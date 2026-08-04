@@ -32,9 +32,19 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   await sendEmail(
     to,
     "Verify your FxInsites email",
-    `<p>Welcome to FxInsites. Click the link below to verify your email address:</p>
-     <p><a href="${link}">${link}</a></p>
-     <p>This link expires in 24 hours.</p>`,
+    `<p>Welcome to FxInsites. Click the button below to verify your email address:</p>
+     <p>
+       <a href="${link}"
+          style="display:inline-block;padding:12px 24px;background-color:#18181b;color:#fafafa;
+                 text-decoration:none;border-radius:9999px;font-family:sans-serif;font-size:14px;
+                 font-weight:500;">
+         Verify email
+       </a>
+     </p>
+     <p style="font-family:sans-serif;font-size:13px;color:#71717a;">
+       Or paste this link into your browser: <a href="${link}">${link}</a>
+     </p>
+     <p style="font-family:sans-serif;font-size:13px;color:#71717a;">This link expires in 24 hours.</p>`,
     link
   );
 }

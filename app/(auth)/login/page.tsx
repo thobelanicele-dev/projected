@@ -11,12 +11,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
     setError(null);
+    setNeedsVerification(false);
+    setResendState("idle");
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -28,6 +32,7 @@ export default function LoginPage() {
 
       if (!res.ok) {
         setError(data.error ?? "Something went wrong.");
+        if (res.status === 403) setNeedsVerification(true);
         return;
       }
       router.push("/planner");
@@ -35,6 +40,20 @@ export default function LoginPage() {
       setError("Could not reach the server. Please try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    if (resendState === "sending") return;
+    setResendState("sending");
+    try {
+      await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } finally {
+      setResendState("sent");
     }
   }
 
@@ -65,6 +84,24 @@ export default function LoginPage() {
       {error && (
         <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
           {error}
+          {needsVerification && (
+            <div className="mt-2">
+              {resendState === "sent" ? (
+                <span className="text-zinc-400">
+                  If that email has an account, a new verification link is on its way.
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendState === "sending"}
+                  className="text-sky-400 hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {resendState === "sending" ? "Sending…" : "Resend verification email"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
