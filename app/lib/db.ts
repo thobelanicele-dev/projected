@@ -57,6 +57,11 @@ function migrate(): Promise<void> {
         user_id UUID NOT NULL REFERENCES users(id),
         expires_at BIGINT NOT NULL
       );
+
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_customer_code TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_subscription_code TEXT;
     `
     )
     .then(() => undefined);

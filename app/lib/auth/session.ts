@@ -10,6 +10,8 @@ export interface SessionUser {
   email: string;
   username: string;
   emailVerified: boolean;
+  plan: string | null;
+  subscriptionStatus: string | null;
 }
 
 /** Creates a session row and sets the cookie. Route Handlers only. */
@@ -43,9 +45,12 @@ export async function getSession(): Promise<SessionUser | null> {
     email: string;
     username: string;
     email_verified: boolean;
+    plan: string | null;
+    subscription_status: string | null;
     expires_at: string;
   }>(
-    `SELECT users.id, users.email, users.username, users.email_verified, sessions.expires_at
+    `SELECT users.id, users.email, users.username, users.email_verified, users.plan,
+            users.subscription_status, sessions.expires_at
      FROM sessions JOIN users ON users.id = sessions.user_id
      WHERE sessions.id = $1`,
     [token]
@@ -63,6 +68,8 @@ export async function getSession(): Promise<SessionUser | null> {
     email: row.email,
     username: row.username,
     emailVerified: row.email_verified,
+    plan: row.plan,
+    subscriptionStatus: row.subscription_status,
   };
 }
 

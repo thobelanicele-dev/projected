@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { getSession } from "@/app/lib/auth/session";
+import { PricingCTA } from "@/app/components/PricingCTA";
 
 const TIERS = [
   {
     name: "Basic",
+    tier: "basic" as const,
     price: 9,
     tagline: "For occasional planning and review",
     highlighted: false,
@@ -17,6 +20,7 @@ const TIERS = [
   },
   {
     name: "Plus",
+    tier: "plus" as const,
     price: 20,
     tagline: "For a regular trading routine",
     highlighted: true,
@@ -31,6 +35,7 @@ const TIERS = [
   },
   {
     name: "Premium",
+    tier: "premium" as const,
     price: 30,
     tagline: "For unrestricted use",
     highlighted: false,
@@ -273,7 +278,10 @@ function BacktestMock() {
   );
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await getSession();
+  const isLoggedIn = session !== null;
+
   return (
     <div className="min-h-screen bg-black text-zinc-50 [font-family:'Helvetica_Neue',Helvetica,Arial,sans-serif]">
       {/* Nav */}
@@ -486,16 +494,12 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/planner"
-                  className={`mt-8 border px-5 py-2.5 text-center text-sm transition-colors ${
-                    tier.highlighted
-                      ? "border-zinc-100 bg-zinc-100 text-black hover:bg-zinc-300"
-                      : "border-zinc-700 text-zinc-200 hover:border-zinc-500"
-                  }`}
-                >
-                  {tier.cta}
-                </Link>
+                <PricingCTA
+                  tier={tier.tier}
+                  label={tier.cta}
+                  isLoggedIn={isLoggedIn}
+                  highlighted={tier.highlighted}
+                />
               </div>
             ))}
           </div>
