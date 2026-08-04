@@ -556,7 +556,7 @@ export default function LandingPage() {
             Start with a single trade plan.
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-            No account required to try the planner.
+            Free to try — just create an account.
           </p>
           <div className="mt-8">
             <Link
