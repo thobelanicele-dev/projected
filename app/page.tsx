@@ -17,7 +17,7 @@ const TIERS = [
   },
   {
     name: "Plus",
-    price: 15,
+    price: 20,
     tagline: "For a regular trading routine",
     highlighted: true,
     cta: "Start with Plus",
@@ -31,7 +31,7 @@ const TIERS = [
   },
   {
     name: "Premium",
-    price: 20,
+    price: 30,
     tagline: "For unrestricted use",
     highlighted: false,
     cta: "Start with Premium",
