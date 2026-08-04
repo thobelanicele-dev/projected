@@ -28,7 +28,7 @@ async function sendEmail(to: string, subject: string, html: string, fallbackLink
 }
 
 export async function sendVerificationEmail(to: string, token: string): Promise<void> {
-  const link = `${APP_URL}/verify-email?token=${token}`;
+  const link = `${APP_URL}/api/auth/verify-email?token=${token}`;
   await sendEmail(
     to,
     "Verify your FxInsites email",
