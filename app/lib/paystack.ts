@@ -33,18 +33,34 @@ interface InitializeResult {
   reference: string;
 }
 
+async function getPlanAmount(planCode: string): Promise<number> {
+  const res = await fetch(`https://api.paystack.co/plan/${encodeURIComponent(planCode)}`, {
+    headers: { Authorization: `Bearer ${secretKey()}` },
+  });
+  const data = await res.json();
+  if (!res.ok || !data.status) {
+    throw new Error(data.message ?? "Failed to look up Paystack plan.");
+  }
+  return data.data.amount;
+}
+
 export async function initializeTransaction(
   email: string,
   planCode: string,
   callbackUrl: string
 ): Promise<InitializeResult> {
+  // Paystack requires `amount` on this endpoint even when a recurring `plan`
+  // is supplied — the plan itself still governs what actually gets charged
+  // and on what schedule, this just satisfies the endpoint's validation.
+  const amount = await getPlanAmount(planCode);
+
   const res = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${secretKey()}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email, plan: planCode, callback_url: callbackUrl }),
+    body: JSON.stringify({ email, amount, plan: planCode, callback_url: callbackUrl }),
   });
 
   const data = await res.json();
