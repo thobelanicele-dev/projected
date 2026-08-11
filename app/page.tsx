@@ -312,9 +312,9 @@ export default async function LandingPage() {
       {/* Hero */}
       <section className="mx-auto w-full max-w-4xl px-6 pb-20 pt-20 text-center">
         <h1 className="text-4xl font-medium leading-[1.15] tracking-tight text-zinc-50 sm:text-5xl">
-          Trade with a <span className="text-emerald-400">plan</span>,
+          Trade with a plan,
           <br />
-          not a <span className="text-red-400">guess</span>.
+          not a guess.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-zinc-400">
           Describe your trade idea in plain English and we&apos;ll turn it into a clear plan,
