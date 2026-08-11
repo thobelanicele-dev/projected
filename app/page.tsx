@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/app/lib/auth/session";
 import { PricingCTA } from "@/app/components/PricingCTA";
+import { NavAuthLink } from "@/app/components/NavAuthLink";
 
 const TIERS = [
   {
@@ -297,14 +298,12 @@ export default async function LandingPage() {
             <a href="#faq" className="hover:text-zinc-200">FAQ</a>
           </nav>
           <div className="flex items-center gap-5">
-            <Link href="/login" className="hidden text-sm text-zinc-400 hover:text-zinc-200 sm:block">
-              Sign in
-            </Link>
+            <NavAuthLink isLoggedIn={isLoggedIn} />
             <Link
-              href="/planner"
+              href={isLoggedIn ? "/planner" : "/signup"}
               className="border border-zinc-700 px-4 py-1.5 text-sm text-zinc-100 transition-colors hover:border-zinc-500"
             >
-              Open the planner
+              {isLoggedIn ? "Open the planner" : "Get Started"}
             </Link>
           </div>
         </div>
@@ -325,10 +324,10 @@ export default async function LandingPage() {
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
-            href="/planner"
+            href={isLoggedIn ? "/planner" : "/signup"}
             className="border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-colors hover:bg-zinc-300"
           >
-            Open the planner
+            {isLoggedIn ? "Open the planner" : "Get Started"}
           </Link>
           <a
             href="#pricing"
@@ -467,7 +466,8 @@ export default async function LandingPage() {
           </h2>
           <p className="mt-2 max-w-lg text-sm text-zinc-500">
             The planner, risk calculator, journal, and backtest engine are included at every
-            level. Tiers differ only in monthly usage limits.
+            level. Tiers differ only in monthly usage limits. Every plan starts with a 7-day
+            free trial.
           </p>
 
           <div className="mt-10 grid grid-cols-1 divide-y divide-zinc-900 border border-zinc-900 md:grid-cols-3 md:divide-x md:divide-y-0">
@@ -560,14 +560,14 @@ export default async function LandingPage() {
             Start with a single trade plan.
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-            Free to try — just create an account.
+            Try it free for 7 days — no card required.
           </p>
           <div className="mt-8">
             <Link
-              href="/planner"
+              href={isLoggedIn ? "/planner" : "/signup"}
               className="inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-colors hover:bg-zinc-300"
             >
-              Open the planner
+              {isLoggedIn ? "Open the planner" : "Get Started"}
             </Link>
           </div>
         </div>
