@@ -210,14 +210,25 @@ export const inputClass =
 const priceOptionalHint =
   "Don't know the exact price? Leave it blank — just describe it in words on the right.";
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
+export interface ChartImage {
+  data: string;
+  mediaType: string;
+}
+
 export function TradeIdeaForm({
   onSubmit,
   loading,
 }: {
-  onSubmit: (ideaText: string) => void;
+  onSubmit: (ideaText: string, chartImage?: ChartImage) => void;
   loading: boolean;
 }) {
   const [fields, setFields] = useState<TradeIdeaFields>(emptyFields);
+  const [chartImage, setChartImage] = useState<ChartImage | null>(null);
+  const [chartPreviewUrl, setChartPreviewUrl] = useState<string | null>(null);
+  const [chartError, setChartError] = useState<string | null>(null);
   const [customPair, setCustomPair] = useState(false);
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [priceStatus, setPriceStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -405,8 +416,42 @@ export function TradeIdeaForm({
         livePrice: priceStatus === "ready" ? livePrice : null,
         priceRange: rangeStatus === "ready" ? priceRange : null,
         events: calendarStatus === "ready" ? calendarEvents : undefined,
-      })
+      }),
+      chartImage ?? undefined
     );
+  }
+
+  function handleChartFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setChartError(null);
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setChartError("Please upload a PNG, JPEG, or WebP image.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setChartError("Image must be 5MB or smaller.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+      setChartImage({ data: base64, mediaType: file.type });
+      setChartPreviewUrl(dataUrl);
+    };
+    reader.onerror = () => setChartError("Couldn't read that image. Please try again.");
+    reader.readAsDataURL(file);
+  }
+
+  function removeChartImage() {
+    setChartImage(null);
+    setChartPreviewUrl(null);
+    setChartError(null);
   }
 
   return (
@@ -687,6 +732,37 @@ export function TradeIdeaForm({
           Add numeric entry and stop-loss prices (and an account balance) to see position size.
         </p>
       )}
+
+      <Field
+        label="Attach a chart screenshot (optional)"
+        hint="We'll check it against the plan above — it never overrides what you've already described."
+      >
+        {chartPreviewUrl ? (
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={chartPreviewUrl}
+              alt="Chart screenshot preview"
+              className="h-16 w-16 rounded-lg border border-zinc-800 object-cover"
+            />
+            <button
+              type="button"
+              onClick={removeChartImage}
+              className="text-xs text-zinc-400 hover:text-zinc-200"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={handleChartFileChange}
+            className="text-sm text-zinc-400 file:mr-3 file:rounded-lg file:border file:border-zinc-800 file:bg-zinc-950 file:px-3 file:py-1.5 file:text-sm file:text-zinc-200 hover:file:border-zinc-600"
+          />
+        )}
+        {chartError && <span className="text-xs text-orange-400">{chartError}</span>}
+      </Field>
 
       <button
         type="submit"

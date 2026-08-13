@@ -121,6 +121,30 @@ export function TradeCard({ plan }: { plan: TradePlan }) {
         </div>
       )}
 
+      {plan.chartCheck && (
+        <div className="mt-5 border-t border-zinc-800 pt-5">
+          <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">From your chart</p>
+          {plan.chartCheck.warnings.length > 0 && (
+            <ul className="mb-2 space-y-1.5">
+              {plan.chartCheck.warnings.map((warning, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-orange-300">
+                  <span className="text-orange-400">⚠</span>
+                  <span>{warning}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <ul className="space-y-1.5">
+            {plan.chartCheck.observations.map((observation, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
+                <span className="text-sky-400">•</span>
+                <span>{observation}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {plan.watchFor.length > 0 && (
         <div className="mt-5 border-t border-zinc-800 pt-5">
           <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">Watch for</p>

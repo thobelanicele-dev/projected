@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TradeCard } from "@/app/components/TradeCard";
-import { TradeIdeaForm } from "@/app/components/TradeIdeaForm";
+import { TradeIdeaForm, type ChartImage } from "@/app/components/TradeIdeaForm";
 import type { TradePlan } from "@/app/api/plan/route";
 import { addPlanToJournal, loadJournal, type JournalEntry } from "@/app/lib/journal";
 
@@ -29,7 +29,7 @@ export default function Home() {
     return () => clearTimeout(timeout);
   }, []);
 
-  async function handleSubmit(ideaText: string) {
+  async function handleSubmit(ideaText: string, chartImage?: ChartImage) {
     if (loading) return;
 
     setLoading(true);
@@ -40,7 +40,7 @@ export default function Home() {
       const res = await fetch("/api/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: ideaText }),
+        body: JSON.stringify({ idea: ideaText, image: chartImage ?? undefined }),
       });
       const data = await res.json();
 

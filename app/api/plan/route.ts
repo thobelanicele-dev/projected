@@ -7,6 +7,7 @@ import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 const RATE_LIMIT = 10;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const MAX_IDEA_LENGTH = 4000;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const tradePlanSchema = z.object({
   instrument: z
@@ -72,6 +73,21 @@ const tradePlanSchema = z.object({
     .describe(
       "3-5 sentence overall verdict tying entry, risk, and thesis quality together — enough for a beginner to understand not just whether this trade is 'good' but why."
     ),
+  chartCheck: z
+    .object({
+      observations: z
+        .array(z.string())
+        .describe(
+          "Plain-English observations from the attached chart screenshot that support or relate to the trader's stated plan — trend direction, visible structure, candle behavior. Never a specific price level unless the trader already gave that number."
+        ),
+      warnings: z
+        .array(z.string())
+        .describe(
+          "Ways the chart screenshot appears to contradict or undercut the trader's stated plan, if any — e.g. the stated direction doesn't match the visible trend."
+        ),
+    })
+    .nullable()
+    .describe("Leave null if no chart screenshot was attached."),
 });
 
 export type TradePlan = z.infer<typeof tradePlanSchema>;
@@ -90,12 +106,15 @@ Write the final summary as a short verdict paragraph that ties entry quality, ri
 
 If the trader's message includes real market data (a current price, a recent high/low range, or upcoming economic events), ground your reasoning in those actual numbers — reference them directly rather than inventing separate figures. If no such data is given for something, discuss it qualitatively (e.g. "recent structure suggests...") rather than fabricating a specific price or level you have no evidence for. Never state a specific technical level (a swing high, a support/resistance price, a range boundary) unless it was given to you or the trader specified it themselves.
 
+If a chart screenshot is attached, use it only to check whether it supports or contradicts the trade plan the trader already described above — never to originate a new trade idea, and never to state a specific price level that wasn't already given to you by the trader. Describe what you observe qualitatively (overall trend direction, visible structure, candle behavior) and note plainly if something in the image seems to contradict the trader's stated plan. Put this in the chartCheck field. If no image is attached, leave chartCheck null.
+
 This is not financial advice — you are structuring the trader's own idea and coaching them on risk discipline and process, not predicting market direction.`;
 
 export async function POST(req: NextRequest) {
   let idea: unknown;
+  let image: unknown;
   try {
-    ({ idea } = await req.json());
+    ({ idea, image } = await req.json());
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -109,6 +128,19 @@ export async function POST(req: NextRequest) {
       { error: `Trade idea must be ${MAX_IDEA_LENGTH} characters or fewer.` },
       { status: 400 }
     );
+  }
+
+  let chartImage: { data: string; mediaType: string } | null = null;
+  if (image !== undefined && image !== null) {
+    const { data, mediaType } = (image ?? {}) as { data?: unknown; mediaType?: unknown };
+    if (typeof data !== "string" || typeof mediaType !== "string" || !mediaType.startsWith("image/")) {
+      return NextResponse.json({ error: "Invalid chart image." }, { status: 400 });
+    }
+    const approxBytes = (data.length * 3) / 4;
+    if (approxBytes > MAX_IMAGE_BYTES) {
+      return NextResponse.json({ error: "Chart image must be 5MB or smaller." }, { status: 400 });
+    }
+    chartImage = { data, mediaType };
   }
 
   const rateLimit = checkRateLimit(`plan:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
@@ -131,7 +163,17 @@ export async function POST(req: NextRequest) {
       model: anthropic("claude-sonnet-5"),
       schema: tradePlanSchema,
       system: SYSTEM_PROMPT,
-      prompt: idea,
+      prompt: chartImage
+        ? [
+            {
+              role: "user" as const,
+              content: [
+                { type: "text" as const, text: idea },
+                { type: "file" as const, mediaType: chartImage.mediaType, data: chartImage.data },
+              ],
+            },
+          ]
+        : idea,
     });
 
     return NextResponse.json({ plan: object });
