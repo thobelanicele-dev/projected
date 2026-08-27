@@ -209,9 +209,6 @@ export function Field({
 export const inputClass =
   "w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none";
 
-const priceOptionalHint =
-  "Don't know the exact price? Leave it blank — just describe it in words on the right.";
-
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
@@ -478,11 +475,7 @@ export function TradeIdeaForm({
         </div>
       </div>
 
-      <Field
-        label="What are you trading?"
-        hint="Pick a common pair, or choose Other to type your own."
-        tourId="pair"
-      >
+      <Field label="What are you trading?" tourId="pair">
         {customPair ? (
           <input
             type="text"
@@ -635,8 +628,8 @@ export function TradeIdeaForm({
 
       <Field
         label="Stop loss — where you'll get out if you're wrong"
-        hint={`${priceOptionalHint} This is still the most important field — it caps how much you can lose on this trade, so try to fill in at least the "why" even if you skip the price.`}
-        info="A stop loss is a safety net: an exact point where you'll automatically exit if the trade goes against you. Without one, a bad trade has no limit on how much it can cost you — this single field is the difference between a controlled loss and an account-ending one."
+        hint="The most important field — don't skip it."
+        info="A stop loss is a safety net: an exact point where you'll automatically exit if the trade goes against you. Without one, a bad trade has no limit on how much it can cost you. Don't know the exact price? Leave it blank and just describe it in words on the right — that's still enough to work with."
         tourId="stop-loss"
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -665,8 +658,7 @@ export function TradeIdeaForm({
 
       <Field
         label="Take profit — where you'll bank the win"
-        hint={priceOptionalHint}
-        info="A take profit is the price where you plan to exit and lock in your gains if the trade goes your way. It doesn't have to be exact — even a rough idea of 'where' helps you judge whether the potential win is worth the risk you're taking."
+        info="A take profit is the price where you plan to exit and lock in your gains if the trade goes your way. It doesn't have to be exact — even a rough idea of 'where' helps you judge whether the potential win is worth the risk. Don't know the exact price? Leave it blank and describe it in words instead."
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <input
@@ -688,8 +680,7 @@ export function TradeIdeaForm({
 
       <Field
         label="How much of your account are you risking?"
-        hint="Most experienced traders risk 1–2% of their account per trade. Higher than that is a bigger bet than it might feel like."
-        info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss — not how much you're putting into the trade overall. Keeping this small (1-2%) means no single bad trade can seriously damage your account, even if you have a string of losses in a row."
+        info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss — not how much you're putting into the trade overall. Most experienced traders risk 1–2% per trade; keeping it small means no single bad trade can seriously damage your account."
       >
         <div className="flex items-center gap-2">
           <input
@@ -711,10 +702,7 @@ export function TradeIdeaForm({
         )}
       </Field>
 
-      <Field
-        label="Account balance"
-        hint="Used to turn your risk % into an actual position size below. Saved locally so you don't have to re-enter it."
-      >
+      <Field label="Account balance" hint="Powers the position size below.">
         <div className="flex items-center gap-2">
           <span className="text-sm text-zinc-400">$</span>
           <input
@@ -742,7 +730,7 @@ export function TradeIdeaForm({
 
       <Field
         label="Attach a chart screenshot (optional)"
-        hint="We'll check it against the plan above — it never overrides what you've already described."
+        hint="Checked against the plan above — never overrides it."
       >
         {chartPreviewUrl ? (
           <div className="flex items-center gap-3">

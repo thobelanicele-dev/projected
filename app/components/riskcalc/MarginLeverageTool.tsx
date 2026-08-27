@@ -73,7 +73,7 @@ export function MarginLeverageTool() {
     <div className="flex flex-col gap-5">
       <PairInput value={pair} onChange={setPair} />
 
-      <Field label="Exchange rate" hint="Current rate for the pair.">
+      <Field label="Exchange rate">
         <input
           type="text"
           inputMode="decimal"

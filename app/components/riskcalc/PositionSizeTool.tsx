@@ -57,7 +57,7 @@ export function PositionSizeTool() {
             className={inputClass}
           />
         </Field>
-        <Field label="Exchange rate" hint="Current rate for the pair.">
+        <Field label="Exchange rate">
           <input
             type="text"
             inputMode="decimal"
