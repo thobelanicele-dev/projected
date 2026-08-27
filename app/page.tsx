@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getSession } from "@/app/lib/auth/session";
 import { PricingCTA } from "@/app/components/PricingCTA";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
+import { Reveal } from "@/app/components/Reveal";
+import { CountUp } from "@/app/components/CountUp";
 
 const TIERS = [
   {
@@ -64,11 +66,11 @@ const LIMIT_ROWS: { label: string; values: [string, string, string] }[] = [
 ];
 
 const CAPABILITIES = [
-  ["5", "safety checks run on every trade plan"],
-  ["5", "simple calculators for safer position sizing"],
-  ["3", "ready-made strategies you can test instantly"],
-  ["2 yrs", "of real price history to practice with"],
-  ["2", "ways to bring in trades you've already made"],
+  { value: 5, suffix: "", label: "safety checks run on every trade plan" },
+  { value: 5, suffix: "", label: "simple calculators for safer position sizing" },
+  { value: 3, suffix: "", label: "ready-made strategies you can test instantly" },
+  { value: 2, suffix: " yrs", label: "of real price history to practice with" },
+  { value: 2, suffix: "", label: "ways to bring in trades you've already made" },
 ];
 
 const STEPS = [
@@ -116,9 +118,18 @@ function Dot() {
   return <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-zinc-600" />;
 }
 
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-zinc-500">
+      <span className="h-1 w-1 rounded-full bg-emerald-400" />
+      {children}
+    </p>
+  );
+}
+
 function PlannerMock() {
   return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
+    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
       <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-zinc-500">Trade plan</p>
@@ -161,7 +172,7 @@ function PlannerMock() {
 
 function JournalMock() {
   return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
+    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
       <div className="grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800">
         {[
           ["Win rate", "58%"],
@@ -180,7 +191,7 @@ function JournalMock() {
           points="8,50 45,42 82,46 120,35 158,38 195,26 232,29 270,14 292,10"
           fill="none"
           strokeWidth="1.5"
-          className="stroke-emerald-400"
+          className="chart-line stroke-emerald-400"
         />
       </svg>
       <div className="mt-2 space-y-1.5 text-[12px]">
@@ -203,7 +214,7 @@ function JournalMock() {
 
 function RiskCalculatorMock() {
   return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
+    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
       <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-zinc-500">Risk calculator</p>
@@ -239,7 +250,7 @@ function RiskCalculatorMock() {
 
 function BacktestMock() {
   return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
+    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
       <p className="border border-zinc-800 px-3 py-2 text-[11px] text-zinc-400">
         &quot;10/30-day moving average crossover, risk 2%, target 6%&quot;
       </p>
@@ -288,7 +299,8 @@ export default async function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-50 border-b border-zinc-900 bg-black/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-base font-medium tracking-tight text-zinc-100">
+          <span className="flex items-center gap-2 text-base font-medium tracking-tight text-zinc-100">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_1px_rgba(52,211,153,0.7)]" />
             FxInsites
           </span>
           <nav className="hidden items-center gap-8 text-sm text-zinc-500 md:flex">
@@ -301,7 +313,7 @@ export default async function LandingPage() {
             <NavAuthLink isLoggedIn={isLoggedIn} />
             <Link
               href={isLoggedIn ? "/planner" : "/signup"}
-              className="border border-zinc-700 px-4 py-1.5 text-sm text-zinc-100 transition-colors hover:border-zinc-500"
+              className="border border-zinc-700 px-4 py-1.5 text-sm text-zinc-100 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/50 hover:shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]"
             >
               {isLoggedIn ? "Open the planner" : "Get Started"}
             </Link>
@@ -310,68 +322,88 @@ export default async function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto w-full max-w-4xl px-6 pb-20 pt-20 text-center">
-        <h1 className="text-4xl font-medium leading-[1.15] tracking-tight text-zinc-50 sm:text-5xl">
-          Trade with a plan,
-          <br />
-          not a guess.
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-zinc-400">
-          Describe your trade idea in plain English and we&apos;ll turn it into a clear plan,
-          checked for the mistakes beginners make most. Test any idea against years of real price
-          history before risking a cent. And every trade gets saved automatically, so you always
-          know how you&apos;re really doing.
-        </p>
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href={isLoggedIn ? "/planner" : "/signup"}
-            className="border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-colors hover:bg-zinc-300"
-          >
-            {isLoggedIn ? "Open the planner" : "Get Started"}
-          </Link>
-          <a
-            href="#pricing"
-            className="border border-zinc-700 px-6 py-3 text-sm text-zinc-300 transition-colors hover:border-zinc-500"
-          >
-            View pricing
-          </a>
+      <section className="relative overflow-hidden px-6 pb-20 pt-20 text-center">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="blob absolute left-1/2 top-[-160px] h-[460px] w-[460px] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-[110px]" />
+          <div
+            className="blob absolute right-[10%] top-[80px] h-[280px] w-[280px] rounded-full bg-emerald-400/10 blur-[90px]"
+            style={{ animationDelay: "-6s" }}
+          />
+        </div>
+
+        <div className="mx-auto w-full max-w-4xl">
+          <Reveal>
+            <h1 className="text-4xl font-medium leading-[1.15] tracking-tight text-zinc-50 sm:text-5xl">
+              Trade with a plan,
+              <br />
+              not a guess.
+            </h1>
+          </Reveal>
+          <Reveal delay={100}>
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-zinc-400">
+              Describe your trade idea in plain English and we&apos;ll turn it into a clear plan,
+              checked for the mistakes beginners make most. Test any idea against years of real
+              price history before risking a cent. And every trade gets saved automatically, so
+              you always know how you&apos;re really doing.
+            </p>
+          </Reveal>
+          <Reveal delay={200}>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href={isLoggedIn ? "/planner" : "/signup"}
+                className="border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
+              >
+                {isLoggedIn ? "Open the planner" : "Get Started"}
+              </Link>
+              <a
+                href="#pricing"
+                className="border border-zinc-700 px-6 py-3 text-sm text-zinc-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-500"
+              >
+                View pricing
+              </a>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Capability strip */}
       <section className="border-y border-zinc-900">
         <div className="mx-auto grid w-full max-w-6xl grid-cols-2 divide-x divide-y divide-zinc-900 sm:grid-cols-5 sm:divide-y-0">
-          {CAPABILITIES.map(([stat, label]) => (
-            <div key={label} className="px-6 py-8 text-center">
-              <p className="text-2xl font-medium text-zinc-100">{stat}</p>
-              <p className="mt-1 text-xs leading-snug text-zinc-500">{label}</p>
-            </div>
+          {CAPABILITIES.map((cap, i) => (
+            <Reveal key={cap.label} delay={i * 80} className="px-6 py-8 text-center">
+              <p className="text-2xl font-medium text-zinc-100">
+                <CountUp target={cap.value} suffix={cap.suffix} />
+              </p>
+              <p className="mt-1 text-xs leading-snug text-zinc-500">{cap.label}</p>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* How it works */}
       <section id="how" className="mx-auto w-full max-w-6xl px-6 py-24">
-        <p className="text-xs uppercase tracking-widest text-zinc-500">How it works</p>
-        <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
-          Three simple steps, every time
-        </h2>
+        <Reveal>
+          <Eyebrow>How it works</Eyebrow>
+          <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
+            Three simple steps, every time
+          </h2>
+        </Reveal>
         <div className="mt-10 grid grid-cols-1 divide-y divide-zinc-900 border-t border-zinc-900 md:grid-cols-3 md:divide-x md:divide-y-0">
-          {STEPS.map((step) => (
-            <div key={step.n} className="py-8 md:px-8 md:py-0 md:pt-8">
-              <span className="font-mono text-xs text-zinc-600">{step.n}</span>
+          {STEPS.map((step, i) => (
+            <Reveal key={step.n} delay={i * 120} className="py-8 md:px-8 md:py-0 md:pt-8">
+              <span className="font-mono text-xs text-emerald-500/70">{step.n}</span>
               <h3 className="mt-2 text-base font-medium text-zinc-100">{step.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* Feature deep dives */}
       <section id="features" className="mx-auto w-full max-w-6xl space-y-20 border-t border-zinc-900 px-6 py-24">
-        <div className="grid items-start gap-10 lg:grid-cols-2">
+        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
           <div>
-            <p className="text-xs uppercase tracking-widest text-zinc-500">Trade planner</p>
+            <Eyebrow>Trade planner</Eyebrow>
             <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
               Your idea, turned into a safe plan
             </h3>
@@ -388,14 +420,14 @@ export default async function LandingPage() {
             </ul>
           </div>
           <PlannerMock />
-        </div>
+        </Reveal>
 
-        <div className="grid items-start gap-10 lg:grid-cols-2">
+        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
           <div className="order-last lg:order-first">
             <JournalMock />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-widest text-zinc-500">Trade journal</p>
+            <Eyebrow>Trade journal</Eyebrow>
             <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
               Your trading history, kept honest
             </h3>
@@ -411,11 +443,11 @@ export default async function LandingPage() {
               <li className="flex gap-2"><Dot />See not just whether you won, but whether you followed your own plan</li>
             </ul>
           </div>
-        </div>
+        </Reveal>
 
-        <div className="grid items-start gap-10 lg:grid-cols-2">
+        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
           <div>
-            <p className="text-xs uppercase tracking-widest text-zinc-500">Backtest engine</p>
+            <Eyebrow>Backtest engine</Eyebrow>
             <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
               Try it before you risk real money
             </h3>
@@ -431,14 +463,14 @@ export default async function LandingPage() {
             </ul>
           </div>
           <BacktestMock />
-        </div>
+        </Reveal>
 
-        <div className="grid items-start gap-10 lg:grid-cols-2">
+        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
           <div className="order-last lg:order-first">
             <RiskCalculatorMock />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-widest text-zinc-500">Risk calculator</p>
+            <Eyebrow>Risk calculator</Eyebrow>
             <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
               Know exactly how much to risk
             </h3>
@@ -454,29 +486,39 @@ export default async function LandingPage() {
               <li className="flex gap-2"><Dot />Every calculation is tested against worked examples, not just guessed at</li>
             </ul>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* Pricing */}
       <section id="pricing" className="border-t border-zinc-900 py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
-          <p className="text-xs uppercase tracking-widest text-zinc-500">Pricing</p>
-          <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
-            All four tools on every tier
-          </h2>
-          <p className="mt-2 max-w-lg text-sm text-zinc-500">
-            The planner, risk calculator, journal, and backtest engine are included at every
-            level. Tiers differ only in monthly usage limits. Every plan starts with a 7-day
-            free trial.
-          </p>
+          <Reveal>
+            <Eyebrow>Pricing</Eyebrow>
+            <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
+              All four tools on every tier
+            </h2>
+            <p className="mt-2 max-w-lg text-sm text-zinc-500">
+              The planner, risk calculator, journal, and backtest engine are included at every
+              level. Tiers differ only in monthly usage limits. Every plan starts with a 7-day
+              free trial.
+            </p>
+          </Reveal>
 
           <div className="mt-10 grid grid-cols-1 divide-y divide-zinc-900 border border-zinc-900 md:grid-cols-3 md:divide-x md:divide-y-0">
-            {TIERS.map((tier) => (
-              <div key={tier.name} className="flex flex-col p-6">
+            {TIERS.map((tier, i) => (
+              <Reveal
+                key={tier.name}
+                delay={i * 100}
+                className={`relative flex flex-col p-6 transition-all duration-300 ${
+                  tier.highlighted
+                    ? "bg-gradient-to-b from-emerald-500/[0.08] to-transparent"
+                    : "hover:bg-zinc-950/50"
+                }`}
+              >
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-medium text-zinc-100">{tier.name}</h3>
                   {tier.highlighted && (
-                    <span className="border border-zinc-700 px-1.5 py-0.5 text-[10px] uppercase tracking-widest text-zinc-400">
+                    <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-400 shadow-[0_0_12px_-4px_rgba(52,211,153,0.6)]">
                       Most used
                     </span>
                   )}
@@ -500,7 +542,7 @@ export default async function LandingPage() {
                   isLoggedIn={isLoggedIn}
                   highlighted={tier.highlighted}
                 />
-              </div>
+              </Reveal>
             ))}
           </div>
 
@@ -534,15 +576,17 @@ export default async function LandingPage() {
 
       {/* FAQ */}
       <section id="faq" className="mx-auto w-full max-w-3xl border-t border-zinc-900 px-6 py-24">
-        <p className="text-xs uppercase tracking-widest text-zinc-500">FAQ</p>
-        <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
-          Questions traders ask
-        </h2>
-        <div className="mt-8 divide-y divide-zinc-900 border-t border-zinc-900">
+        <Reveal>
+          <Eyebrow>FAQ</Eyebrow>
+          <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
+            Questions traders ask
+          </h2>
+        </Reveal>
+        <Reveal delay={100} className="mt-8 divide-y divide-zinc-900 border-t border-zinc-900">
           {FAQS.map((faq) => (
             <details key={faq.q} className="group py-4">
-              <summary className="cursor-pointer select-none list-none text-sm font-medium text-zinc-200 marker:content-none [&::-webkit-details-marker]:hidden">
-                <span className="mr-2 inline-block text-zinc-600 transition-transform group-open:rotate-45">
+              <summary className="cursor-pointer select-none list-none text-sm font-medium text-zinc-200 marker:content-none transition-colors hover:text-emerald-300 [&::-webkit-details-marker]:hidden">
+                <span className="mr-2 inline-block text-emerald-500/70 transition-transform group-open:rotate-45">
                   +
                 </span>
                 {faq.q}
@@ -550,12 +594,15 @@ export default async function LandingPage() {
               <p className="mt-3 pl-5 text-sm leading-relaxed text-zinc-500">{faq.a}</p>
             </details>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       {/* Final CTA */}
-      <section className="border-t border-zinc-900">
-        <div className="mx-auto w-full max-w-6xl px-6 py-20 text-center">
+      <section className="relative overflow-hidden border-t border-zinc-900">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="blob absolute left-1/2 top-1/2 h-[380px] w-[380px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 blur-[110px]" />
+        </div>
+        <Reveal className="mx-auto w-full max-w-6xl px-6 py-20 text-center">
           <h2 className="text-2xl font-medium tracking-tight text-zinc-50">
             Start with a single trade plan.
           </h2>
@@ -565,12 +612,12 @@ export default async function LandingPage() {
           <div className="mt-8">
             <Link
               href={isLoggedIn ? "/planner" : "/signup"}
-              className="inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-colors hover:bg-zinc-300"
+              className="inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
             >
               {isLoggedIn ? "Open the planner" : "Get Started"}
             </Link>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* Footer */}

@@ -24,3 +24,51 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Scroll-reveal: fades and lifts content in as it enters the viewport. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Slow-drifting glow blobs used behind the hero. */
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -24px) scale(1.08); }
+  66% { transform: translate(-24px, 18px) scale(0.94); }
+}
+.blob {
+  animation: blob-drift 18s ease-in-out infinite;
+}
+
+/* Equity-curve "draw in" effect, triggered once its Reveal ancestor is visible. */
+.chart-line {
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+}
+.is-visible .chart-line {
+  animation: draw-line 1.6s ease forwards;
+}
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .blob {
+    animation: none;
+  }
+  .is-visible .chart-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
