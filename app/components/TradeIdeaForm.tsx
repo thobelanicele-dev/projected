@@ -185,15 +185,17 @@ export function Field({
   label,
   hint,
   info,
+  tourId,
   children,
 }: {
   label: string;
   hint?: string;
   info?: string;
+  tourId?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5" data-tour={tourId}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-medium text-zinc-200">{label}</span>
         {info && <InfoTip text={info} />}
@@ -456,7 +458,7 @@ export function TradeIdeaForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4" data-tour="templates">
         <p className="text-sm font-medium text-zinc-200">New to this? Try an example</p>
         <p className="mt-1 text-xs text-zinc-500">
           Pick a starting point, then edit it to match what you&apos;re actually seeing.
@@ -476,7 +478,11 @@ export function TradeIdeaForm({
         </div>
       </div>
 
-      <Field label="What are you trading?" hint="Pick a common pair, or choose Other to type your own.">
+      <Field
+        label="What are you trading?"
+        hint="Pick a common pair, or choose Other to type your own."
+        tourId="pair"
+      >
         {customPair ? (
           <input
             type="text"
@@ -631,6 +637,7 @@ export function TradeIdeaForm({
         label="Stop loss — where you'll get out if you're wrong"
         hint={`${priceOptionalHint} This is still the most important field — it caps how much you can lose on this trade, so try to fill in at least the "why" even if you skip the price.`}
         info="A stop loss is a safety net: an exact point where you'll automatically exit if the trade goes against you. Without one, a bad trade has no limit on how much it can cost you — this single field is the difference between a controlled loss and an account-ending one."
+        tourId="stop-loss"
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <input
@@ -767,6 +774,7 @@ export function TradeIdeaForm({
       <button
         type="submit"
         disabled={!canSubmit}
+        data-tour="submit"
         className="self-start rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {loading ? "Structuring plan…" : "Build trade plan"}

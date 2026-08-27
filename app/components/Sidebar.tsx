@@ -5,15 +5,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { href: "/planner", label: "Planner", description: "Build a structured trade plan" },
+  { href: "/planner", label: "Planner", description: "Build a structured trade plan", tourId: "nav-planner" },
   {
     href: "/risk-calculator",
     label: "Risk calculator",
     description: "Size positions, check margin, spot correlation",
+    tourId: "nav-risk-calculator",
   },
-  { href: "/backtest", label: "Backtest", description: "Test a strategy against real price history" },
-  { href: "/journal", label: "Journal", description: "Log trades and track outcomes" },
-  { href: "/dashboard", label: "Dashboard", description: "See how your plans matched reality" },
+  {
+    href: "/backtest",
+    label: "Backtest",
+    description: "Test a strategy against real price history",
+    tourId: "nav-backtest",
+  },
+  { href: "/journal", label: "Journal", description: "Log trades and track outcomes", tourId: "nav-journal" },
+  { href: "/dashboard", label: "Dashboard", description: "See how your plans matched reality", tourId: "nav-dashboard" },
 ];
 
 export function Sidebar() {
@@ -46,6 +52,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              data-tour={item.tourId}
               className={`rounded-lg px-2.5 py-2.5 transition-colors ${
                 active ? "bg-zinc-900" : "hover:bg-zinc-900/60"
               }`}
@@ -63,9 +70,17 @@ export function Sidebar() {
 
       <button
         type="button"
+        onClick={() => window.dispatchEvent(new Event("fxinsites:replay-tour"))}
+        className="mt-auto rounded-lg px-2.5 py-2.5 text-left text-sm text-zinc-500 transition-colors hover:bg-zinc-900/60 hover:text-zinc-300"
+      >
+        Replay tour
+      </button>
+
+      <button
+        type="button"
         onClick={handleLogout}
         disabled={loggingOut}
-        className="mt-auto rounded-lg px-2.5 py-2.5 text-left text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-900/60 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-lg px-2.5 py-2.5 text-left text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-900/60 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {loggingOut ? "Logging out…" : "Log out"}
       </button>

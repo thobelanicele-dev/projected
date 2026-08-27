@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
+import { ProductTour, TOUR_STEPS } from "@/app/components/ProductTour";
 import { getSession } from "@/app/lib/auth/session";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -15,6 +16,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <main className="flex flex-1 justify-center px-6 py-16">
         <div className="w-full max-w-2xl">{children}</div>
       </main>
+      <ProductTour steps={TOUR_STEPS} />
     </div>
   );
 }
