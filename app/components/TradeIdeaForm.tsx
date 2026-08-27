@@ -209,6 +209,19 @@ export function Field({
 export const inputClass =
   "w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none";
 
+const STEP_LABELS = [
+  "Get started",
+  "Instrument",
+  "Direction",
+  "Entry",
+  "Stop loss",
+  "Take profit",
+  "Risk",
+  "Account balance",
+  "Chart (optional)",
+];
+const STEP_COUNT = STEP_LABELS.length;
+
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
@@ -224,6 +237,7 @@ export function TradeIdeaForm({
   onSubmit: (ideaText: string, chartImage?: ChartImage) => void;
   loading: boolean;
 }) {
+  const [step, setStep] = useState(0);
   const [fields, setFields] = useState<TradeIdeaFields>(emptyFields);
   const [chartImage, setChartImage] = useState<ChartImage | null>(null);
   const [chartPreviewUrl, setChartPreviewUrl] = useState<string | null>(null);
@@ -247,6 +261,18 @@ export function TradeIdeaForm({
     return () => clearTimeout(timeout);
   }, []);
 
+  // The product tour highlights fields that now only exist on their own wizard
+  // step — it dispatches this event to jump the wizard there before it looks
+  // for the element to highlight.
+  useEffect(() => {
+    function handleSetStep(e: Event) {
+      const detail = (e as CustomEvent<number>).detail;
+      if (typeof detail === "number") setStep(detail);
+    }
+    window.addEventListener("fxinsites:set-planner-step", handleSetStep);
+    return () => window.removeEventListener("fxinsites:set-planner-step", handleSetStep);
+  }, []);
+
   function updateAccountBalance(value: string) {
     setAccountBalance(value);
     const parsed = parseFloat(value);
@@ -262,6 +288,7 @@ export function TradeIdeaForm({
   function applyTemplate(template: Template) {
     setFields({ ...emptyFields, ...template.fields });
     setCustomPair(false);
+    setStep(1);
   }
 
   useEffect(() => {
@@ -407,8 +434,22 @@ export function TradeIdeaForm({
       ]
     : undefined;
 
+  const isLastStep = step === STEP_COUNT - 1;
+  const pairStepBlocked = step === 1 && !fields.pair.trim();
+
+  function goBack() {
+    setStep((s) => Math.max(s - 1, 0));
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (pairStepBlocked) return;
+
+    if (!isLastStep) {
+      setStep((s) => Math.min(s + 1, STEP_COUNT - 1));
+      return;
+    }
+
     if (!canSubmit) return;
     onSubmit(
       buildIdeaText(fields, {
@@ -455,6 +496,19 @@ export function TradeIdeaForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+      <div className="flex items-center gap-3">
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className="h-full rounded-full bg-emerald-400 transition-all duration-300"
+            style={{ width: `${((step + 1) / STEP_COUNT) * 100}%` }}
+          />
+        </div>
+        <span className="shrink-0 text-xs text-zinc-500">
+          Step {step + 1} of {STEP_COUNT} — {STEP_LABELS[step]}
+        </span>
+      </div>
+
+      {step === 0 && (
       <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4" data-tour="templates">
         <p className="text-sm font-medium text-zinc-200">New to this? Try an example</p>
         <p className="mt-1 text-xs text-zinc-500">
@@ -474,7 +528,9 @@ export function TradeIdeaForm({
           ))}
         </div>
       </div>
+      )}
 
+      {step === 1 && (
       <Field label="What are you trading?" tourId="pair">
         {customPair ? (
           <input
@@ -547,7 +603,9 @@ export function TradeIdeaForm({
           </div>
         )}
       </Field>
+      )}
 
+      {step === 2 && (
       <Field
         label="Which way do you think it's going?"
         info="'Long' means you think the price will rise — you buy now, hoping to sell later for more. 'Short' means you think the price will fall — you effectively sell first, planning to buy back later at a lower price. Short trades are a more advanced concept, so stick with Long until you're comfortable."
@@ -577,7 +635,9 @@ export function TradeIdeaForm({
           </button>
         </div>
       </Field>
+      )}
 
+      {step === 3 && (
       <Field
         label="When do you want to enter?"
         info="Your 'entry' is the price where your trade actually opens. 'Right now' jumps in immediately at whatever the current price happens to be. 'Wait for a price/condition' means you only enter once something specific happens first — e.g. the price reaching a certain level — which usually gives you more control than jumping in blind."
@@ -625,7 +685,9 @@ export function TradeIdeaForm({
           </div>
         )}
       </Field>
+      )}
 
+      {step === 4 && (
       <Field
         label="Stop loss — where you'll get out if you're wrong"
         hint="The most important field — don't skip it."
@@ -655,7 +717,9 @@ export function TradeIdeaForm({
           </p>
         )}
       </Field>
+      )}
 
+      {step === 5 && (
       <Field
         label="Take profit — where you'll bank the win"
         info="A take profit is the price where you plan to exit and lock in your gains if the trade goes your way. It doesn't have to be exact — even a rough idea of 'where' helps you judge whether the potential win is worth the risk. Don't know the exact price? Leave it blank and describe it in words instead."
@@ -677,7 +741,9 @@ export function TradeIdeaForm({
           />
         </div>
       </Field>
+      )}
 
+      {step === 6 && (
       <Field
         label="How much of your account are you risking?"
         info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss — not how much you're putting into the trade overall. Most experienced traders risk 1–2% per trade; keeping it small means no single bad trade can seriously damage your account."
@@ -701,33 +767,39 @@ export function TradeIdeaForm({
           </p>
         )}
       </Field>
-
-      <Field label="Account balance" hint="Powers the position size below.">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-zinc-400">$</span>
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={accountBalance}
-            onChange={(e) => updateAccountBalance(e.target.value)}
-            className={`${inputClass} max-w-[160px]`}
-          />
-        </div>
-      </Field>
-
-      {positionSizeOutcome ? (
-        <RiskCalcSummary
-          stats={positionSizeStats}
-          warnings={positionSizeOutcome.ok ? positionSizeOutcome.warnings : undefined}
-          errors={!positionSizeOutcome.ok ? positionSizeOutcome.errors : undefined}
-        />
-      ) : (
-        <p className="text-xs text-zinc-500">
-          Add numeric entry and stop-loss prices (and an account balance) to see position size.
-        </p>
       )}
 
+      {step === 7 && (
+        <>
+          <Field label="Account balance" hint="Powers the position size below.">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-zinc-400">$</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={accountBalance}
+                onChange={(e) => updateAccountBalance(e.target.value)}
+                className={`${inputClass} max-w-[160px]`}
+              />
+            </div>
+          </Field>
+
+          {positionSizeOutcome ? (
+            <RiskCalcSummary
+              stats={positionSizeStats}
+              warnings={positionSizeOutcome.ok ? positionSizeOutcome.warnings : undefined}
+              errors={!positionSizeOutcome.ok ? positionSizeOutcome.errors : undefined}
+            />
+          ) : (
+            <p className="text-xs text-zinc-500">
+              Add numeric entry and stop-loss prices (and an account balance) to see position size.
+            </p>
+          )}
+        </>
+      )}
+
+      {step === 8 && (
       <Field
         label="Attach a chart screenshot (optional)"
         hint="Checked against the plan above — never overrides it."
@@ -758,15 +830,27 @@ export function TradeIdeaForm({
         )}
         {chartError && <span className="text-xs text-orange-400">{chartError}</span>}
       </Field>
+      )}
 
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        data-tour="submit"
-        className="self-start rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {loading ? "Structuring plan…" : "Build trade plan"}
-      </button>
+      <div className="flex items-center gap-3">
+        {step > 0 && (
+          <button
+            type="button"
+            onClick={goBack}
+            className="rounded-full border border-zinc-700 px-5 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500"
+          >
+            Back
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={isLastStep ? !canSubmit : pairStepBlocked}
+          data-tour={isLastStep ? "submit" : undefined}
+          className="self-start rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {isLastStep ? (loading ? "Structuring plan…" : "Build trade plan") : "Next"}
+        </button>
+      </div>
     </form>
   );
 }

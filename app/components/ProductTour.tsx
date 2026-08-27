@@ -6,6 +6,13 @@ export interface TourStep {
   target: string;
   title: string;
   body: string;
+  /**
+   * The planner is now a step-by-step wizard, so a field like "pair" or
+   * "stop-loss" only exists in the DOM while the wizard is on its own step.
+   * When set, the tour jumps the wizard to this step (via a custom event)
+   * before it looks for the target element.
+   */
+  plannerStep?: number;
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -18,21 +25,25 @@ export const TOUR_STEPS: TourStep[] = [
     target: '[data-tour="templates"]',
     title: "Not sure where to start?",
     body: "Pick an example here, then edit it to match what you're actually seeing.",
+    plannerStep: 0,
   },
   {
     target: '[data-tour="pair"]',
     title: "Pick what you're trading",
     body: "Choose a common pair, or type your own.",
+    plannerStep: 1,
   },
   {
     target: '[data-tour="stop-loss"]',
     title: "The most important field",
     body: "Your stop loss caps how much you can lose. Always fill this in — even just the reason, if you don't know the exact price.",
+    plannerStep: 4,
   },
   {
     target: '[data-tour="submit"]',
     title: "Build your plan",
-    body: "We'll check it for common mistakes and flag anything risky before you trade.",
+    body: "We'll check it for common mistakes and flag anything risky before you trade. The planner walks you through it step by step — this button appears on the last step.",
+    plannerStep: 8,
   },
   {
     target: '[data-tour="nav-risk-calculator"]',
@@ -80,33 +91,50 @@ export function ProductTour({ steps }: { steps: TourStep[] }) {
   useEffect(() => {
     if (stepIndex === null) return;
     const step = steps[stepIndex];
-    const el = document.querySelector<HTMLElement>(step.target);
 
-    if (!el) {
-      // Target not on screen right now (e.g. hidden by responsive layout) —
-      // don't get stuck, just move on.
-      const timeout = setTimeout(() => {
-        setStepIndex((i) => (i !== null && i < steps.length - 1 ? i + 1 : null));
-      }, 0);
-      return () => clearTimeout(timeout);
+    if (step.plannerStep !== undefined) {
+      window.dispatchEvent(new CustomEvent("fxinsites:set-planner-step", { detail: step.plannerStep }));
     }
 
-    el.scrollIntoView({ behavior: "auto", block: "center" });
-    el.classList.add("tour-highlight");
+    let cleanup: (() => void) | undefined;
 
-    function updateRect() {
-      setRect(el!.getBoundingClientRect());
-    }
-    updateRect();
-    const raf = requestAnimationFrame(updateRect);
-    window.addEventListener("resize", updateRect);
-    window.addEventListener("scroll", updateRect, true);
+    // When we just told the wizard to jump to a step, give it a render cycle
+    // before looking for the target — it won't be in the DOM yet otherwise.
+    const lookupTimeout = setTimeout(
+      () => {
+        const el = document.querySelector<HTMLElement>(step.target);
+
+        if (!el) {
+          // Target not on screen right now (e.g. hidden by responsive layout) —
+          // don't get stuck, just move on.
+          setStepIndex((i) => (i !== null && i < steps.length - 1 ? i + 1 : null));
+          return;
+        }
+
+        el.scrollIntoView({ behavior: "auto", block: "center" });
+        el.classList.add("tour-highlight");
+
+        function updateRect() {
+          setRect(el!.getBoundingClientRect());
+        }
+        updateRect();
+        const raf = requestAnimationFrame(updateRect);
+        window.addEventListener("resize", updateRect);
+        window.addEventListener("scroll", updateRect, true);
+
+        cleanup = () => {
+          el.classList.remove("tour-highlight");
+          cancelAnimationFrame(raf);
+          window.removeEventListener("resize", updateRect);
+          window.removeEventListener("scroll", updateRect, true);
+        };
+      },
+      step.plannerStep !== undefined ? 50 : 0
+    );
 
     return () => {
-      el.classList.remove("tour-highlight");
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", updateRect);
-      window.removeEventListener("scroll", updateRect, true);
+      clearTimeout(lookupTimeout);
+      cleanup?.();
     };
   }, [stepIndex, steps]);
 
