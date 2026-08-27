@@ -291,8 +291,14 @@ function BacktestMock() {
 }
 
 export default async function LandingPage() {
-  const session = await getSession();
-  const isLoggedIn = session !== null;
+  // A DB hiccup here must not take down the entire marketing page for every
+  // visitor — fall back to the logged-out view rather than erroring.
+  let isLoggedIn = false;
+  try {
+    isLoggedIn = (await getSession()) !== null;
+  } catch (error) {
+    console.error("Landing page session check failed", error);
+  }
 
   return (
     <div className="min-h-screen bg-black text-zinc-50 [font-family:'Helvetica_Neue',Helvetica,Arial,sans-serif]">
