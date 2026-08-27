@@ -77,40 +77,73 @@ const STEPS = [
   {
     n: "01",
     title: "Describe your trade idea",
-    body: "Tell us what you're thinking — what to trade, which way you think it'll move, and where you'd get out if you're wrong. Just answer simple questions in plain English. No experience needed.",
+    body: "What to trade, which way, where you'd get out. Plain English, no jargon.",
   },
   {
     n: "02",
     title: "We check it for you",
-    body: "We look at your plan and flag anything risky — betting too much, having no exit plan, or ignoring what the price has actually been doing lately. You'll see exactly why, in plain English.",
+    body: "We flag anything risky — no exit plan, betting too much, ignoring the trend — and say why.",
   },
   {
     n: "03",
     title: "See how it actually went",
-    body: "Once you've made the trade, log the result. We compare it against real price history to keep things honest, so your track record shows what actually happened — not just what you remember.",
+    body: "Log the result. We check it against real price history, so your record stays honest.",
+  },
+];
+
+const GRID_FEATURES = [
+  {
+    eyebrow: "Trade journal",
+    title: "Your history, kept honest",
+    body: "Every plan saves automatically and gets checked against real price history — not just what you remember.",
+    stats: [
+      ["Win rate", "58%"],
+      ["Avg R", "0.8R"],
+      ["Trades", "34"],
+    ] as [string, string][],
+  },
+  {
+    eyebrow: "Backtest engine",
+    title: "Test it before you risk it",
+    body: "Pick a template or describe your own strategy — run it against real historical prices, costs included.",
+    stats: [
+      ["Trades", "24"],
+      ["Win rate", "46%"],
+      ["Profit factor", "1.31"],
+    ] as [string, string][],
+  },
+  {
+    eyebrow: "Risk calculator",
+    title: "Know your exact risk",
+    body: "Position size, margin, and correlated exposure — worked out automatically from your account and risk %.",
+    stats: [
+      ["Risk", "$100"],
+      ["Size", "0.20 lots"],
+      ["R:R", "1:2.0"],
+    ] as [string, string][],
   },
 ];
 
 const FAQS = [
   {
     q: "Do all plans include all four tools?",
-    a: "Yes. The trade planner, risk calculator, journal, and backtest engine are available on every tier. Tiers differ only in monthly usage limits, not in feature access.",
+    a: "Yes. Tiers differ only in monthly usage limits, not in feature access.",
   },
   {
     q: "Is this suitable if I have no trading experience?",
-    a: "Yes. Every input field includes a plain-language explanation of the underlying concept: what a stop-loss does, why position size matters, what long and short mean. No prior terminology is assumed.",
+    a: "Yes. Every field explains itself in plain language — no prior terminology assumed.",
   },
   {
     q: "Can I import my existing MT4 or TradingView history?",
-    a: "Yes. Export a CSV from MT4 (Account History → Save as Report) or from TradingView's trade history, and the import will parse symbol, direction, entry/exit price, and P/L into the journal automatically.",
+    a: "Yes. Export a CSV from either one and we'll parse it straight into your journal.",
   },
   {
     q: "Does the system generate trade signals?",
-    a: "No. It does not predict price direction or issue buy/sell signals. It takes a trade idea you supply and evaluates its risk structure: whether the stop is defined, whether sizing is appropriate, whether the reasoning shows signs of impulsive decision-making.",
+    a: "No. It checks the risk structure of an idea you supply — it doesn't predict direction.",
   },
   {
     q: "How are backtest results kept realistic?",
-    a: "Backtests run against real historical daily price data with a configurable spread/slippage cost deducted from every simulated trade, win or lose, rather than an idealized zero-cost simulation.",
+    a: "We run against real historical prices with spread/slippage costs deducted, not an idealized zero-cost simulation.",
   },
 ];
 
@@ -124,6 +157,34 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
       <span className="h-1 w-1 rounded-full bg-emerald-400" />
       {children}
     </p>
+  );
+}
+
+function FeatureCard({
+  eyebrow,
+  title,
+  body,
+  stats,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  stats: [string, string][];
+}) {
+  return (
+    <div className="flex h-full flex-col border border-zinc-800 bg-zinc-950 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
+      <Eyebrow>{eyebrow}</Eyebrow>
+      <h3 className="mt-2 text-lg font-medium tracking-tight text-zinc-50">{title}</h3>
+      <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">{body}</p>
+      <div className="mt-5 grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800 font-mono text-[13px]">
+        {stats.map(([label, value]) => (
+          <div key={label} className="bg-zinc-950 p-2.5">
+            <p className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
+            <p className="mt-0.5 text-zinc-100">{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -165,126 +226,6 @@ function PlannerMock() {
       <div className="mt-3 border border-zinc-800 px-3 py-2 text-[11px] text-zinc-400">
         FLAG: entry proposed at market, immediately following a large directional move, with no
         stated confirmation condition.
-      </div>
-    </div>
-  );
-}
-
-function JournalMock() {
-  return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
-      <div className="grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800">
-        {[
-          ["Win rate", "58%"],
-          ["Avg R", "0.8R"],
-          ["Trades", "34"],
-        ].map(([label, value]) => (
-          <div key={label} className="bg-zinc-950 p-2.5">
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
-            <p className="mt-0.5 text-zinc-100">{value}</p>
-          </div>
-        ))}
-      </div>
-      <svg viewBox="0 0 300 70" className="mt-3 h-16 w-full">
-        <line x1="8" y1="52" x2="292" y2="52" className="stroke-zinc-800" strokeDasharray="3 3" />
-        <polyline
-          points="8,50 45,42 82,46 120,35 158,38 195,26 232,29 270,14 292,10"
-          fill="none"
-          strokeWidth="1.5"
-          className="chart-line stroke-emerald-400"
-        />
-      </svg>
-      <div className="mt-2 space-y-1.5 text-[12px]">
-        <div className="flex items-center justify-between border border-zinc-800 px-3 py-2">
-          <span className="text-zinc-300">
-            EUR/USD · <span className="text-emerald-400">Long</span>
-          </span>
-          <span className="text-emerald-400">WIN · 1.8R</span>
-        </div>
-        <div className="flex items-center justify-between border border-zinc-800 px-3 py-2">
-          <span className="text-zinc-300">
-            GBP/USD · <span className="text-red-400">Short</span> · imported
-          </span>
-          <span className="text-red-400">LOSS · -1.0R</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RiskCalculatorMock() {
-  return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
-      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Risk calculator</p>
-          <p className="mt-0.5 text-base text-zinc-100">EUR/USD · 50 pip stop</p>
-        </div>
-        <span className="border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-300">1% RISK</span>
-      </div>
-      <div className="grid grid-cols-3 gap-3 py-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Risk</p>
-          <p className="text-zinc-200">$100</p>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Size</p>
-          <p className="text-zinc-200">0.20 lots</p>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">R:R</p>
-          <p className="text-zinc-200">1 : 2.0</p>
-        </div>
-      </div>
-      <div className="space-y-1.5 border-t border-zinc-800 pt-3 text-[12px]">
-        <p className="flex gap-2 text-zinc-400">
-          <span className="text-emerald-400">[✓]</span> Margin level: 340% — well clear of a call
-        </p>
-        <p className="flex gap-2 text-zinc-400">
-          <span className="text-orange-400">[!]</span> EUR/USD + GBP/USD both net short USD — correlated exposure
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function BacktestMock() {
-  return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
-      <p className="border border-zinc-800 px-3 py-2 text-[11px] text-zinc-400">
-        &quot;10/30-day moving average crossover, risk 2%, target 6%&quot;
-      </p>
-      <div className="mt-3 grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800">
-        {[
-          ["Trades", "24"],
-          ["Win rate", "46%"],
-          ["Profit factor", "1.31"],
-        ].map(([label, value]) => (
-          <div key={label} className="bg-zinc-950 p-2.5">
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
-            <p className="mt-0.5 text-zinc-100">{value}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 border border-zinc-800 text-[11px]">
-        <div className="grid grid-cols-4 gap-2 border-b border-zinc-800 px-3 py-1.5 text-zinc-500">
-          <span>Entry</span>
-          <span>Dir</span>
-          <span>Exit</span>
-          <span className="text-right">R</span>
-        </div>
-        {[
-          ["Mar 04", "Long", "stop", "-1.03R", false],
-          ["Apr 18", "Long", "target", "+2.95R", true],
-          ["Jun 02", "Short", "target", "+2.95R", true],
-        ].map(([entry, dir, exit, r, won]) => (
-          <div key={entry as string} className="grid grid-cols-4 gap-2 border-b border-zinc-900 px-3 py-1.5 last:border-0">
-            <span className="text-zinc-300">{entry}</span>
-            <span className={dir === "Long" ? "text-emerald-400" : "text-red-400"}>{dir}</span>
-            <span className="text-zinc-500">{exit}</span>
-            <span className={`text-right ${won ? "text-emerald-400" : "text-red-400"}`}>{r}</span>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -346,11 +287,9 @@ export default async function LandingPage() {
             </h1>
           </Reveal>
           <Reveal delay={100}>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-zinc-400">
-              Describe your trade idea in plain English and we&apos;ll turn it into a clear plan,
-              checked for the mistakes beginners make most. Test any idea against years of real
-              price history before risking a cent. And every trade gets saved automatically, so
-              you always know how you&apos;re really doing.
+            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-zinc-400">
+              Describe your trade in plain English. We&apos;ll structure it, check it for
+              mistakes, and track how it actually plays out.
             </p>
           </Reveal>
           <Reveal delay={200}>
@@ -405,8 +344,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Feature deep dives */}
-      <section id="features" className="mx-auto w-full max-w-6xl space-y-20 border-t border-zinc-900 px-6 py-24">
+      {/* Feature spotlight + grid */}
+      <section id="features" className="mx-auto w-full max-w-6xl border-t border-zinc-900 px-6 py-24">
         <Reveal className="grid items-start gap-10 lg:grid-cols-2">
           <div>
             <Eyebrow>Trade planner</Eyebrow>
@@ -414,85 +353,25 @@ export default async function LandingPage() {
               Your idea, turned into a safe plan
             </h3>
             <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-              Describe your trade in plain English — what you&apos;re trading, which way you
-              expect it to move, and where you&apos;d get out. We turn that into a clear plan and
-              check it for the most common mistakes: no exit plan, betting too much, or a target
-              that isn&apos;t worth the risk.
+              Describe your trade in plain English. We turn it into a clear plan and check it for
+              the mistakes beginners make most.
             </p>
             <ul className="mt-6 space-y-2 text-sm text-zinc-400">
-              <li className="flex gap-2"><Dot />Warns you if your plan looks like a bad habit — chasing price, revenge trading, betting too big</li>
-              <li className="flex gap-2"><Dot />Compares your plan to the real, current price — not guesswork</li>
-              <li className="flex gap-2"><Dot />Every question explains itself, so nothing feels like jargon</li>
+              <li className="flex gap-2"><Dot />Flags bad habits — chasing price, revenge trading, oversized bets</li>
+              <li className="flex gap-2"><Dot />Checked against the real, current price — not guesswork</li>
+              <li className="flex gap-2"><Dot />Every question explains itself — no jargon</li>
             </ul>
           </div>
           <PlannerMock />
         </Reveal>
 
-        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
-          <div className="order-last lg:order-first">
-            <JournalMock />
-          </div>
-          <div>
-            <Eyebrow>Trade journal</Eyebrow>
-            <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
-              Your trading history, kept honest
-            </h3>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-              Every plan you make gets saved automatically. Mark trades as open or closed, note
-              how they went, and we&apos;ll quietly keep score for you — your win rate, your
-              average result, and whether you&apos;re actually sticking to your own plans over
-              time.
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-zinc-400">
-              <li className="flex gap-2"><Dot />Already trading elsewhere? Import your history from MT4 or TradingView in one click</li>
-              <li className="flex gap-2"><Dot />We double-check your reported results against real price history</li>
-              <li className="flex gap-2"><Dot />See not just whether you won, but whether you followed your own plan</li>
-            </ul>
-          </div>
-        </Reveal>
-
-        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
-          <div>
-            <Eyebrow>Backtest engine</Eyebrow>
-            <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
-              Try it before you risk real money
-            </h3>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-              Pick a simple strategy template, or just describe your idea in plain English — we&apos;ll
-              match it to the closest template and show you exactly how. Then we run it against
-              real historical prices to show how it would have actually performed.
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-zinc-400">
-              <li className="flex gap-2"><Dot />Realistic results — trading costs are included, not ignored</li>
-              <li className="flex gap-2"><Dot />See your win rate, your biggest loss, and every trade it would have made</li>
-              <li className="flex gap-2"><Dot />Or bring your own price data if you want to test something specific</li>
-            </ul>
-          </div>
-          <BacktestMock />
-        </Reveal>
-
-        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
-          <div className="order-last lg:order-first">
-            <RiskCalculatorMock />
-          </div>
-          <div>
-            <Eyebrow>Risk calculator</Eyebrow>
-            <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
-              Know exactly how much to risk
-            </h3>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-              Tell it your account balance and how much you&apos;re comfortable risking, and it
-              works out the rest — how big a trade to place, what it&apos;ll cost you, and whether
-              two trades are secretly the same bet in disguise. Change one number and everything
-              updates together.
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-zinc-400">
-              <li className="flex gap-2"><Dot />Works out the right trade size automatically, in any currency</li>
-              <li className="flex gap-2"><Dot />Warns you when two trades are riskier together than they look apart</li>
-              <li className="flex gap-2"><Dot />Every calculation is tested against worked examples, not just guessed at</li>
-            </ul>
-          </div>
-        </Reveal>
+        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {GRID_FEATURES.map((feature, i) => (
+            <Reveal key={feature.eyebrow} delay={i * 100}>
+              <FeatureCard {...feature} />
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* Pricing */}
@@ -504,9 +383,8 @@ export default async function LandingPage() {
               All four tools on every tier
             </h2>
             <p className="mt-2 max-w-lg text-sm text-zinc-500">
-              The planner, risk calculator, journal, and backtest engine are included at every
-              level. Tiers differ only in monthly usage limits. Every plan starts with a 7-day
-              free trial.
+              All four tools, every tier. Limits differ, features don&apos;t. 7-day free trial
+              included.
             </p>
           </Reveal>
 
