@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { TradeCard } from "@/app/components/TradeCard";
-import { TradeIdeaForm, type ChartImage } from "@/app/components/TradeIdeaForm";
+import { TradeIdeaForm, emptyFields, type ChartImage, type TradeIdeaFields } from "@/app/components/TradeIdeaForm";
 import type { TradePlan } from "@/app/api/plan/route";
-import { addPlanToJournal, loadJournal, type JournalEntry } from "@/app/lib/journal";
+import { addPlanToJournal, loadJournal, reconstructFieldsFromEntry, type JournalEntry } from "@/app/lib/journal";
 
 function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString(undefined, {
@@ -29,7 +29,7 @@ export default function Home() {
     return () => clearTimeout(timeout);
   }, []);
 
-  async function handleSubmit(ideaText: string, chartImage?: ChartImage) {
+  async function handleSubmit(ideaText: string, fields: TradeIdeaFields, chartImage?: ChartImage) {
     if (loading) return;
 
     setLoading(true);
@@ -51,7 +51,7 @@ export default function Home() {
 
       setPlan(data.plan);
       setRecent(
-        addPlanToJournal(ideaText, data.plan)
+        addPlanToJournal(ideaText, data.plan, fields)
           .filter((e) => e.source === "planner")
           .slice(0, 5)
       );
@@ -60,6 +60,13 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function loadEntryIntoPlanner(entry: JournalEntry) {
+    const fields = reconstructFieldsFromEntry(entry, emptyFields);
+    if (!fields) return;
+    window.dispatchEvent(new CustomEvent("fxinsites:load-planner-fields", { detail: fields }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (
@@ -91,11 +98,14 @@ export default function Home() {
           <p className="text-xs uppercase tracking-wide text-zinc-500">Recently saved</p>
           <ul className="mt-2 space-y-2">
             {recent.map((entry) => (
-              <li key={entry.id}>
+              <li
+                key={entry.id}
+                className="rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition-colors hover:border-zinc-600"
+              >
                 <button
                   type="button"
                   onClick={() => entry.plan && setPlan(entry.plan)}
-                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 text-left transition-colors hover:border-zinc-600"
+                  className="w-full text-left"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-zinc-100">
@@ -108,6 +118,15 @@ export default function Home() {
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs text-zinc-500">{entry.plan?.summary}</p>
                 </button>
+                {reconstructFieldsFromEntry(entry, emptyFields) && (
+                  <button
+                    type="button"
+                    onClick={() => loadEntryIntoPlanner(entry)}
+                    className="mt-2 text-xs font-medium text-sky-400 hover:text-sky-300"
+                  >
+                    Use as a starting point →
+                  </button>
+                )}
               </li>
             ))}
           </ul>

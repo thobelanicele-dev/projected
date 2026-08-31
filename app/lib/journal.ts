@@ -1,4 +1,5 @@
 import type { TradePlan } from "@/app/api/plan/route";
+import type { TradeIdeaFields } from "@/app/components/TradeIdeaForm";
 
 export type TradeStatus = "planned" | "open" | "closed";
 export type TradeOutcome = "win" | "loss" | "breakeven";
@@ -12,6 +13,10 @@ export interface JournalEntry {
   direction: "long" | "short";
   ideaText?: string;
   plan?: TradePlan;
+  // The exact wizard fields the user entered when this plan was built — lets
+  // "Use as a starting point" restore the original wording, not just the
+  // numbers. Absent on entries saved before this field existed.
+  fields?: TradeIdeaFields;
   stopLossPrice?: number;
   status: TradeStatus;
   outcome?: TradeOutcome;
@@ -68,7 +73,7 @@ function persist(entries: JournalEntry[]): JournalEntry[] {
   return entries;
 }
 
-export function addPlanToJournal(ideaText: string, plan: TradePlan): JournalEntry[] {
+export function addPlanToJournal(ideaText: string, plan: TradePlan, fields: TradeIdeaFields): JournalEntry[] {
   const entry: JournalEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: Date.now(),
@@ -77,9 +82,39 @@ export function addPlanToJournal(ideaText: string, plan: TradePlan): JournalEntr
     direction: plan.direction,
     ideaText,
     plan,
+    fields,
     status: "planned",
   };
   return persist([entry, ...loadJournal()].slice(0, MAX_ENTRIES));
+}
+
+// Reconstructs the wizard fields for "Use as a starting point": the exact
+// originally-typed fields if they were saved, otherwise a best-effort
+// approximation built from the AI-generated plan (numeric levels only —
+// the original wording isn't recoverable). Returns null if there's nothing
+// to build from at all.
+export function reconstructFieldsFromEntry(
+  entry: JournalEntry,
+  emptyFields: TradeIdeaFields
+): TradeIdeaFields | null {
+  if (entry.fields) return entry.fields;
+  if (!entry.plan) return null;
+
+  const p = entry.plan;
+  const takeProfit = p.takeProfits[0];
+
+  return {
+    ...emptyFields,
+    pair: entry.instrument,
+    direction: entry.direction,
+    entryMode: p.entry.price != null ? "condition" : "now",
+    entryPrice: p.entry.price != null ? String(p.entry.price) : "",
+    entryCondition: p.entry.condition ?? "",
+    stopLossPrice: p.stopLoss.price != null ? String(p.stopLoss.price) : "",
+    stopLossCondition: p.stopLoss.invalidation || p.stopLoss.reasoning || "",
+    takeProfitPrice: takeProfit?.price != null ? String(takeProfit.price) : "",
+    takeProfitCondition: takeProfit?.reasoning ?? "",
+  };
 }
 
 export function addImportedEntries(newEntries: JournalEntry[]): JournalEntry[] {

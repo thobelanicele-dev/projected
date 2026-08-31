@@ -12,6 +12,7 @@ import {
   parsePair,
   DEFAULT_SHARED_INPUTS,
 } from "@/app/lib/riskCalculator";
+import { loadPlannerDraft, savePlannerDraft, clearPlannerDraft } from "@/app/lib/plannerDraft";
 
 export const POPULAR_PAIRS = [
   { value: "EUR/USD", label: "EUR/USD" },
@@ -40,7 +41,7 @@ export interface TradeIdeaFields {
   riskPercent: string;
 }
 
-const emptyFields: TradeIdeaFields = {
+export const emptyFields: TradeIdeaFields = {
   pair: "",
   direction: "long",
   entryMode: "now",
@@ -206,6 +207,34 @@ export function Field({
   );
 }
 
+function ReviewRow({
+  label,
+  onEdit,
+  warning,
+  children,
+}: {
+  label: string;
+  onEdit: () => void;
+  warning?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5">
+      <div>
+        <p className="text-xs font-medium text-zinc-500">{label}</p>
+        <p className={`mt-0.5 text-sm ${warning ? "text-orange-400" : "text-zinc-200"}`}>{children}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onEdit}
+        className="shrink-0 text-xs font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
+      >
+        Edit
+      </button>
+    </div>
+  );
+}
+
 export const inputClass =
   "w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none";
 
@@ -219,8 +248,18 @@ const STEP_LABELS = [
   "Risk",
   "Account balance",
   "Chart (optional)",
+  "Review",
 ];
 const STEP_COUNT = STEP_LABELS.length;
+
+const LOADING_MESSAGES = [
+  "Reading your plan…",
+  "Checking your risk setup…",
+  "Comparing against market data…",
+  "Looking for red flags…",
+  "Double-checking your stop loss…",
+  "Almost done…",
+];
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -234,10 +273,11 @@ export function TradeIdeaForm({
   onSubmit,
   loading,
 }: {
-  onSubmit: (ideaText: string, chartImage?: ChartImage) => void;
+  onSubmit: (ideaText: string, fields: TradeIdeaFields, chartImage?: ChartImage) => void;
   loading: boolean;
 }) {
   const [step, setStep] = useState(0);
+  const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [fields, setFields] = useState<TradeIdeaFields>(emptyFields);
   const [chartImage, setChartImage] = useState<ChartImage | null>(null);
   const [chartPreviewUrl, setChartPreviewUrl] = useState<string | null>(null);
@@ -252,6 +292,27 @@ export function TradeIdeaForm({
   const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
   const [rangeStatus, setRangeStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [accountBalance, setAccountBalance] = useState("10000");
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [restoredDraft, setRestoredDraft] = useState(false);
+
+  function goToStep(n: number) {
+    const clamped = Math.min(Math.max(n, 0), STEP_COUNT - 1);
+    setStep(clamped);
+    setMaxStepVisited((m) => Math.max(m, clamped));
+  }
+
+  // Loads a full set of fields (from a template or a past saved plan) and
+  // unlocks the whole wizard, since everything is already filled in — no
+  // reason to make the user re-walk steps they don't need to touch.
+  function loadFieldsAndUnlock(newFields: TradeIdeaFields, landingStep = 1) {
+    setFields(newFields);
+    setCustomPair(!POPULAR_PAIRS.some((p) => p.value === newFields.pair));
+    setChartImage(null);
+    setChartPreviewUrl(null);
+    setChartError(null);
+    setStep(landingStep);
+    setMaxStepVisited(STEP_COUNT - 1);
+  }
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -261,17 +322,67 @@ export function TradeIdeaForm({
     return () => clearTimeout(timeout);
   }, []);
 
+  // Restore an in-progress plan if the user refreshed or came back later.
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const draft = loadPlannerDraft();
+      if (!draft) return;
+      const isMeaningful = draft.step > 0 || JSON.stringify(draft.fields) !== JSON.stringify(emptyFields);
+      if (!isMeaningful) return;
+      setFields(draft.fields);
+      setStep(draft.step);
+      setMaxStepVisited(draft.maxStepVisited);
+      setCustomPair(!POPULAR_PAIRS.some((p) => p.value === draft.fields.pair));
+      setRestoredDraft(true);
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Save the in-progress plan as the user goes, so a refresh doesn't lose it.
+  // (The chart image itself isn't persisted — only whether one was attached —
+  // to avoid risking the whole app's localStorage quota on a multi-MB image.)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      savePlannerDraft({ fields, step, maxStepVisited, hadChartImage: chartImage !== null });
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [fields, step, maxStepVisited, chartImage]);
+
   // The product tour highlights fields that now only exist on their own wizard
   // step — it dispatches this event to jump the wizard there before it looks
   // for the element to highlight.
   useEffect(() => {
     function handleSetStep(e: Event) {
       const detail = (e as CustomEvent<number>).detail;
-      if (typeof detail === "number") setStep(detail);
+      if (typeof detail === "number") goToStep(detail);
     }
     window.addEventListener("fxinsites:set-planner-step", handleSetStep);
     return () => window.removeEventListener("fxinsites:set-planner-step", handleSetStep);
   }, []);
+
+  // The planner page dispatches this when the user picks a past plan from
+  // "Recently saved" to use as a starting point — same idea as a template,
+  // just sourced from the user's own history instead of a hardcoded example.
+  useEffect(() => {
+    function handleLoadFields(e: Event) {
+      const detail = (e as CustomEvent<TradeIdeaFields>).detail;
+      if (detail) loadFieldsAndUnlock(detail);
+    }
+    window.addEventListener("fxinsites:load-planner-fields", handleLoadFields);
+    return () => window.removeEventListener("fxinsites:load-planner-fields", handleLoadFields);
+  }, []);
+
+  // While the AI works, cycle through a few messages instead of one static label.
+  useEffect(() => {
+    if (!loading) {
+      const timeout = setTimeout(() => setLoadingMessageIndex(0), 0);
+      return () => clearTimeout(timeout);
+    }
+    const interval = setInterval(() => {
+      setLoadingMessageIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   function updateAccountBalance(value: string) {
     setAccountBalance(value);
@@ -286,9 +397,19 @@ export function TradeIdeaForm({
   }
 
   function applyTemplate(template: Template) {
-    setFields({ ...emptyFields, ...template.fields });
+    loadFieldsAndUnlock({ ...emptyFields, ...template.fields });
+  }
+
+  function startOver() {
+    setFields(emptyFields);
     setCustomPair(false);
-    setStep(1);
+    setChartImage(null);
+    setChartPreviewUrl(null);
+    setChartError(null);
+    setStep(0);
+    setMaxStepVisited(0);
+    setRestoredDraft(false);
+    clearPlannerDraft();
   }
 
   useEffect(() => {
@@ -437,8 +558,50 @@ export function TradeIdeaForm({
   const isLastStep = step === STEP_COUNT - 1;
   const pairStepBlocked = step === 1 && !fields.pair.trim();
 
+  // What's blocking a position-size calculation, in priority order, so the
+  // hint on the account-balance step (and the review step) can point at the
+  // one specific thing to fix instead of listing every possibility at once.
+  function findMissingForPositionSize(): "pair" | "entry" | "stopLoss" | "balance" | "other" | null {
+    if (positionSizeOutcome) return null;
+    if (!fields.pair.trim()) return "pair";
+    const entry = fields.entryPrice.trim() ? parseFloat(fields.entryPrice) : livePrice;
+    if (entry === null || entry === undefined || isNaN(entry)) return "entry";
+    if (!fields.stopLossPrice.trim()) return "stopLoss";
+    if (isNaN(parseFloat(accountBalance))) return "balance";
+    return "other";
+  }
+  const missingForPositionSize = findMissingForPositionSize();
+
+  function renderMissingPositionSizeHint() {
+    if (missingForPositionSize === "stopLoss") {
+      return (
+        <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-3">
+          <p className="text-xs text-orange-300">Add a stop-loss price to see your position size.</p>
+          <button
+            type="button"
+            onClick={() => goToStep(4)}
+            className="mt-1.5 text-xs font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
+          >
+            Go to stop loss
+          </button>
+        </div>
+      );
+    }
+    if (missingForPositionSize === "entry") {
+      return (
+        <p className="text-xs text-zinc-500">
+          Add an entry price (or wait for the live price) to see position size.
+        </p>
+      );
+    }
+    if (missingForPositionSize === "pair") {
+      return <p className="text-xs text-zinc-500">Pick an instrument to see position size.</p>;
+    }
+    return <p className="text-xs text-zinc-500">Add an account balance to see position size.</p>;
+  }
+
   function goBack() {
-    setStep((s) => Math.max(s - 1, 0));
+    goToStep(step - 1);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -446,17 +609,19 @@ export function TradeIdeaForm({
     if (pairStepBlocked) return;
 
     if (!isLastStep) {
-      setStep((s) => Math.min(s + 1, STEP_COUNT - 1));
+      goToStep(step + 1);
       return;
     }
 
     if (!canSubmit) return;
+    clearPlannerDraft();
     onSubmit(
       buildIdeaText(fields, {
         livePrice: priceStatus === "ready" ? livePrice : null,
         priceRange: rangeStatus === "ready" ? priceRange : null,
         events: calendarStatus === "ready" ? calendarEvents : undefined,
       }),
+      fields,
       chartImage ?? undefined
     );
   }
@@ -496,6 +661,19 @@ export function TradeIdeaForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+      {restoredDraft && (
+        <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2">
+          <span className="text-xs text-zinc-400">We saved where you left off.</span>
+          <button
+            type="button"
+            onClick={startOver}
+            className="text-xs font-medium text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+          >
+            Start over
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         <div className="h-1 flex-1 overflow-hidden rounded-full bg-zinc-800">
           <div
@@ -506,6 +684,28 @@ export function TradeIdeaForm({
         <span className="shrink-0 text-xs text-zinc-500">
           Step {step + 1} of {STEP_COUNT} — {STEP_LABELS[step]}
         </span>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {STEP_LABELS.map((label, i) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => goToStep(i)}
+            disabled={i > maxStepVisited}
+            aria-label={`Step ${i + 1}: ${label}`}
+            title={label}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-medium transition-colors ${
+              i === step
+                ? "bg-emerald-400 text-black"
+                : i <= maxStepVisited
+                  ? "border border-zinc-600 text-zinc-300 hover:border-zinc-400"
+                  : "cursor-not-allowed border border-zinc-800 text-zinc-700 opacity-40"
+            }`}
+          >
+            {i + 1}
+          </button>
+        ))}
       </div>
 
       {step === 0 && (
@@ -792,9 +992,7 @@ export function TradeIdeaForm({
               errors={!positionSizeOutcome.ok ? positionSizeOutcome.errors : undefined}
             />
           ) : (
-            <p className="text-xs text-zinc-500">
-              Add numeric entry and stop-loss prices (and an account balance) to see position size.
-            </p>
+            renderMissingPositionSizeHint()
           )}
         </>
       )}
@@ -832,6 +1030,80 @@ export function TradeIdeaForm({
       </Field>
       )}
 
+      {step === 9 && (
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="text-sm font-medium text-zinc-200">Review your plan</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Here&apos;s everything you&apos;ve entered. Check it over, then build your plan.
+            </p>
+          </div>
+
+          <ReviewRow label="Instrument" onEdit={() => goToStep(1)}>
+            {fields.pair || "Not set"}
+          </ReviewRow>
+
+          <ReviewRow label="Direction" onEdit={() => goToStep(2)}>
+            {fields.direction === "long"
+              ? "Long — you expect the price to go up"
+              : "Short — you expect the price to go down"}
+          </ReviewRow>
+
+          <ReviewRow label="Entry" onEdit={() => goToStep(3)}>
+            {fields.entryMode === "now"
+              ? "Entering right now, at market price"
+              : [
+                  fields.entryPrice && `Around ${fields.entryPrice}`,
+                  fields.entryCondition && `When ${fields.entryCondition}`,
+                ]
+                  .filter(Boolean)
+                  .join(" — ") || "Waiting for a condition (not described yet)"}
+          </ReviewRow>
+
+          <ReviewRow label="Stop loss" onEdit={() => goToStep(4)} warning={noStopLossDefined}>
+            {noStopLossDefined
+              ? "No stop loss set yet — go back and add one."
+              : [
+                  fields.stopLossPrice && `At ${fields.stopLossPrice}`,
+                  fields.stopLossCondition && fields.stopLossCondition,
+                ]
+                  .filter(Boolean)
+                  .join(" — ")}
+          </ReviewRow>
+
+          <ReviewRow label="Take profit" onEdit={() => goToStep(5)}>
+            {[
+              fields.takeProfitPrice && `At ${fields.takeProfitPrice}`,
+              fields.takeProfitCondition && fields.takeProfitCondition,
+            ]
+              .filter(Boolean)
+              .join(" — ") || "Not set (optional)"}
+          </ReviewRow>
+
+          <ReviewRow label="Risk per trade" onEdit={() => goToStep(6)} warning={riskTooHigh}>
+            {fields.riskPercent}% of your account
+            {riskTooHigh ? " — higher than most experienced traders risk on one trade" : ""}
+          </ReviewRow>
+
+          <ReviewRow label="Account & position size" onEdit={() => goToStep(7)}>
+            <div className="flex flex-col gap-2">
+              <span>${accountBalance} account balance</span>
+              {positionSizeOutcome && positionSizeStats ? (
+                <span className="text-zinc-300">
+                  {positionSizeStats.map((s) => `${s.label}: ${s.value}`).join(" · ")}
+                </span>
+              ) : (
+                renderMissingPositionSizeHint()
+              )}
+            </div>
+          </ReviewRow>
+
+          <ReviewRow label="Chart" onEdit={() => goToStep(8)}>
+            {chartPreviewUrl ? "Screenshot attached" : "No chart attached"}
+          </ReviewRow>
+        </div>
+      )}
+
       <div className="flex items-center gap-3">
         {step > 0 && (
           <button
@@ -848,8 +1120,13 @@ export function TradeIdeaForm({
           data-tour={isLastStep ? "submit" : undefined}
           className="self-start rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {isLastStep ? (loading ? "Structuring plan…" : "Build trade plan") : "Next"}
+          {isLastStep ? (loading ? "Building your plan…" : "Build trade plan") : "Next"}
         </button>
+        {isLastStep && loading && (
+          <p className="text-xs text-zinc-500" aria-live="polite">
+            {LOADING_MESSAGES[loadingMessageIndex]}
+          </p>
+        )}
       </div>
     </form>
   );

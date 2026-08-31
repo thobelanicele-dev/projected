@@ -42,8 +42,8 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="submit"]',
     title: "Build your plan",
-    body: "We'll check it for common mistakes and flag anything risky before you trade. The planner walks you through it step by step — this button appears on the last step.",
-    plannerStep: 8,
+    body: "We'll check it for common mistakes and flag anything risky before you trade. The planner walks you through it step by step, ending with a review — this button appears on the last step.",
+    plannerStep: 9,
   },
   {
     target: '[data-tour="nav-risk-calculator"]',
