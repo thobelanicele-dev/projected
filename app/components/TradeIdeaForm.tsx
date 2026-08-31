@@ -273,7 +273,12 @@ export function TradeIdeaForm({
   onSubmit,
   loading,
 }: {
-  onSubmit: (ideaText: string, fields: TradeIdeaFields, chartImage?: ChartImage) => void;
+  onSubmit: (
+    ideaText: string,
+    fields: TradeIdeaFields,
+    chartImage?: ChartImage,
+    positionSize?: ResultStat[]
+  ) => void;
   loading: boolean;
 }) {
   const [step, setStep] = useState(0);
@@ -312,6 +317,18 @@ export function TradeIdeaForm({
     setChartError(null);
     setStep(landingStep);
     setMaxStepVisited(STEP_COUNT - 1);
+  }
+
+  function startOver() {
+    setFields(emptyFields);
+    setCustomPair(false);
+    setChartImage(null);
+    setChartPreviewUrl(null);
+    setChartError(null);
+    setStep(0);
+    setMaxStepVisited(0);
+    setRestoredDraft(false);
+    clearPlannerDraft();
   }
 
   useEffect(() => {
@@ -372,6 +389,13 @@ export function TradeIdeaForm({
     return () => window.removeEventListener("fxinsites:load-planner-fields", handleLoadFields);
   }, []);
 
+  // The planner page dispatches this when the user clicks "Start a new plan"
+  // after seeing a finished trade plan.
+  useEffect(() => {
+    window.addEventListener("fxinsites:reset-planner", startOver);
+    return () => window.removeEventListener("fxinsites:reset-planner", startOver);
+  }, []);
+
   // While the AI works, cycle through a few messages instead of one static label.
   useEffect(() => {
     if (!loading) {
@@ -398,18 +422,6 @@ export function TradeIdeaForm({
 
   function applyTemplate(template: Template) {
     loadFieldsAndUnlock({ ...emptyFields, ...template.fields });
-  }
-
-  function startOver() {
-    setFields(emptyFields);
-    setCustomPair(false);
-    setChartImage(null);
-    setChartPreviewUrl(null);
-    setChartError(null);
-    setStep(0);
-    setMaxStepVisited(0);
-    setRestoredDraft(false);
-    clearPlannerDraft();
   }
 
   useEffect(() => {
@@ -622,7 +634,8 @@ export function TradeIdeaForm({
         events: calendarStatus === "ready" ? calendarEvents : undefined,
       }),
       fields,
-      chartImage ?? undefined
+      chartImage ?? undefined,
+      positionSizeStats
     );
   }
 

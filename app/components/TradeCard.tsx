@@ -1,4 +1,5 @@
 import type { TradePlan } from "@/app/api/plan/route";
+import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSummary";
 
 function formatPrice(price: number | null) {
   return price === null ? "—" : price.toLocaleString(undefined, { maximumFractionDigits: 5 });
@@ -10,7 +11,26 @@ const severityStyles: Record<TradePlan["biasFlags"][number]["severity"], string>
   high: "border-red-500/40 bg-red-500/10 text-red-300",
 };
 
-export function TradeCard({ plan }: { plan: TradePlan }) {
+const detailsSummaryClass =
+  "cursor-pointer select-none text-xs text-sky-400 marker:content-none [&::-webkit-details-marker]:hidden";
+
+export function TradeCard({ plan, positionSize }: { plan: TradePlan; positionSize?: ResultStat[] }) {
+  const passedCount = plan.ruleChecks.filter((c) => c.passed).length;
+  const totalChecks = plan.ruleChecks.length;
+
+  const headlineStats: ResultStat[] = [
+    { label: "Entry", value: formatPrice(plan.entry.price) },
+    { label: "Stop loss", value: formatPrice(plan.stopLoss.price) },
+    ...plan.takeProfits.map((tp, i) => ({
+      label: plan.takeProfits.length > 1 ? `Target ${i + 1}` : "Target",
+      value: formatPrice(tp.price),
+    })),
+    ...(plan.riskRewardRatio !== null
+      ? [{ label: "Risk:Reward", value: `1:${plan.riskRewardRatio}` }]
+      : []),
+    ...(positionSize ?? []),
+  ];
+
   return (
     <div className="w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-zinc-50 shadow-xl">
       <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
@@ -29,6 +49,38 @@ export function TradeCard({ plan }: { plan: TradePlan }) {
         </span>
       </div>
 
+      <div className="mt-5 rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-base leading-relaxed text-zinc-100">
+        {plan.summary}
+      </div>
+
+      <div className="mt-5">
+        <RiskCalcSummary stats={headlineStats} />
+      </div>
+
+      {plan.chartCheck && (
+        <div className="mt-5 border-t border-zinc-800 pt-5">
+          <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">From your chart</p>
+          {plan.chartCheck.warnings.length > 0 && (
+            <ul className="mb-2 space-y-1.5">
+              {plan.chartCheck.warnings.map((warning, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-orange-300">
+                  <span className="text-orange-400">⚠</span>
+                  <span>{warning}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <ul className="space-y-1.5">
+            {plan.chartCheck.observations.map((observation, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
+                <span className="text-sky-400">•</span>
+                <span>{observation}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="space-y-5 py-5">
         <div>
           <div className="flex items-baseline gap-2">
@@ -36,11 +88,13 @@ export function TradeCard({ plan }: { plan: TradePlan }) {
             <p className="text-lg font-medium">{formatPrice(plan.entry.price)}</p>
             <span className="text-xs text-zinc-500">({plan.entry.type})</span>
           </div>
-          <p className="mt-1 text-sm text-zinc-400">{plan.entry.condition}</p>
-          <p className="mt-1 text-sm text-zinc-500">
-            <span className="text-zinc-400">Before you pull the trigger:</span>{" "}
-            {plan.entry.confirmation}
-          </p>
+          <details className="group mt-1.5">
+            <summary className={detailsSummaryClass}>Why this level?</summary>
+            <p className="mt-1.5 text-sm text-zinc-400">{plan.entry.condition}</p>
+            <p className="mt-1.5 text-sm text-zinc-500">
+              <span className="text-zinc-400">Before you pull the trigger:</span> {plan.entry.confirmation}
+            </p>
+          </details>
         </div>
 
         <div>
@@ -48,10 +102,13 @@ export function TradeCard({ plan }: { plan: TradePlan }) {
             <p className="text-xs uppercase tracking-wide text-zinc-500">Stop loss</p>
             <p className="text-lg font-medium text-red-400">{formatPrice(plan.stopLoss.price)}</p>
           </div>
-          <p className="mt-1 text-sm text-zinc-400">{plan.stopLoss.reasoning}</p>
-          <p className="mt-1 text-sm text-zinc-500">
-            <span className="text-zinc-400">If this is hit:</span> {plan.stopLoss.invalidation}
-          </p>
+          <details className="group mt-1.5">
+            <summary className={detailsSummaryClass}>Why this level?</summary>
+            <p className="mt-1.5 text-sm text-zinc-400">{plan.stopLoss.reasoning}</p>
+            <p className="mt-1.5 text-sm text-zinc-500">
+              <span className="text-zinc-400">If this is hit:</span> {plan.stopLoss.invalidation}
+            </p>
+          </details>
         </div>
 
         <div>
@@ -60,34 +117,42 @@ export function TradeCard({ plan }: { plan: TradePlan }) {
             {plan.takeProfits.map((tp, i) => (
               <div key={i}>
                 <p className="text-lg font-medium text-emerald-400">{formatPrice(tp.price)}</p>
-                <p className="text-sm text-zinc-400">{tp.reasoning}</p>
+                <details className="group mt-1">
+                  <summary className={detailsSummaryClass}>Why this level?</summary>
+                  <p className="mt-1.5 text-sm text-zinc-400">{tp.reasoning}</p>
+                </details>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {plan.riskRewardRatio !== null && (
-        <p className="text-sm text-zinc-400">
-          Risk:Reward ≈ <span className="font-medium text-zinc-200">1:{plan.riskRewardRatio}</span>
-        </p>
-      )}
-
-      <div className="mt-5 border-t border-zinc-800 pt-5">
-        <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">Rule-set check</p>
-        <ul className="space-y-1.5">
-          {plan.ruleChecks.map((check, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm">
-              <span className={check.passed ? "text-emerald-400" : "text-red-400"}>
-                {check.passed ? "✓" : "✗"}
-              </span>
-              <span>
-                <span className="font-medium">{check.rule}</span>
-                {check.note && <span className="text-zinc-400"> — {check.note}</span>}
-              </span>
-            </li>
-          ))}
-        </ul>
+      <div className="border-t border-zinc-800 pt-5">
+        <details className="group">
+          <summary className="flex cursor-pointer select-none items-center justify-between marker:content-none [&::-webkit-details-marker]:hidden">
+            <span className="text-xs uppercase tracking-wide text-zinc-500">Rule-set check</span>
+            <span
+              className={`text-sm font-medium ${
+                passedCount === totalChecks ? "text-emerald-400" : "text-orange-400"
+              }`}
+            >
+              {passedCount}/{totalChecks} passed
+            </span>
+          </summary>
+          <ul className="mt-3 space-y-1.5">
+            {plan.ruleChecks.map((check, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <span className={check.passed ? "text-emerald-400" : "text-red-400"}>
+                  {check.passed ? "✓" : "✗"}
+                </span>
+                <span>
+                  <span className="font-medium">{check.rule}</span>
+                  {check.note && <span className="text-zinc-400"> — {check.note}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
       </div>
 
       {plan.biasFlags.length > 0 && (
@@ -121,30 +186,6 @@ export function TradeCard({ plan }: { plan: TradePlan }) {
         </div>
       )}
 
-      {plan.chartCheck && (
-        <div className="mt-5 border-t border-zinc-800 pt-5">
-          <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">From your chart</p>
-          {plan.chartCheck.warnings.length > 0 && (
-            <ul className="mb-2 space-y-1.5">
-              {plan.chartCheck.warnings.map((warning, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-orange-300">
-                  <span className="text-orange-400">⚠</span>
-                  <span>{warning}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <ul className="space-y-1.5">
-            {plan.chartCheck.observations.map((observation, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
-                <span className="text-sky-400">•</span>
-                <span>{observation}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {plan.watchFor.length > 0 && (
         <div className="mt-5 border-t border-zinc-800 pt-5">
           <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">Watch for</p>
@@ -158,8 +199,6 @@ export function TradeCard({ plan }: { plan: TradePlan }) {
           </ul>
         </div>
       )}
-
-      <div className="mt-5 rounded-lg bg-zinc-900 p-4 text-sm text-zinc-300">{plan.summary}</div>
     </div>
   );
 }

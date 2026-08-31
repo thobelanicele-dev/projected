@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { TradeCard } from "@/app/components/TradeCard";
 import { TradeIdeaForm, emptyFields, type ChartImage, type TradeIdeaFields } from "@/app/components/TradeIdeaForm";
+import type { ResultStat } from "@/app/components/RiskCalcSummary";
 import type { TradePlan } from "@/app/api/plan/route";
 import { addPlanToJournal, loadJournal, reconstructFieldsFromEntry, type JournalEntry } from "@/app/lib/journal";
 
@@ -18,6 +19,8 @@ function formatTimestamp(ts: number): string {
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<TradePlan | null>(null);
+  const [positionSize, setPositionSize] = useState<ResultStat[] | undefined>(undefined);
+  const [justSaved, setJustSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<JournalEntry[]>([]);
 
@@ -29,12 +32,18 @@ export default function Home() {
     return () => clearTimeout(timeout);
   }, []);
 
-  async function handleSubmit(ideaText: string, fields: TradeIdeaFields, chartImage?: ChartImage) {
+  async function handleSubmit(
+    ideaText: string,
+    fields: TradeIdeaFields,
+    chartImage?: ChartImage,
+    newPositionSize?: ResultStat[]
+  ) {
     if (loading) return;
 
     setLoading(true);
     setError(null);
     setPlan(null);
+    setJustSaved(false);
 
     try {
       const res = await fetch("/api/plan", {
@@ -50,6 +59,8 @@ export default function Home() {
       }
 
       setPlan(data.plan);
+      setPositionSize(newPositionSize);
+      setJustSaved(true);
       setRecent(
         addPlanToJournal(ideaText, data.plan, fields)
           .filter((e) => e.source === "planner")
@@ -66,6 +77,21 @@ export default function Home() {
     const fields = reconstructFieldsFromEntry(entry, emptyFields);
     if (!fields) return;
     window.dispatchEvent(new CustomEvent("fxinsites:load-planner-fields", { detail: fields }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function viewSavedPlan(entry: JournalEntry) {
+    if (!entry.plan) return;
+    setPlan(entry.plan);
+    setPositionSize(undefined);
+    setJustSaved(false);
+  }
+
+  function startNewPlan() {
+    setPlan(null);
+    setPositionSize(undefined);
+    setJustSaved(false);
+    window.dispatchEvent(new Event("fxinsites:reset-planner"));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -89,7 +115,21 @@ export default function Home() {
 
       {plan && (
         <div className="mt-10">
-          <TradeCard plan={plan} />
+          <div className="mb-3 flex items-center justify-between">
+            {justSaved ? (
+              <p className="text-xs text-emerald-400">✓ Saved to your journal</p>
+            ) : (
+              <span />
+            )}
+            <button
+              type="button"
+              onClick={startNewPlan}
+              className="text-xs font-medium text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+            >
+              Start a new plan
+            </button>
+          </div>
+          <TradeCard plan={plan} positionSize={positionSize} />
         </div>
       )}
 
@@ -104,7 +144,7 @@ export default function Home() {
               >
                 <button
                   type="button"
-                  onClick={() => entry.plan && setPlan(entry.plan)}
+                  onClick={() => viewSavedPlan(entry)}
                   className="w-full text-left"
                 >
                   <div className="flex items-center justify-between">
