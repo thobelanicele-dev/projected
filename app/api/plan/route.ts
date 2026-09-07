@@ -85,6 +85,31 @@ const tradePlanSchema = z.object({
         .describe(
           "Ways the chart screenshot appears to contradict or undercut the trader's stated plan, if any — e.g. the stated direction doesn't match the visible trend."
         ),
+      levels: z
+        .object({
+          entry: z
+            .number()
+            .min(0)
+            .max(1)
+            .nullable()
+            .describe(
+              "Rough vertical position of the trader's stated entry price on the image, 0 = very top, 1 = very bottom. Null if not confidently placeable."
+            ),
+          stopLoss: z
+            .number()
+            .min(0)
+            .max(1)
+            .nullable()
+            .describe("Same, for the trader's stated stop loss."),
+          takeProfits: z
+            .array(z.number().min(0).max(1).nullable())
+            .describe(
+              "Same, one entry per take-profit, in the same order as this plan's takeProfits array."
+            ),
+        })
+        .describe(
+          "Rough per-level vertical position estimates, only for levels the trader already gave you a price for."
+        ),
     })
     .nullable()
     .describe("Leave null if no chart screenshot was attached."),
@@ -107,6 +132,8 @@ Write the final summary as a short verdict paragraph that ties entry quality, ri
 If the trader's message includes real market data (a current price, a recent high/low range, or upcoming economic events), ground your reasoning in those actual numbers — reference them directly rather than inventing separate figures. If no such data is given for something, discuss it qualitatively (e.g. "recent structure suggests...") rather than fabricating a specific price or level you have no evidence for. Never state a specific technical level (a swing high, a support/resistance price, a range boundary) unless it was given to you or the trader specified it themselves.
 
 If a chart screenshot is attached, use it only to check whether it supports or contradicts the trade plan the trader already described above — never to originate a new trade idea, and never to state a specific price level that wasn't already given to you by the trader. Describe what you observe qualitatively (overall trend direction, visible structure, candle behavior) and note plainly if something in the image seems to contradict the trader's stated plan. Put this in the chartCheck field. If no image is attached, leave chartCheck null.
+
+When you do provide chartCheck, also fill in levels: for each price level the trader already gave you a number for (entry, stop loss, each take profit), estimate roughly where it sits vertically on the image as a fraction from 0 (very top of the image) to 1 (very bottom). This is a rough visual estimate for drawing an approximate line on the trader's own image, not a measurement — return null for any level you can't confidently place (chart is cropped, that part of the image is unclear, the level is off-screen, or the trader never gave a price for it). Never invent or describe a level the trader didn't already state.
 
 This is not financial advice — you are structuring the trader's own idea and coaching them on risk discipline and process, not predicting market direction.`;
 

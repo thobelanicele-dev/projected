@@ -92,3 +92,25 @@ body {
     transition: none;
   }
 }
+
+/* Trade plan export: "Print / Save as PDF" should print only the Full
+   report section of the plan card — not the sidebar, the Overview tab's
+   diagram/checklist, or the tab/export buttons themselves. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-report,
+  .print-report * {
+    visibility: visible;
+  }
+  .print-report {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

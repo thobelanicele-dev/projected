@@ -20,6 +20,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<TradePlan | null>(null);
   const [positionSize, setPositionSize] = useState<ResultStat[] | undefined>(undefined);
+  const [chartImageUrl, setChartImageUrl] = useState<string | null>(null);
+  const [currentEntryId, setCurrentEntryId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<JournalEntry[]>([]);
@@ -60,12 +62,11 @@ export default function Home() {
 
       setPlan(data.plan);
       setPositionSize(newPositionSize);
+      setChartImageUrl(chartImage ? `data:${chartImage.mediaType};base64,${chartImage.data}` : null);
       setJustSaved(true);
-      setRecent(
-        addPlanToJournal(ideaText, data.plan, fields)
-          .filter((e) => e.source === "planner")
-          .slice(0, 5)
-      );
+      const updated = addPlanToJournal(ideaText, data.plan, fields);
+      setCurrentEntryId(updated[0]?.id ?? null);
+      setRecent(updated.filter((e) => e.source === "planner").slice(0, 5));
     } catch {
       setError("Could not reach the server. Please try again.");
     } finally {
@@ -84,12 +85,19 @@ export default function Home() {
     if (!entry.plan) return;
     setPlan(entry.plan);
     setPositionSize(undefined);
+    // Chart images are never persisted with a journal entry (avoids risking the
+    // app's localStorage quota on multi-MB base64 images) — so a saved plan
+    // never has an overlay, even if the original submission had one.
+    setChartImageUrl(null);
+    setCurrentEntryId(entry.id);
     setJustSaved(false);
   }
 
   function startNewPlan() {
     setPlan(null);
     setPositionSize(undefined);
+    setChartImageUrl(null);
+    setCurrentEntryId(null);
     setJustSaved(false);
     window.dispatchEvent(new Event("fxinsites:reset-planner"));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -129,7 +137,12 @@ export default function Home() {
               Start a new plan
             </button>
           </div>
-          <TradeCard plan={plan} positionSize={positionSize} />
+          <TradeCard
+            plan={plan}
+            positionSize={positionSize}
+            chartImageUrl={chartImageUrl}
+            journalEntryId={currentEntryId}
+          />
         </div>
       )}
 
