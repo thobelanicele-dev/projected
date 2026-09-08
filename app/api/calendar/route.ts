@@ -5,7 +5,7 @@ import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 const RATE_LIMIT = 60;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
-const PAIR_CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "NZD", "CAD"];
+const PAIR_CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "NZD", "CAD", "ZAR"];
 
 function currenciesForPair(pair: string): string[] {
   const symbols = pair.split("/").map((s) => s.trim().toUpperCase());
