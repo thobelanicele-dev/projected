@@ -91,6 +91,14 @@ const STEPS = [
   },
 ];
 
+const EARLY_FEEDBACK = [
+  "The risk checks catch things I would've missed — no stop loss, sizing too big, chasing a move I'd already missed.",
+  "I don't know most trading jargon, and it still made sense to me.",
+  "The backtests deduct spread and slippage instead of showing a fantasy win rate.",
+  "Having every plan in one journal, checked against what actually happened, changed how I review my own trading.",
+  "It slows me down before I enter a trade — which is exactly what I needed.",
+];
+
 const GRID_FEATURES = [
   {
     eyebrow: "Trade journal",
@@ -369,6 +377,26 @@ export default async function LandingPage() {
           {GRID_FEATURES.map((feature, i) => (
             <Reveal key={feature.eyebrow} delay={i * 100}>
               <FeatureCard {...feature} />
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Early feedback */}
+      <section className="mx-auto w-full max-w-6xl border-t border-zinc-900 px-6 py-24">
+        <Reveal>
+          <Eyebrow>Early feedback</Eyebrow>
+          <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
+            What early testers are noticing
+          </h3>
+        </Reveal>
+        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {EARLY_FEEDBACK.map((quote, i) => (
+            <Reveal key={quote} delay={i * 80}>
+              <div className="h-full border border-zinc-800 bg-zinc-950 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
+                <span className="text-2xl leading-none text-emerald-400/50">&ldquo;</span>
+                <p className="mt-1 text-sm leading-relaxed text-zinc-300">{quote}</p>
+              </div>
             </Reveal>
           ))}
         </div>
