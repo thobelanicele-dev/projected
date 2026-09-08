@@ -38,19 +38,28 @@ export async function POST(req: NextRequest) {
   // From here on, always respond the same way whether or not the account
   // exists — this is the email-enumeration-prevention boundary.
   const normalizedEmail = email.trim().toLowerCase();
-  const rows = await query<{ id: string }>("SELECT id FROM users WHERE email = $1", [
-    normalizedEmail,
-  ]);
-  const user = rows[0];
 
-  if (user) {
-    const token = generateToken();
-    await query(
-      "INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
-      [hashToken(token), user.id, Date.now() + RESET_TOKEN_TTL_MS]
+  try {
+    const rows = await query<{ id: string }>("SELECT id FROM users WHERE email = $1", [
+      normalizedEmail,
+    ]);
+    const user = rows[0];
+
+    if (user) {
+      const token = generateToken();
+      await query(
+        "INSERT INTO password_reset_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
+        [hashToken(token), user.id, Date.now() + RESET_TOKEN_TTL_MS]
+      );
+      await sendPasswordResetEmail(normalizedEmail, token);
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Password reset request failed", error);
+    return NextResponse.json(
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
     );
-    await sendPasswordResetEmail(normalizedEmail, token);
   }
-
-  return NextResponse.json({ ok: true });
 }

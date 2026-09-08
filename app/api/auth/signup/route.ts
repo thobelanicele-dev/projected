@@ -48,31 +48,39 @@ export async function POST(req: NextRequest) {
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  const existingRows = await query<{ id: string }>(
-    "SELECT id FROM users WHERE email = $1 OR username = $2",
-    [normalizedEmail, username]
-  );
+  try {
+    const existingRows = await query<{ id: string }>(
+      "SELECT id FROM users WHERE email = $1 OR username = $2",
+      [normalizedEmail, username]
+    );
 
-  if (existingRows[0]) {
-    return NextResponse.json({ error: "Email or username is already in use." }, { status: 409 });
+    if (existingRows[0]) {
+      return NextResponse.json({ error: "Email or username is already in use." }, { status: 409 });
+    }
+
+    const userId = randomUUID();
+    const passwordHash = hashPassword(password);
+    const now = Date.now();
+
+    await query(
+      "INSERT INTO users (id, email, username, password_hash, created_at) VALUES ($1, $2, $3, $4, $5)",
+      [userId, normalizedEmail, username, passwordHash, now]
+    );
+
+    const token = generateToken();
+    await query(
+      "INSERT INTO email_verification_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
+      [hashToken(token), userId, now + VERIFICATION_TOKEN_TTL_MS]
+    );
+
+    await sendVerificationEmail(normalizedEmail, token);
+
+    return NextResponse.json({ ok: true }, { status: 201 });
+  } catch (error) {
+    console.error("Signup failed", error);
+    return NextResponse.json(
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
+    );
   }
-
-  const userId = randomUUID();
-  const passwordHash = hashPassword(password);
-  const now = Date.now();
-
-  await query(
-    "INSERT INTO users (id, email, username, password_hash, created_at) VALUES ($1, $2, $3, $4, $5)",
-    [userId, normalizedEmail, username, passwordHash, now]
-  );
-
-  const token = generateToken();
-  await query(
-    "INSERT INTO email_verification_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
-    [hashToken(token), userId, now + VERIFICATION_TOKEN_TTL_MS]
-  );
-
-  await sendVerificationEmail(normalizedEmail, token);
-
-  return NextResponse.json({ ok: true }, { status: 201 });
 }

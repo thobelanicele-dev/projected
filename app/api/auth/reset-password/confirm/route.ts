@@ -36,23 +36,32 @@ export async function POST(req: NextRequest) {
   }
 
   const tokenHash = hashToken(token);
-  const rows = await query<{ user_id: string; expires_at: string }>(
-    "SELECT user_id, expires_at FROM password_reset_tokens WHERE token_hash = $1",
-    [tokenHash]
-  );
-  const row = rows[0];
 
-  if (!row || Number(row.expires_at) <= Date.now()) {
+  try {
+    const rows = await query<{ user_id: string; expires_at: string }>(
+      "SELECT user_id, expires_at FROM password_reset_tokens WHERE token_hash = $1",
+      [tokenHash]
+    );
+    const row = rows[0];
+
+    if (!row || Number(row.expires_at) <= Date.now()) {
+      await query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
+      return NextResponse.json({ error: "This reset link is invalid or has expired." }, { status: 400 });
+    }
+
+    await query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+      hashPassword(password),
+      row.user_id,
+    ]);
     await query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
-    return NextResponse.json({ error: "This reset link is invalid or has expired." }, { status: 400 });
+    await destroyAllSessionsForUser(row.user_id);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Password reset confirm failed", error);
+    return NextResponse.json(
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
+    );
   }
-
-  await query("UPDATE users SET password_hash = $1 WHERE id = $2", [
-    hashPassword(password),
-    row.user_id,
-  ]);
-  await query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
-  await destroyAllSessionsForUser(row.user_id);
-
-  return NextResponse.json({ ok: true });
 }

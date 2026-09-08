@@ -24,16 +24,24 @@ export default async function VerifyEmailPage({
     );
   }
 
+  const heading =
+    error === "missing-token"
+      ? "Verification link is missing a token"
+      : error === "server-error"
+        ? "Something went wrong on our end"
+        : "Verification link is invalid or expired";
+
+  const body =
+    error === "missing-token"
+      ? "Use the full link from your verification email."
+      : error === "server-error"
+        ? "This wasn't a problem with your link — please try clicking it again in a moment."
+        : "This link has expired or was already used.";
+
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-6 text-center">
-      <h1 className="text-lg font-medium text-red-400">
-        {error === "missing-token" ? "Verification link is missing a token" : "Verification link is invalid or expired"}
-      </h1>
-      <p className="mt-2 text-sm text-zinc-400">
-        {error === "missing-token"
-          ? "Use the full link from your verification email."
-          : "This link has expired or was already used."}
-      </p>
+      <h1 className="text-lg font-medium text-red-400">{heading}</h1>
+      <p className="mt-2 text-sm text-zinc-400">{body}</p>
       <Link href="/signup" className="mt-4 inline-block text-sky-400 hover:text-sky-300">
         Back to signup
       </Link>

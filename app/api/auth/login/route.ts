@@ -34,25 +34,34 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
-  const rows = await query<{ id: string; password_hash: string; email_verified: boolean }>(
-    "SELECT id, password_hash, email_verified FROM users WHERE email = $1",
-    [normalizedEmail]
-  );
-  const user = rows[0];
 
-  const passwordOk = verifyPassword(password, user?.password_hash ?? DUMMY_HASH);
+  try {
+    const rows = await query<{ id: string; password_hash: string; email_verified: boolean }>(
+      "SELECT id, password_hash, email_verified FROM users WHERE email = $1",
+      [normalizedEmail]
+    );
+    const user = rows[0];
 
-  if (!user || !passwordOk) {
-    return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
-  }
+    const passwordOk = verifyPassword(password, user?.password_hash ?? DUMMY_HASH);
 
-  if (!user.email_verified) {
+    if (!user || !passwordOk) {
+      return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
+    }
+
+    if (!user.email_verified) {
+      return NextResponse.json(
+        { error: "Please verify your email before logging in." },
+        { status: 403 }
+      );
+    }
+
+    await createSession(user.id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Login failed", error);
     return NextResponse.json(
-      { error: "Please verify your email before logging in." },
-      { status: 403 }
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
     );
   }
-
-  await createSession(user.id);
-  return NextResponse.json({ ok: true });
 }

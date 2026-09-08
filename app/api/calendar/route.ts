@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/app/lib/auth/session";
+import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
+
+const RATE_LIMIT = 60;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
 const PAIR_CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "NZD", "CAD"];
 
@@ -27,6 +32,19 @@ export interface CalendarEvent {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+  }
+
+  const rateLimit = checkRateLimit(`calendar:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
   const pair = req.nextUrl.searchParams.get("pair")?.trim();
   if (!pair) {
     return NextResponse.json({ error: "Pair is required." }, { status: 400 });

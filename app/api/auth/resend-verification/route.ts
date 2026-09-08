@@ -39,20 +39,29 @@ export async function POST(req: NextRequest) {
   // already verified — same email-enumeration-prevention boundary as
   // reset-password/request.
   const normalizedEmail = email.trim().toLowerCase();
-  const rows = await query<{ id: string; email_verified: boolean }>(
-    "SELECT id, email_verified FROM users WHERE email = $1",
-    [normalizedEmail]
-  );
-  const user = rows[0];
 
-  if (user && !user.email_verified) {
-    const token = generateToken();
-    await query(
-      "INSERT INTO email_verification_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
-      [hashToken(token), user.id, Date.now() + VERIFICATION_TOKEN_TTL_MS]
+  try {
+    const rows = await query<{ id: string; email_verified: boolean }>(
+      "SELECT id, email_verified FROM users WHERE email = $1",
+      [normalizedEmail]
     );
-    await sendVerificationEmail(normalizedEmail, token);
-  }
+    const user = rows[0];
 
-  return NextResponse.json({ ok: true });
+    if (user && !user.email_verified) {
+      const token = generateToken();
+      await query(
+        "INSERT INTO email_verification_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, $3)",
+        [hashToken(token), user.id, Date.now() + VERIFICATION_TOKEN_TTL_MS]
+      );
+      await sendVerificationEmail(normalizedEmail, token);
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Resend verification failed", error);
+    return NextResponse.json(
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
+    );
+  }
 }
