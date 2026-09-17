@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 const iconProps = {
   viewBox: "0 0 24 24",
@@ -103,20 +102,6 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  async function handleLogout() {
-    if (loggingOut) return;
-    setLoggingOut(true);
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/");
-      router.refresh();
-    } finally {
-      setLoggingOut(false);
-    }
-  }
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 px-4 py-8">
@@ -144,23 +129,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
-      <button
-        type="button"
-        onClick={() => window.dispatchEvent(new Event("fxinsites:replay-tour"))}
-        className="mt-auto rounded-lg px-2.5 py-2.5 text-left text-sm text-zinc-500 transition-colors hover:bg-zinc-900/60 hover:text-zinc-300"
-      >
-        Replay tour
-      </button>
-
-      <button
-        type="button"
-        onClick={handleLogout}
-        disabled={loggingOut}
-        className="rounded-lg px-2.5 py-2.5 text-left text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-900/60 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {loggingOut ? "Logging out…" : "Log out"}
-      </button>
     </aside>
   );
 }
