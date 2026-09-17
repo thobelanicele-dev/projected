@@ -99,6 +99,40 @@ export async function verifyTransaction(reference: string): Promise<VerifyResult
   };
 }
 
+export interface SubscriptionDetails {
+  subscriptionCode: string;
+  emailToken: string;
+}
+
+// Fetched fresh rather than relying on anything captured at subscription-create
+// time — disabling a subscription requires an email_token our webhook never
+// stored, and this endpoint reliably returns it regardless.
+export async function fetchSubscription(subscriptionCode: string): Promise<SubscriptionDetails> {
+  const res = await fetch(`https://api.paystack.co/subscription/${encodeURIComponent(subscriptionCode)}`, {
+    headers: { Authorization: `Bearer ${secretKey()}` },
+  });
+  const data = await res.json();
+  if (!res.ok || !data.status) {
+    throw new Error(data.message ?? "Failed to fetch Paystack subscription.");
+  }
+  return { subscriptionCode: data.data.subscription_code, emailToken: data.data.email_token };
+}
+
+export async function disableSubscription(subscriptionCode: string, emailToken: string): Promise<void> {
+  const res = await fetch("https://api.paystack.co/subscription/disable", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secretKey()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ code: subscriptionCode, token: emailToken }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.status) {
+    throw new Error(data.message ?? "Failed to disable Paystack subscription.");
+  }
+}
+
 export function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
   if (!signature) return false;
   const expected = createHmac("sha512", secretKey()).update(rawBody).digest("hex");

@@ -93,3 +93,20 @@ export async function destroySession(): Promise<void> {
 export async function destroyAllSessionsForUser(userId: string): Promise<void> {
   await query("DELETE FROM sessions WHERE user_id = $1", [userId]);
 }
+
+/**
+ * Deletes every session for a user except the one matching exceptTokenHash —
+ * used on password change, where the person already proved they know the
+ * password from the session making the request, so only other (possibly
+ * hijacked) sessions need to be cut off.
+ */
+export async function destroyOtherSessionsForUser(userId: string, exceptTokenHash: string): Promise<void> {
+  await query("DELETE FROM sessions WHERE user_id = $1 AND token_hash != $2", [userId, exceptTokenHash]);
+}
+
+/** The current request's session token, hashed the same way it's stored — null if not logged in. */
+export async function getCurrentSessionTokenHash(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  return token ? hashToken(token) : null;
+}

@@ -60,3 +60,35 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
     link
   );
 }
+
+export async function sendEmailChangeConfirmation(to: string, token: string): Promise<void> {
+  const link = `${APP_URL}/api/auth/change-email/confirm?token=${token}`;
+  await sendEmail(
+    to,
+    "Confirm your new FxInsites email",
+    `<p>Click the button below to confirm this address as your new FxInsites login email:</p>
+     <p>
+       <a href="${link}"
+          style="display:inline-block;padding:12px 24px;background-color:#18181b;color:#fafafa;
+                 text-decoration:none;border-radius:9999px;font-family:sans-serif;font-size:14px;
+                 font-weight:500;">
+         Confirm email change
+       </a>
+     </p>
+     <p style="font-family:sans-serif;font-size:13px;color:#71717a;">
+       Or paste this link into your browser: <a href="${link}">${link}</a>
+     </p>
+     <p style="font-family:sans-serif;font-size:13px;color:#71717a;">This link expires in 1 hour.</p>`,
+    link
+  );
+}
+
+export async function sendEmailChangeNotice(to: string, newEmail: string): Promise<void> {
+  await sendEmail(
+    to,
+    "Your FxInsites email is changing",
+    `<p>A request was made to change the email on your FxInsites account to <strong>${newEmail}</strong>.</p>
+     <p>The change won't take effect until that new address is confirmed. If this wasn't you, log in and change your password right away.</p>`,
+    `${APP_URL}/account`
+  );
+}

@@ -66,6 +66,13 @@ async function migrate(): Promise<void> {
       expires_at BIGINT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS email_change_tokens (
+      token_hash TEXT PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id),
+      new_email TEXT NOT NULL,
+      expires_at BIGINT NOT NULL
+    );
+
     ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_customer_code TEXT;
