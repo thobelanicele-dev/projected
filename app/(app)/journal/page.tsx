@@ -15,6 +15,7 @@ import {
   type JournalEntry,
 } from "@/app/lib/journal";
 import { parseTradeCsv, rowsToJournalEntries, type ImportResult } from "@/app/lib/importTrades";
+import { UsagePing } from "@/app/components/UsagePing";
 
 export default function JournalPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -71,6 +72,7 @@ export default function JournalPage() {
 
   return (
     <>
+      <UsagePing tool="journal" />
       <h1 className="text-3xl font-semibold tracking-tight">Trade journal</h1>
       <p className="mt-2 text-zinc-400">
         Every plan you build gets saved here. Mark trades as taken, log the outcome, and see

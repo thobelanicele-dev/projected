@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPageLayout title="Privacy Policy" updated="September 8, 2026">
+    <LegalPageLayout title="Privacy Policy" updated="September 21, 2026">
       <LegalSection title="Overview">
         <p>
           FxInsites (&quot;we&quot;, &quot;us&quot;) is a trade planning, backtesting, and journaling
@@ -74,10 +74,21 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection title="Usage statistics">
+        <p>
+          We keep an anonymous daily count of how often each tool (planner, risk calculator,
+          backtest, journal, dashboard) is opened, so we know whether the product is actually
+          being used. This is just a running number per tool per day — it&apos;s never linked to
+          your account, your email, or any other identifying information, and it&apos;s separate
+          from the essential login cookie above.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Data retention and deletion">
         <p>
-          We keep your account information for as long as your account is active. You can request
-          deletion of your account and associated data at any time by emailing{" "}
+          We keep your account information for as long as your account is active. You can delete
+          your account and everything tied to it yourself at any time from Account settings, or
+          request deletion by emailing{" "}
           <a href="mailto:hello@fxinsites.com" className="text-sky-400 hover:text-sky-300">
             hello@fxinsites.com
           </a>

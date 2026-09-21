@@ -73,6 +73,17 @@ async function migrate(): Promise<void> {
       expires_at BIGINT NOT NULL
     );
 
+    -- Anonymous, aggregate-only: which tool, which day, how many opens. No
+    -- user id, no IP, nothing that identifies who — deliberately, since this
+    -- exists only to answer "is this tool being used at all", not to profile
+    -- anyone. See app/lib/usage.ts.
+    CREATE TABLE IF NOT EXISTS tool_usage (
+      tool TEXT NOT NULL,
+      day DATE NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (tool, day)
+    );
+
     ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_customer_code TEXT;

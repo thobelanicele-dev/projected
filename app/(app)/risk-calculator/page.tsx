@@ -8,6 +8,7 @@ import { PipValueTool } from "@/app/components/riskcalc/PipValueTool";
 import { RiskRewardTool } from "@/app/components/riskcalc/RiskRewardTool";
 import { MarginLeverageTool } from "@/app/components/riskcalc/MarginLeverageTool";
 import { CorrelationTool } from "@/app/components/riskcalc/CorrelationTool";
+import { UsagePing } from "@/app/components/UsagePing";
 
 const TABS = [
   { key: "position", label: "Position size", Component: PositionSizeTool },
@@ -25,6 +26,7 @@ export default function RiskCalculatorPage() {
 
   return (
     <RiskCalcSharedProvider>
+      <UsagePing tool="risk-calculator" />
       <h1 className="text-3xl font-semibold tracking-tight">Risk calculator</h1>
       <p className="mt-2 text-zinc-400">
         Five tools, one shared set of inputs — position size, pip value, risk/reward, margin

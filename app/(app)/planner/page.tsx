@@ -6,6 +6,7 @@ import { TradeIdeaForm, emptyFields, type ChartImage, type TradeIdeaFields } fro
 import type { ResultStat } from "@/app/components/RiskCalcSummary";
 import type { TradePlan } from "@/app/api/plan/route";
 import { addPlanToJournal, loadJournal, reconstructFieldsFromEntry, type JournalEntry } from "@/app/lib/journal";
+import { UsagePing } from "@/app/components/UsagePing";
 
 function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString(undefined, {
@@ -105,6 +106,7 @@ export default function Home() {
 
   return (
     <>
+      <UsagePing tool="planner" />
       <h1 className="text-3xl font-semibold tracking-tight">FxInsites</h1>
       <p className="mt-2 text-zinc-400">
         Fill in your trade idea below, field by field — no trading jargon required. The AI

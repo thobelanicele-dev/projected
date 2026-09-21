@@ -5,6 +5,7 @@ import { BacktestForm } from "@/app/components/BacktestForm";
 import { BacktestResults } from "@/app/components/BacktestResults";
 import { runBacktest } from "@/app/lib/backtestEngine";
 import type { BacktestResult, Candle, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
+import { UsagePing } from "@/app/components/UsagePing";
 
 export default function BacktestPage() {
   const [result, setResult] = useState<BacktestResult | null>(null);
@@ -22,6 +23,7 @@ export default function BacktestPage() {
 
   return (
     <>
+      <UsagePing tool="backtest" />
       <h1 className="text-3xl font-semibold tracking-tight">Backtest engine</h1>
       <p className="mt-2 text-zinc-400">
         Test a strategy against real price history before you risk real money on it. Pick a

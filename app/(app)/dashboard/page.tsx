@@ -7,6 +7,7 @@ import { ErrorTrendChart } from "@/app/components/ErrorTrendChart";
 import { AccuracyTable } from "@/app/components/AccuracyTable";
 import { loadJournal, computeStats, type JournalEntry } from "@/app/lib/journal";
 import { computeAccuracyStats } from "@/app/lib/dashboardStats";
+import { UsagePing } from "@/app/components/UsagePing";
 
 export default function DashboardPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -21,6 +22,7 @@ export default function DashboardPage() {
 
   return (
     <>
+      <UsagePing tool="dashboard" />
       <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
       <p className="mt-2 text-zinc-400">
         A simple look at how your trades went, and whether the AI&apos;s plans were actually
