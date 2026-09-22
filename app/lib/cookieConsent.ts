@@ -1,4 +1,6 @@
-const STORAGE_KEY = "fxinsites.cookieConsent";
+// Bumped to v2 when analytics were added, so anyone who already dismissed
+// the original (cookie-only) notice sees the updated one at least once.
+const STORAGE_KEY = "fxinsites.cookieConsent.v2";
 
 export function hasAcknowledgedCookies(): boolean {
   if (typeof window === "undefined") return false;

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPageLayout title="Privacy Policy" updated="September 21, 2026">
+    <LegalPageLayout title="Privacy Policy" updated="September 22, 2026">
       <LegalSection title="Overview">
         <p>
           FxInsites (&quot;we&quot;, &quot;us&quot;) is a trade planning, backtesting, and journaling
@@ -69,8 +69,9 @@ export default function PrivacyPage() {
 
       <LegalSection title="Cookies">
         <p>
-          We use one essential cookie to keep you logged in. We don&apos;t use advertising,
-          tracking, or analytics cookies of any kind.
+          We use one essential cookie to keep you logged in. We don&apos;t use advertising or
+          cross-site tracking cookies of any kind. The website analytics described below don&apos;t
+          use cookies either — see that section for how they work instead.
         </p>
       </LegalSection>
 
@@ -81,6 +82,17 @@ export default function PrivacyPage() {
           being used. This is just a running number per tool per day — it&apos;s never linked to
           your account, your email, or any other identifying information, and it&apos;s separate
           from the essential login cookie above.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Website analytics">
+        <p>
+          We use Vercel Web Analytics to see basic visit information — which pages are viewed,
+          what site referred you here, your approximate location (country/region, not exact),
+          and your general device type. It doesn&apos;t use cookies, doesn&apos;t store your IP
+          address, and can&apos;t track you across other websites. Vercel identifies a visit using
+          a temporary hash that&apos;s automatically discarded after 24 hours, so there&apos;s no
+          persistent profile of you or your visits over time.
         </p>
       </LegalSection>
 
