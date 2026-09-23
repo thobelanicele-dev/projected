@@ -55,50 +55,54 @@ export const emptyFields: TradeIdeaFields = {
   riskPercent: "1",
 };
 
+interface TemplateHints {
+  entryCondition: string;
+  stopLossCondition: string;
+  takeProfitCondition: string;
+}
+
 interface Template {
   label: string;
   description: string;
-  fields: Partial<TradeIdeaFields>;
+  // Only the *shape* of an idea — instrument, direction, whether entry waits on
+  // a condition. Deliberately excludes the actual entry/stop/target wording, so
+  // picking a template still leaves the trader to describe what they're seeing
+  // in their own words, rather than submitting our canned reasoning as theirs.
+  fields: Pick<TradeIdeaFields, "pair" | "direction" | "entryMode" | "riskPercent">;
+  // Shown only as greyed-out placeholder text on the relevant fields — never
+  // written into the field's actual value.
+  hints: TemplateHints;
 }
 
 const TEMPLATES: Template[] = [
   {
     label: "Simple breakout",
     description: "Price pushes past a recent high and keeps climbing",
-    fields: {
-      pair: "EUR/USD",
-      direction: "long",
-      entryMode: "condition",
-      entryCondition: "the price breaks above a recent high and looks like it wants to keep climbing",
-      stopLossCondition: "just below that same high, in case it turns out to be a fake breakout",
-      takeProfitCondition: "roughly twice as far away as my stop, so a win is worth more than a loss",
-      riskPercent: "1",
+    fields: { pair: "EUR/USD", direction: "long", entryMode: "condition", riskPercent: "1" },
+    hints: {
+      entryCondition: "What has to happen first? e.g. it breaks above a recent high and looks like it wants to keep climbing",
+      stopLossCondition: "Why there? e.g. just below that same high, in case it's a fake breakout",
+      takeProfitCondition: "Why there? e.g. roughly twice as far as your stop, so a win is worth more than a loss",
     },
   },
   {
     label: "Bounce off support",
     description: "Price dips to a level it's bounced off before, then turns back up",
-    fields: {
-      pair: "GBP/USD",
-      direction: "long",
-      entryMode: "condition",
-      entryCondition: "the price drops to a level it has bounced off before, and starts turning back up",
-      stopLossCondition: "just below that same level, in case it breaks instead of bouncing",
-      takeProfitCondition: "back up near the recent high",
-      riskPercent: "1",
+    fields: { pair: "GBP/USD", direction: "long", entryMode: "condition", riskPercent: "1" },
+    hints: {
+      entryCondition: "What has to happen first? e.g. it drops to a level it has bounced off before, and starts turning back up",
+      stopLossCondition: "Why there? e.g. just below that same level, in case it breaks instead of bouncing",
+      takeProfitCondition: "Why there? e.g. back up near the recent high",
     },
   },
   {
     label: "Breakdown short",
     description: "Price falls through a recent low and keeps dropping",
-    fields: {
-      pair: "USD/JPY",
-      direction: "short",
-      entryMode: "condition",
-      entryCondition: "the price breaks below a recent low and keeps falling",
-      stopLossCondition: "just above that same low, in case it turns out to be a fake breakdown",
-      takeProfitCondition: "a round number below where price has struggled to fall past before",
-      riskPercent: "1",
+    fields: { pair: "USD/JPY", direction: "short", entryMode: "condition", riskPercent: "1" },
+    hints: {
+      entryCondition: "What has to happen first? e.g. it breaks below a recent low and keeps falling",
+      stopLossCondition: "Why there? e.g. just above that same low, in case it's a fake breakdown",
+      takeProfitCondition: "Why there? e.g. a round number below where price has struggled to fall past before",
     },
   },
 ];
@@ -300,6 +304,8 @@ export function TradeIdeaForm({
   const [accountBalance, setAccountBalance] = useState("10000");
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [restoredDraft, setRestoredDraft] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [activeHints, setActiveHints] = useState<TemplateHints | null>(null);
 
   function goToStep(n: number) {
     const clamped = Math.min(Math.max(n, 0), STEP_COUNT - 1);
@@ -310,12 +316,17 @@ export function TradeIdeaForm({
   // Loads a full set of fields (from a template or a past saved plan) and
   // unlocks the whole wizard, since everything is already filled in — no
   // reason to make the user re-walk steps they don't need to touch.
-  function loadFieldsAndUnlock(newFields: TradeIdeaFields, landingStep = 1) {
+  function loadFieldsAndUnlock(
+    newFields: TradeIdeaFields,
+    landingStep = 1,
+    hints: TemplateHints | null = null
+  ) {
     setFields(newFields);
     setCustomPair(!POPULAR_PAIRS.some((p) => p.value === newFields.pair));
     setChartImage(null);
     setChartPreviewUrl(null);
     setChartError(null);
+    setActiveHints(hints);
     setStep(landingStep);
     setMaxStepVisited(STEP_COUNT - 1);
   }
@@ -326,6 +337,8 @@ export function TradeIdeaForm({
     setChartImage(null);
     setChartPreviewUrl(null);
     setChartError(null);
+    setActiveHints(null);
+    setShowTemplates(false);
     setStep(0);
     setMaxStepVisited(0);
     setRestoredDraft(false);
@@ -422,7 +435,7 @@ export function TradeIdeaForm({
   }
 
   function applyTemplate(template: Template) {
-    loadFieldsAndUnlock({ ...emptyFields, ...template.fields });
+    loadFieldsAndUnlock({ ...emptyFields, ...template.fields }, 1, template.hints);
   }
 
   useEffect(() => {
@@ -723,24 +736,47 @@ export function TradeIdeaForm({
       </div>
 
       {step === 0 && (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4" data-tour="templates">
-        <p className="text-sm font-medium text-zinc-200">New to this? Try an example</p>
-        <p className="mt-1 text-xs text-zinc-500">
-          Pick a starting point, then edit it to match what you&apos;re actually seeing.
-        </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          {TEMPLATES.map((t) => (
-            <button
-              key={t.label}
-              type="button"
-              onClick={() => applyTemplate(t)}
-              className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left text-xs transition-colors hover:border-zinc-600"
-            >
-              <span className="block font-medium text-zinc-100">{t.label}</span>
-              <span className="mt-0.5 block text-zinc-500">{t.description}</span>
-            </button>
-          ))}
+      <div className="flex flex-col gap-3" data-tour="templates">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <p className="text-sm font-medium text-zinc-200">What&apos;s your trade idea?</p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Bring something you&apos;ve actually noticed — a pattern, a level, a reaction to
+            news. The next few steps walk you through describing it in your own words, and we&apos;ll
+            structure it and check it against good risk practice. We won&apos;t hand you a strategy
+            to use instead — this is about building yours.
+          </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowTemplates((v) => !v)}
+          className="self-start text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-zinc-300"
+        >
+          {showTemplates ? "Hide examples" : "Never had a trade idea before? See a couple of examples"}
+        </button>
+
+        {showTemplates && (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+            <p className="text-xs text-zinc-500">
+              These only set the shape of an idea — instrument, direction, whether entry waits on a
+              condition. You&apos;ll still describe what you&apos;re actually seeing yourself on the
+              next few steps.
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              {TEMPLATES.map((t) => (
+                <button
+                  key={t.label}
+                  type="button"
+                  onClick={() => applyTemplate(t)}
+                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left text-xs transition-colors hover:border-zinc-600"
+                >
+                  <span className="block font-medium text-zinc-100">{t.label}</span>
+                  <span className="mt-0.5 block text-zinc-500">{t.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       )}
 
@@ -893,7 +929,10 @@ export function TradeIdeaForm({
               type="text"
               value={fields.entryCondition}
               onChange={(e) => update("entryCondition", e.target.value)}
-              placeholder="What has to happen first? e.g. it breaks above the London high"
+              placeholder={
+                activeHints?.entryCondition ??
+                "What has to happen first? e.g. it breaks above the London high"
+              }
               className={inputClass}
             />
           </div>
@@ -920,7 +959,7 @@ export function TradeIdeaForm({
             type="text"
             value={fields.stopLossCondition}
             onChange={(e) => update("stopLossCondition", e.target.value)}
-            placeholder="Why there? e.g. below the recent swing low"
+            placeholder={activeHints?.stopLossCondition ?? "Why there? e.g. below the recent swing low"}
             className={inputClass}
           />
         </div>
@@ -950,7 +989,7 @@ export function TradeIdeaForm({
             type="text"
             value={fields.takeProfitCondition}
             onChange={(e) => update("takeProfitCondition", e.target.value)}
-            placeholder="Why there? e.g. the Asian range high"
+            placeholder={activeHints?.takeProfitCondition ?? "Why there? e.g. the Asian range high"}
             className={inputClass}
           />
         </div>

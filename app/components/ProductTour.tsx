@@ -23,8 +23,8 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     target: '[data-tour="templates"]',
-    title: "Not sure where to start?",
-    body: "Pick an example here, then edit it to match what you're actually seeing.",
+    title: "Start with your own idea",
+    body: "Describe something you've actually noticed — we'll structure it and check it, not hand you one. Stuck? There's a quick example link here too.",
     plannerStep: 0,
   },
   {
