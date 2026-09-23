@@ -18,7 +18,7 @@ function saveMap(map: StoredMap): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
   } catch {
-    // localStorage can throw (quota, private browsing) — losing a checklist tick isn't worth surfacing
+    // localStorage can throw (quota, private browsing); losing a checklist tick isn't worth surfacing
   }
 }
 

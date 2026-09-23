@@ -53,7 +53,7 @@ export function parseLocaleNumber(raw: string): number | null {
     }
   } else if (lastComma !== -1) {
     // A lone comma followed by anything other than exactly 3 digits can't be a
-    // thousands group (those are always 3 digits), so it must be a decimal —
+    // thousands group (those are always 3 digits), so it must be a decimal;
     // this covers forex pip precision (e.g. "1,0850") that a 2-digit-cents
     // assumption would misread as a thousands-grouped integer.
     const decimalPart = s.slice(lastComma + 1);

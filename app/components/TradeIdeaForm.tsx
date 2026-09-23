@@ -66,12 +66,12 @@ interface TemplateHints {
 interface Template {
   label: string;
   description: string;
-  // Only the *shape* of an idea — instrument, direction, whether entry waits on
+  // Only the *shape* of an idea: instrument, direction, whether entry waits on
   // a condition. Deliberately excludes the actual entry/stop/target wording, so
   // picking a template still leaves the trader to describe what they're seeing
   // in their own words, rather than submitting our canned reasoning as theirs.
   fields: Pick<TradeIdeaFields, "pair" | "direction" | "entryMode" | "riskPercent">;
-  // Shown only as greyed-out placeholder text on the relevant fields — never
+  // Shown only as greyed-out placeholder text on the relevant fields; never
   // written into the field's actual value.
   hints: TemplateHints;
 }
@@ -317,8 +317,8 @@ export function TradeIdeaForm({
   }
 
   // Loads a full set of fields (from a template or a past saved plan) and
-  // unlocks the whole wizard, since everything is already filled in — no
-  // reason to make the user re-walk steps they don't need to touch.
+  // unlocks the whole wizard, since everything is already filled in; there's
+  // no reason to make the user re-walk steps they don't need to touch.
   function loadFieldsAndUnlock(
     newFields: TradeIdeaFields,
     landingStep = 1,
@@ -373,7 +373,7 @@ export function TradeIdeaForm({
   }, []);
 
   // Save the in-progress plan as the user goes, so a refresh doesn't lose it.
-  // (The chart image itself isn't persisted — only whether one was attached —
+  // (The chart image itself isn't persisted, only whether one was attached,
   // to avoid risking the whole app's localStorage quota on a multi-MB image.)
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -383,7 +383,7 @@ export function TradeIdeaForm({
   }, [fields, step, maxStepVisited, chartImage]);
 
   // The product tour highlights fields that now only exist on their own wizard
-  // step — it dispatches this event to jump the wizard there before it looks
+  // step, so it dispatches this event to jump the wizard there before it looks
   // for the element to highlight.
   useEffect(() => {
     function handleSetStep(e: Event) {
@@ -395,7 +395,7 @@ export function TradeIdeaForm({
   }, []);
 
   // The planner page dispatches this when the user picks a past plan from
-  // "Recently saved" to use as a starting point — same idea as a template,
+  // "Recently saved" to use as a starting point: the same idea as a template,
   // just sourced from the user's own history instead of a hardcoded example.
   useEffect(() => {
     function handleLoadFields(e: Event) {
@@ -438,7 +438,7 @@ export function TradeIdeaForm({
   }
 
   function applyTemplate(template: Template) {
-    // Preserve any notes the trader already typed — a template only sets the
+    // Preserve any notes the trader already typed. A template only sets the
     // shape of an idea and shouldn't silently discard their own words.
     loadFieldsAndUnlock(
       { ...emptyFields, notes: fields.notes, ...template.fields },
@@ -718,7 +718,7 @@ export function TradeIdeaForm({
           />
         </div>
         <span className="shrink-0 text-sm text-zinc-500">
-          Step {step + 1} of {STEP_COUNT} — {STEP_LABELS[step]}
+          Step {step + 1} of {STEP_COUNT}: {STEP_LABELS[step]}
         </span>
       </div>
 
@@ -749,10 +749,10 @@ export function TradeIdeaForm({
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <p className="text-base font-medium text-zinc-200">What&apos;s your trade idea?</p>
           <p className="mt-1 text-sm text-zinc-500">
-            Bring something you&apos;ve actually noticed — a pattern, a level, a reaction to news.
+            Bring something you&apos;ve actually noticed: a pattern, a level, a reaction to news.
             Describe it below in your own words; the next few steps turn it into a structured plan
             and check it against good risk practice. We won&apos;t hand you a strategy to use
-            instead — this is about building yours.
+            instead. This is about building yours.
           </p>
           <textarea
             value={fields.notes}
@@ -774,7 +774,7 @@ export function TradeIdeaForm({
         {showTemplates && (
           <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
             <p className="text-sm text-zinc-500">
-              These only set the shape of an idea — instrument, direction, whether entry waits on a
+              These only set the shape of an idea: instrument, direction, whether entry waits on a
               condition. You&apos;ll still describe what you&apos;re actually seeing yourself on the
               next few steps.
             </p>
@@ -833,19 +833,19 @@ export function TradeIdeaForm({
         )}
         {priceStatus === "error" && (
           <span className="text-sm text-zinc-500">
-            Live price unavailable — no problem, you can still describe everything in words below.
+            Live price unavailable. No problem, you can still describe everything in words below.
           </span>
         )}
         {priceStatus === "ready" && livePrice !== null && (
           <span className="text-sm text-emerald-400">
-            Current price: <span className="font-medium">{livePrice}</span> — use this as a
+            Current price: <span className="font-medium">{livePrice}</span>. Use this as a
             reference point for your entry, stop, and target.
           </span>
         )}
         {rangeStatus === "ready" && priceRange && (
           <span className="text-sm text-sky-400">
             {priceRange.periodDays}-day range: <span className="font-medium">{priceRange.low}</span>{" "}
-            – <span className="font-medium">{priceRange.high}</span> (trending {priceRange.trend})
+            to <span className="font-medium">{priceRange.high}</span> (trending {priceRange.trend})
           </span>
         )}
         {calendarStatus === "ready" && calendarEvents.length > 0 && (
@@ -862,7 +862,7 @@ export function TradeIdeaForm({
                   >
                     {e.impact} impact
                   </span>
-                  ) — {formatEventTime(e.time)}
+                  ), {formatEventTime(e.time)}
                 </li>
               ))}
             </ul>
@@ -874,7 +874,7 @@ export function TradeIdeaForm({
       {step === 2 && (
       <Field
         label="Which way do you think it's going?"
-        info="'Long' means you think the price will rise — you buy now, hoping to sell later for more. 'Short' means you think the price will fall — you effectively sell first, planning to buy back later at a lower price. Short trades are a more advanced concept, so stick with Long until you're comfortable."
+        info="'Long' means you think the price will rise: you buy now, hoping to sell later for more. 'Short' means you think the price will fall: you effectively sell first, planning to buy back later at a lower price. Short trades are a more advanced concept, so stick with Long until you're comfortable."
       >
         <div className="flex gap-3">
           <button
@@ -886,7 +886,7 @@ export function TradeIdeaForm({
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
             }`}
           >
-            Long — price will go up
+            Long: price will go up
           </button>
           <button
             type="button"
@@ -897,7 +897,7 @@ export function TradeIdeaForm({
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
             }`}
           >
-            Short — price will go down
+            Short: price will go down
           </button>
         </div>
       </Field>
@@ -906,7 +906,7 @@ export function TradeIdeaForm({
       {step === 3 && (
       <Field
         label="When do you want to enter?"
-        info="Your 'entry' is the price where your trade actually opens. 'Right now' jumps in immediately at whatever the current price happens to be. 'Wait for a price/condition' means you only enter once something specific happens first — e.g. the price reaching a certain level — which usually gives you more control than jumping in blind."
+        info="Your 'entry' is the price where your trade actually opens. 'Right now' jumps in immediately at whatever the current price happens to be. 'Wait for a price/condition' means you only enter once something specific happens first (e.g. the price reaching a certain level), which usually gives you more control than jumping in blind."
       >
         <div className="flex gap-3">
           <button
@@ -958,9 +958,9 @@ export function TradeIdeaForm({
 
       {step === 4 && (
       <Field
-        label="Stop loss — where you'll get out if you're wrong"
-        hint="The most important field — don't skip it."
-        info="A stop loss is a safety net: an exact point where you'll automatically exit if the trade goes against you. Without one, a bad trade has no limit on how much it can cost you. Don't know the exact price? Leave it blank and just describe it in words on the right — that's still enough to work with."
+        label="Stop loss: where you'll get out if you're wrong"
+        hint="The most important field. Don't skip it."
+        info="A stop loss is a safety net: an exact point where you'll automatically exit if the trade goes against you. Without one, a bad trade has no limit on how much it can cost you. Don't know the exact price? Leave it blank and just describe it in words on the right. That's still enough to work with."
         tourId="stop-loss"
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -981,7 +981,7 @@ export function TradeIdeaForm({
         </div>
         {noStopLossDefined && (
           <p className="mt-1 text-sm text-orange-400">
-            You haven&apos;t set a stop loss yet. Every experienced trader defines one before entering —
+            You haven&apos;t set a stop loss yet. Every experienced trader defines one before entering;
             even just a reason in words is better than nothing.
           </p>
         )}
@@ -990,8 +990,8 @@ export function TradeIdeaForm({
 
       {step === 5 && (
       <Field
-        label="Take profit — where you'll bank the win"
-        info="A take profit is the price where you plan to exit and lock in your gains if the trade goes your way. It doesn't have to be exact — even a rough idea of 'where' helps you judge whether the potential win is worth the risk. Don't know the exact price? Leave it blank and describe it in words instead."
+        label="Take profit: where you'll bank the win"
+        info="A take profit is the price where you plan to exit and lock in your gains if the trade goes your way. It doesn't have to be exact; even a rough idea of 'where' helps you judge whether the potential win is worth the risk. Don't know the exact price? Leave it blank and describe it in words instead."
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <input
@@ -1015,7 +1015,7 @@ export function TradeIdeaForm({
       {step === 6 && (
       <Field
         label="How much of your account are you risking?"
-        info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss — not how much you're putting into the trade overall. Most experienced traders risk 1–2% per trade; keeping it small means no single bad trade can seriously damage your account."
+        info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss, not how much you're putting into the trade overall. Most experienced traders risk 1 to 2% per trade; keeping it small means no single bad trade can seriously damage your account."
       >
         <div className="flex items-center gap-2">
           <input
@@ -1031,7 +1031,7 @@ export function TradeIdeaForm({
         </div>
         {riskTooHigh && (
           <p className="mt-1 text-sm text-orange-400">
-            {fields.riskPercent}% is higher than what most experienced traders risk on one trade —
+            {fields.riskPercent}% is higher than what most experienced traders risk on one trade;
             a short losing streak could hurt a lot more than it might feel like right now.
           </p>
         )}
@@ -1069,7 +1069,7 @@ export function TradeIdeaForm({
       {step === 8 && (
       <Field
         label="Attach a chart screenshot (optional)"
-        hint="Checked against the plan above — never overrides it."
+        hint="Checked against the plan above. Never overrides it."
       >
         {chartPreviewUrl ? (
           <div className="flex items-center gap-3">
@@ -1114,8 +1114,8 @@ export function TradeIdeaForm({
 
           <ReviewRow label="Direction" onEdit={() => goToStep(2)}>
             {fields.direction === "long"
-              ? "Long — you expect the price to go up"
-              : "Short — you expect the price to go down"}
+              ? "Long: you expect the price to go up"
+              : "Short: you expect the price to go down"}
           </ReviewRow>
 
           <ReviewRow label="Entry" onEdit={() => goToStep(3)}>
@@ -1126,18 +1126,18 @@ export function TradeIdeaForm({
                   fields.entryCondition && `When ${fields.entryCondition}`,
                 ]
                   .filter(Boolean)
-                  .join(" — ") || "Waiting for a condition (not described yet)"}
+                  .join(", ") || "Waiting for a condition (not described yet)"}
           </ReviewRow>
 
           <ReviewRow label="Stop loss" onEdit={() => goToStep(4)} warning={noStopLossDefined}>
             {noStopLossDefined
-              ? "No stop loss set yet — go back and add one."
+              ? "No stop loss set yet. Go back and add one."
               : [
                   fields.stopLossPrice && `At ${fields.stopLossPrice}`,
                   fields.stopLossCondition && fields.stopLossCondition,
                 ]
                   .filter(Boolean)
-                  .join(" — ")}
+                  .join(", ")}
           </ReviewRow>
 
           <ReviewRow label="Take profit" onEdit={() => goToStep(5)}>
@@ -1146,12 +1146,12 @@ export function TradeIdeaForm({
               fields.takeProfitCondition && fields.takeProfitCondition,
             ]
               .filter(Boolean)
-              .join(" — ") || "Not set (optional)"}
+              .join(", ") || "Not set (optional)"}
           </ReviewRow>
 
           <ReviewRow label="Risk per trade" onEdit={() => goToStep(6)} warning={riskTooHigh}>
             {fields.riskPercent}% of your account
-            {riskTooHigh ? " — higher than most experienced traders risk on one trade" : ""}
+            {riskTooHigh ? ", higher than most experienced traders risk on one trade" : ""}
           </ReviewRow>
 
           <ReviewRow label="Account & position size" onEdit={() => goToStep(7)}>

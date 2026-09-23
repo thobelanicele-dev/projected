@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPageLayout, LegalSection } from "@/app/components/LegalPageLayout";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — FxInsites",
+  title: "Privacy Policy | FxInsites",
 };
 
 export default function PrivacyPage() {
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       <LegalSection title="Information we collect">
         <p>
           <strong className="text-zinc-200">Account information:</strong> your email address,
-          username, and password. Your password is stored as a salted hash — we never store it, and
+          username, and password. Your password is stored as a salted hash; we never store it, and
           can never see it, in plain text.
         </p>
         <p>
@@ -36,14 +36,14 @@ export default function PrivacyPage() {
         <p>
           <strong className="text-zinc-200">Payment information:</strong> if you subscribe to a paid
           plan, your payment is handled entirely by Paystack. FxInsites never receives or stores your
-          card number or bank details — only your subscription tier and status.
+          card number or bank details, only your subscription tier and status.
         </p>
       </LegalSection>
 
       <LegalSection title="What stays on your device only">
         <p>
           Your trade journal, saved plan drafts, plan checklists, and risk-calculator inputs are
-          stored in your browser&apos;s local storage — never sent to or stored on our servers.
+          stored in your browser&apos;s local storage, never sent to or stored on our servers.
           Clearing your browser data, or switching device or browser, will not carry this information
           over, since we never had a copy of it.
         </p>
@@ -54,14 +54,14 @@ export default function PrivacyPage() {
           <li>To create, secure, and manage your account.</li>
           <li>
             To generate your trade plans and check them against risk-management rules, using
-            Anthropic&apos;s Claude AI — your submitted idea and any attached chart image is sent to
+            Anthropic&apos;s Claude AI: your submitted idea and any attached chart image is sent to
             Anthropic for this purpose.
           </li>
           <li>To send account-related emails (verification, password reset) via Resend.</li>
           <li>To process payments via Paystack, if you subscribe to a paid plan.</li>
           <li>
             To fetch live prices, historical price ranges, and economic-calendar data from Twelvedata
-            and Financial Modeling Prep — only the instrument symbol or a date range is sent to these
+            and Financial Modeling Prep, only the instrument symbol or a date range is sent to these
             providers, never anything that identifies you.
           </li>
         </ul>
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
         <p>
           We use one essential cookie to keep you logged in. We don&apos;t use advertising or
           cross-site tracking cookies of any kind. The website analytics described below don&apos;t
-          use cookies either — see that section for how they work instead.
+          use cookies either; see that section for how they work instead.
         </p>
       </LegalSection>
 
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
         <p>
           We keep an anonymous daily count of how often each tool (planner, risk calculator,
           backtest, journal, dashboard) is opened, so we know whether the product is actually
-          being used. This is just a running number per tool per day — it&apos;s never linked to
+          being used. This is just a running number per tool per day; it&apos;s never linked to
           your account, your email, or any other identifying information, and it&apos;s separate
           from the essential login cookie above.
         </p>
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="Website analytics">
         <p>
-          We use Vercel Web Analytics to see basic visit information — which pages are viewed,
+          We use Vercel Web Analytics to see basic visit information: which pages are viewed,
           what site referred you here, your approximate location (country/region, not exact),
           and your general device type. It doesn&apos;t use cookies, doesn&apos;t store your IP
           address, and can&apos;t track you across other websites. Vercel identifies a visit using
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
       <LegalSection title="Your rights">
         <p>
           Depending on where you live, you may have rights to access, correct, or delete your
-          personal information — for example under South Africa&apos;s Protection of Personal
+          personal information, for example under South Africa&apos;s Protection of Personal
           Information Act (POPIA), or the EU/UK GDPR if it applies to you. Contact us at{" "}
           <a href="mailto:hello@fxinsites.com" className="text-sky-400 hover:text-sky-300">
             hello@fxinsites.com

@@ -293,7 +293,7 @@ export function BacktestForm({
               <span className="font-medium text-sky-300">How this was interpreted: </span>
               {explanation}
               <span className="mt-1 block text-zinc-500">
-                Review the fields below — edit anything that doesn&apos;t match what you meant.
+                Review the fields below; edit anything that doesn&apos;t match what you meant.
               </span>
             </div>
           )}
@@ -416,7 +416,7 @@ export function BacktestForm({
         </Field>
         <Field
           label="Trading cost %"
-          hint="Spread + slippage, charged on every trade — even 'breakeven' ones lose this."
+          hint="Spread + slippage, charged on every trade; even 'breakeven' ones lose this."
         >
           <input
             type="number"

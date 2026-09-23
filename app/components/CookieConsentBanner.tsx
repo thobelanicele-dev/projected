@@ -25,7 +25,7 @@ export function CookieConsentBanner() {
     <div className="fixed inset-x-0 bottom-0 z-[70] border-t border-zinc-800 bg-zinc-950/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-6 py-4 sm:flex-row sm:justify-between">
         <p className="text-sm text-zinc-400">
-          We use one essential cookie to keep you logged in — no advertising or tracking cookies.
+          We use one essential cookie to keep you logged in; no advertising or tracking cookies.
           We also use cookieless, anonymous page-view analytics. See our{" "}
           <Link href="/privacy" className="text-sky-400 hover:text-sky-300">
             Privacy Policy

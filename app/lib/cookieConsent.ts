@@ -17,6 +17,6 @@ export function acknowledgeCookies(): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, "1");
   } catch {
-    // ignore — worst case the banner reappears next visit
+    // ignore; worst case the banner reappears next visit
   }
 }

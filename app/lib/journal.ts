@@ -13,7 +13,7 @@ export interface JournalEntry {
   direction: "long" | "short";
   ideaText?: string;
   plan?: TradePlan;
-  // The exact wizard fields the user entered when this plan was built — lets
+  // The exact wizard fields the user entered when this plan was built. Lets
   // "Use as a starting point" restore the original wording, not just the
   // numbers. Absent on entries saved before this field existed.
   fields?: TradeIdeaFields;
@@ -90,7 +90,7 @@ export function addPlanToJournal(ideaText: string, plan: TradePlan, fields: Trad
 
 // Reconstructs the wizard fields for "Use as a starting point": the exact
 // originally-typed fields if they were saved, otherwise a best-effort
-// approximation built from the AI-generated plan (numeric levels only —
+// approximation built from the AI-generated plan (numeric levels only;
 // the original wording isn't recoverable). Returns null if there's nothing
 // to build from at all.
 export function reconstructFieldsFromEntry(

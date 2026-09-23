@@ -44,7 +44,7 @@ export function TradeLadder({ plan }: { plan: TradePlan }) {
   const max = Math.max(...prices);
 
   if (min === max) {
-    return <Fallback text="Entry, stop, and target are at the same price — nothing to diagram." />;
+    return <Fallback text="Entry, stop, and target are at the same price; nothing to diagram." />;
   }
 
   const padding = (max - min) * 0.12;

@@ -82,7 +82,7 @@ const STEPS = [
   {
     n: "02",
     title: "We check it for you",
-    body: "We flag anything risky — no exit plan, betting too much, ignoring the trend — and say why.",
+    body: "We flag anything risky (no exit plan, betting too much, ignoring the trend) and say why.",
   },
   {
     n: "03",
@@ -92,18 +92,18 @@ const STEPS = [
 ];
 
 const EARLY_FEEDBACK = [
-  "The risk checks catch things I would've missed — no stop loss, sizing too big, chasing a move I'd already missed.",
+  "The risk checks catch things I would've missed: no stop loss, sizing too big, chasing a move I'd already missed.",
   "I don't know most trading jargon, and it still made sense to me.",
   "The backtests deduct spread and slippage instead of showing a fantasy win rate.",
   "Having every plan in one journal, checked against what actually happened, changed how I review my own trading.",
-  "It slows me down before I enter a trade — which is exactly what I needed.",
+  "It slows me down before I enter a trade, which is exactly what I needed.",
 ];
 
 const GRID_FEATURES = [
   {
     eyebrow: "Trade journal",
     title: "Your history, kept honest",
-    body: "Every plan saves automatically and gets checked against real price history — not just what you remember.",
+    body: "Every plan saves automatically and gets checked against real price history, not just what you remember.",
     stats: [
       ["Win rate", "58%"],
       ["Avg R", "0.8R"],
@@ -113,7 +113,7 @@ const GRID_FEATURES = [
   {
     eyebrow: "Backtest engine",
     title: "Test it before you risk it",
-    body: "Pick a template or describe your own strategy — run it against real historical prices, costs included.",
+    body: "Pick a template or describe your own strategy, then run it against real historical prices, costs included.",
     stats: [
       ["Trades", "24"],
       ["Win rate", "46%"],
@@ -123,7 +123,7 @@ const GRID_FEATURES = [
   {
     eyebrow: "Risk calculator",
     title: "Know your exact risk",
-    body: "Position size, margin, and correlated exposure — worked out automatically from your account and risk %.",
+    body: "Position size, margin, and correlated exposure, worked out automatically from your account and risk %.",
     stats: [
       ["Risk", "$100"],
       ["Size", "0.20 lots"],
@@ -139,7 +139,7 @@ const FAQS = [
   },
   {
     q: "Is this suitable if I have no trading experience?",
-    a: "Yes. Every field explains itself in plain language — no prior terminology assumed.",
+    a: "Yes. Every field explains itself in plain language; no prior terminology assumed.",
   },
   {
     q: "Can I import my existing MT4 or TradingView history?",
@@ -147,7 +147,7 @@ const FAQS = [
   },
   {
     q: "Does the system generate trade signals?",
-    a: "No. It checks the risk structure of an idea you supply — it doesn't predict direction.",
+    a: "No. It checks the risk structure of an idea you supply; it doesn't predict direction.",
   },
   {
     q: "How are backtest results kept realistic?",
@@ -241,7 +241,7 @@ function PlannerMock() {
 
 export default async function LandingPage() {
   // A DB hiccup here must not take down the entire marketing page for every
-  // visitor — fall back to the logged-out view rather than erroring.
+  // visitor; fall back to the logged-out view rather than erroring.
   let isLoggedIn = false;
   try {
     isLoggedIn = (await getSession()) !== null;
@@ -365,9 +365,9 @@ export default async function LandingPage() {
               the mistakes beginners make most.
             </p>
             <ul className="mt-6 space-y-2 text-sm text-zinc-400">
-              <li className="flex gap-2"><Dot />Flags bad habits — chasing price, revenge trading, oversized bets</li>
-              <li className="flex gap-2"><Dot />Checked against the real, current price — not guesswork</li>
-              <li className="flex gap-2"><Dot />Every question explains itself — no jargon</li>
+              <li className="flex gap-2"><Dot />Flags bad habits: chasing price, revenge trading, oversized bets</li>
+              <li className="flex gap-2"><Dot />Checked against the real, current price, not guesswork</li>
+              <li className="flex gap-2"><Dot />Every question explains itself: no jargon</li>
             </ul>
           </div>
           <PlannerMock />
@@ -519,7 +519,7 @@ export default async function LandingPage() {
             Start with a single trade plan.
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-            Try it free for 7 days — no card required.
+            Try it free for 7 days. No card required.
           </p>
           <div className="mt-8">
             <Link

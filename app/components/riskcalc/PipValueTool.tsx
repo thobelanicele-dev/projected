@@ -8,8 +8,8 @@ import { useRiskCalcShared } from "@/app/components/riskcalc/SharedInputsContext
 import { calculatePipValue } from "@/app/lib/riskCalculator";
 
 const CASE_LABEL: Record<string, string> = {
-  "quote-match": "Exact — quote currency matches your account currency",
-  "base-match": "Exact — base currency matches your account currency",
+  "quote-match": "Exact: quote currency matches your account currency",
+  "base-match": "Exact: base currency matches your account currency",
   cross: "This pair doesn't share a leg with your account currency",
 };
 

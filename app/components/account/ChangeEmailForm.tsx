@@ -70,7 +70,7 @@ export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
       )}
       {success && (
         <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">
-          Check your new inbox for a confirmation link — your email won&apos;t change until you click it.
+          Check your new inbox for a confirmation link; your email won&apos;t change until you click it.
         </div>
       )}
 

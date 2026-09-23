@@ -165,7 +165,7 @@ export function CorrelationTool() {
                     className="rounded-lg border border-orange-500/40 bg-orange-500/10 p-3 text-sm text-orange-300"
                   >
                     {g.positionIds.length} positions combine to net {g.direction === "long" ? "+" : "−"}
-                    {Math.abs(g.combinedNetLots)} lots of {g.currency} exposure — combined risk contribution $
+                    {Math.abs(g.combinedNetLots)} lots of {g.currency} exposure, combined risk contribution $
                     {g.combinedRisk}
                   </div>
                 ))}

@@ -22,7 +22,7 @@ export async function createSession(userId: string): Promise<void> {
 
   // The raw token is only ever kept in the httpOnly cookie. The database
   // stores a SHA-256 hash of it (like every other token in this app) and a
-  // separate random row id — so reading the sessions table alone is never
+  // separate random row id, so reading the sessions table alone is never
   // enough to impersonate a logged-in user.
   await query(
     "INSERT INTO sessions (id, token_hash, user_id, expires_at, created_at) VALUES ($1, $2, $3, $4, $5)",
@@ -89,14 +89,14 @@ export async function destroySession(): Promise<void> {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-/** Deletes every session belonging to a user — used on password reset. */
+/** Deletes every session belonging to a user. Used on password reset. */
 export async function destroyAllSessionsForUser(userId: string): Promise<void> {
   await query("DELETE FROM sessions WHERE user_id = $1", [userId]);
 }
 
 /**
- * Deletes every session for a user except the one matching exceptTokenHash —
- * used on password change, where the person already proved they know the
+ * Deletes every session for a user except the one matching exceptTokenHash.
+ * Used on password change, where the person already proved they know the
  * password from the session making the request, so only other (possibly
  * hijacked) sessions need to be cut off.
  */
@@ -104,7 +104,7 @@ export async function destroyOtherSessionsForUser(userId: string, exceptTokenHas
   await query("DELETE FROM sessions WHERE user_id = $1 AND token_hash != $2", [userId, exceptTokenHash]);
 }
 
-/** The current request's session token, hashed the same way it's stored — null if not logged in. */
+/** The current request's session token, hashed the same way it's stored; null if not logged in. */
 export async function getCurrentSessionTokenHash(): Promise<string | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;

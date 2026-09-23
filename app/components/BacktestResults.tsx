@@ -19,15 +19,15 @@ export function BacktestResults({ result }: { result: BacktestResult }) {
 
       <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatTile label="Total trades" value={String(stats.totalTrades)} />
-        <StatTile label="Win rate" value={stats.winRate !== null ? `${stats.winRate}%` : "—"} />
-        <StatTile label="Avg R" value={stats.avgR !== null ? `${stats.avgR}R` : "—"} />
+        <StatTile label="Win rate" value={stats.winRate !== null ? `${stats.winRate}%` : "N/A"} />
+        <StatTile label="Avg R" value={stats.avgR !== null ? `${stats.avgR}R` : "N/A"} />
         <StatTile
           label="Profit factor"
-          value={stats.profitFactor !== null ? stats.profitFactor.toString() : "—"}
+          value={stats.profitFactor !== null ? stats.profitFactor.toString() : "N/A"}
         />
         <StatTile
           label="Max drawdown"
-          value={stats.maxDrawdownR !== null ? `${stats.maxDrawdownR}R` : "—"}
+          value={stats.maxDrawdownR !== null ? `${stats.maxDrawdownR}R` : "N/A"}
         />
         <StatTile label="Losses" value={String(stats.losses)} />
       </div>

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Always respond the same way whether or not the account exists, or is
-  // already verified — same email-enumeration-prevention boundary as
+  // already verified: the same email-enumeration-prevention boundary as
   // reset-password/request.
   const normalizedEmail = email.trim().toLowerCase();
 

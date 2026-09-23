@@ -13,7 +13,7 @@ async function sendEmail(to: string, subject: string, html: string, fallbackLink
   const client = getClient();
 
   if (!client) {
-    // No RESEND_API_KEY yet — log the link so the flow is testable end-to-end locally.
+    // No RESEND_API_KEY yet; log the link so the flow is testable end-to-end locally.
     console.log(`[email] RESEND_API_KEY not set. Would send "${subject}" to ${to}:\n${fallbackLink}`);
     return;
   }

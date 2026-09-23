@@ -81,16 +81,16 @@ export default function JournalPage() {
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatTile label="Trades logged" value={String(stats.totalTrades)} />
-        <StatTile label="Win rate" value={stats.winRate !== null ? `${stats.winRate}%` : "—"} />
-        <StatTile label="Avg R" value={stats.avgR !== null ? `${stats.avgR}R` : "—"} />
+        <StatTile label="Win rate" value={stats.winRate !== null ? `${stats.winRate}%` : "N/A"} />
+        <StatTile label="Avg R" value={stats.avgR !== null ? `${stats.avgR}R` : "N/A"} />
         <StatTile
           label="Total P/L"
-          value={stats.totalProfitAmount !== null ? `${stats.totalProfitAmount >= 0 ? "+" : ""}${stats.totalProfitAmount}` : "—"}
+          value={stats.totalProfitAmount !== null ? `${stats.totalProfitAmount >= 0 ? "+" : ""}${stats.totalProfitAmount}` : "N/A"}
           hint="From imported trades with a profit figure"
         />
         <StatTile
           label="Rule adherence"
-          value={stats.ruleAdherenceRate !== null ? `${stats.ruleAdherenceRate}%` : "—"}
+          value={stats.ruleAdherenceRate !== null ? `${stats.ruleAdherenceRate}%` : "N/A"}
           hint={`Planner trades only (${stats.ruleAdherenceSampleSize})`}
         />
       </div>
@@ -119,7 +119,7 @@ export default function JournalPage() {
             {importPreview.validCount} trade{importPreview.validCount === 1 ? "" : "s"} ready to
             import
             {importPreview.skippedCount > 0
-              ? ` — ${importPreview.skippedCount} row${importPreview.skippedCount === 1 ? "" : "s"} skipped (couldn't parse)`
+              ? `, ${importPreview.skippedCount} row${importPreview.skippedCount === 1 ? "" : "s"} skipped (couldn't parse)`
               : ""}
             .
           </p>
@@ -129,8 +129,8 @@ export default function JournalPage() {
               .slice(0, 8)
               .map((r, i) => (
                 <div key={i}>
-                  {r.symbol} · {r.direction} · entry {r.entryPrice ?? "—"} → exit{" "}
-                  {r.exitPrice ?? "—"}
+                  {r.symbol} · {r.direction} · entry {r.entryPrice ?? "N/A"} → exit{" "}
+                  {r.exitPrice ?? "N/A"}
                   {r.profit !== null ? ` · P/L ${r.profit}` : ""}
                 </div>
               ))}

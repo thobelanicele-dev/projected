@@ -2,7 +2,7 @@ import type { TradeIdeaFields } from "@/app/components/TradeIdeaForm";
 
 const STORAGE_KEY = "fxinsites.plannerDraft";
 const VERSION = 1;
-const MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks — an older draft isn't worth resurrecting
+const MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks; an older draft isn't worth resurrecting
 
 export interface PlannerDraft {
   fields: TradeIdeaFields;
@@ -33,7 +33,7 @@ export function savePlannerDraft(draft: Omit<PlannerDraft, "savedAt" | "version"
     const toSave: PlannerDraft = { ...draft, savedAt: Date.now(), version: VERSION };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch {
-    // localStorage can throw (quota, private browsing) — losing a draft save isn't worth surfacing
+    // localStorage can throw (quota, private browsing); losing a draft save isn't worth surfacing
   }
 }
 

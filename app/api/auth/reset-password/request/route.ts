@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   // From here on, always respond the same way whether or not the account
-  // exists — this is the email-enumeration-prevention boundary.
+  // exists: this is the email-enumeration-prevention boundary.
   const normalizedEmail = email.trim().toLowerCase();
 
   try {

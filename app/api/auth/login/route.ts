@@ -8,7 +8,7 @@ const RATE_LIMIT = 10;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
 // A syntactically valid salt:hash placeholder, so a login attempt against an
-// unknown email still runs a full scrypt comparison — keeps response timing
+// unknown email still runs a full scrypt comparison, which keeps response timing
 // close to the real-account case instead of returning early and cheap.
 const DUMMY_HASH = `${"0".repeat(32)}:${"0".repeat(128)}`;
 

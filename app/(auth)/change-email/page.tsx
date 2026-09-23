@@ -41,7 +41,7 @@ export default async function ChangeEmailPage({
       : error === "email-taken"
         ? "Someone registered that email address before you confirmed the change. Try a different address from your account settings."
         : error === "server-error"
-          ? "This wasn't a problem with your link — please try clicking it again in a moment."
+          ? "This wasn't a problem with your link. Please try clicking it again in a moment."
           : "This link has expired or was already used.";
 
   return (

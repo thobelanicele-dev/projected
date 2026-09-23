@@ -62,7 +62,7 @@ export function MarginLeverageTool() {
         { label: "Required margin", value: `${shared.accountCurrency} ${outcome.result.requiredMargin.toLocaleString()}` },
         {
           label: "Margin level",
-          value: outcome.result.marginLevelPct === null ? "—" : `${outcome.result.marginLevelPct}%`,
+          value: outcome.result.marginLevelPct === null ? "N/A" : `${outcome.result.marginLevelPct}%`,
           tone: outcome.result.marginCallWarning ? "danger" : "default",
         },
         { label: "Free margin", value: `${shared.accountCurrency} ${outcome.result.freeMargin.toLocaleString()}` },

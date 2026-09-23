@@ -1,7 +1,7 @@
 import type { TradeComparison } from "@/app/lib/dashboardStats";
 
 function formatDate(ts: number | null): string {
-  if (ts === null) return "—";
+  if (ts === null) return "N/A";
   return new Date(ts).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -59,7 +59,7 @@ export function AccuracyTable({ comparisons }: { comparisons: TradeComparison[] 
                 {c.errorR}×
               </td>
               <td className="px-4 py-2.5 text-right text-zinc-400">
-                {c.entryDeviationPct !== null ? `${c.entryDeviationPct}%` : "—"}
+                {c.entryDeviationPct !== null ? `${c.entryDeviationPct}%` : "N/A"}
               </td>
             </tr>
           ))}

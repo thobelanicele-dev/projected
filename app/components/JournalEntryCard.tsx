@@ -152,7 +152,7 @@ export function JournalEntryCard({
           <p className="text-xs text-zinc-500">
             {entry.plan
               ? entry.plan.summary
-              : "Imported from a CSV export — no AI plan or rule-check exists for this trade, just the raw record."}
+              : "Imported from a CSV export: no AI plan or rule-check exists for this trade, just the raw record."}
           </p>
 
           <div>
@@ -208,7 +208,7 @@ export function JournalEntryCard({
                     return (
                       <span className={`text-xs ${withinRange ? "text-emerald-400" : "text-orange-400"}`}>
                         {withinRange ? "✓ Within" : "⚠ Outside"} {verification.date}&apos;s traded
-                        range ({verification.low}–{verification.high})
+                        range ({verification.low} to {verification.high})
                       </span>
                     );
                   })()}
@@ -251,7 +251,7 @@ export function JournalEntryCard({
           )}
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-zinc-400">Notes — what did you learn?</span>
+            <span className="text-xs text-zinc-400">Notes: what did you learn?</span>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}

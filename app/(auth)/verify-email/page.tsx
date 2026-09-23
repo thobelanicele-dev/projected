@@ -35,7 +35,7 @@ export default async function VerifyEmailPage({
     error === "missing-token"
       ? "Use the full link from your verification email."
       : error === "server-error"
-        ? "This wasn't a problem with your link — please try clicking it again in a moment."
+        ? "This wasn't a problem with your link. Please try clicking it again in a moment."
         : "This link has expired or was already used.";
 
   return (

@@ -38,15 +38,15 @@ const responseSchema = z.object({
     ),
 });
 
-const SYSTEM_PROMPT = `You are mapping a trader's plain-English strategy description onto one of exactly three supported, precisely-defined backtest templates. You must pick the single closest-matching template and fill in its parameters — you cannot invent a new strategy type or run logic outside these three.
+const SYSTEM_PROMPT = `You are mapping a trader's plain-English strategy description onto one of exactly three supported, precisely-defined backtest templates. You must pick the single closest-matching template and fill in its parameters; you cannot invent a new strategy type or run logic outside these three.
 
-1. ma_crossover — enter long when a faster moving average crosses above a slower one, short when it crosses below. Params: fastPeriod, slowPeriod, maKind (sma or ema).
-2. breakout — enter long when price closes above the highest high of the last N days, short when it closes below the lowest low. Params: lookbackDays.
-3. rsi — enter long when RSI crosses down into an oversold zone, short when it crosses up into an overbought zone. Params: period, oversold, overbought.
+1. ma_crossover: enter long when a faster moving average crosses above a slower one, short when it crosses below. Params: fastPeriod, slowPeriod, maKind (sma or ema).
+2. breakout: enter long when price closes above the highest high of the last N days, short when it closes below the lowest low. Params: lookbackDays.
+3. rsi: enter long when RSI crosses down into an oversold zone, short when it crosses up into an overbought zone. Params: period, oversold, overbought.
 
 Also infer a stop-loss percentage and take-profit percentage from the description if mentioned (e.g. "risk 2%, target 6%" or "1:3 risk reward"). If not mentioned, use conservative defaults (stopLossPct: 2, takeProfitPct: 6).
 
-If the description doesn't map cleanly onto one of these three templates, pick whichever is the closest conceptual match and clearly say so in the explanation — do not silently guess without flagging the mismatch. Be explicit in the explanation about every parameter you had to assume rather than read directly from the description, so the trader can correct anything that's wrong before running the backtest.`;
+If the description doesn't map cleanly onto one of these three templates, pick whichever is the closest conceptual match and clearly say so in the explanation; do not silently guess without flagging the mismatch. Be explicit in the explanation about every parameter you had to assume rather than read directly from the description, so the trader can correct anything that's wrong before running the backtest.`;
 
 export async function POST(req: NextRequest) {
   let description: unknown;

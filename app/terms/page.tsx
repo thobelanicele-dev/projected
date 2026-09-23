@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPageLayout, LegalSection } from "@/app/components/LegalPageLayout";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions — FxInsites",
+  title: "Terms & Conditions | FxInsites",
 };
 
 export default function TermsPage() {

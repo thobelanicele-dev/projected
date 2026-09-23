@@ -28,7 +28,7 @@ export function SharedInputsPanel() {
   const [balanceText, setBalanceText] = useState(String(shared.accountBalance));
   const [riskText, setRiskText] = useState(String(shared.riskValue));
 
-  // Resync local text once the provider's async localStorage read lands — never again after
+  // Resync local text once the provider's async localStorage read lands; never again after
   // that, so it doesn't fight with the user mid-keystroke (e.g. typing a trailing ".").
   useEffect(() => {
     if (!hydrated) return;
@@ -62,7 +62,7 @@ export function SharedInputsPanel() {
     <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
       <p className="text-xs uppercase tracking-wide text-zinc-500">Shared inputs</p>
       <p className="mt-1 text-xs text-zinc-500">
-        These apply across all five tools below — change one and every tab updates.
+        These apply across all five tools below; change one and every tab updates.
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">

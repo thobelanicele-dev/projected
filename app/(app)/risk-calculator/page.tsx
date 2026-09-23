@@ -29,7 +29,7 @@ export default function RiskCalculatorPage() {
       <UsagePing tool="risk-calculator" />
       <h1 className="text-3xl font-semibold tracking-tight">Risk calculator</h1>
       <p className="mt-2 text-zinc-400">
-        Five tools, one shared set of inputs — position size, pip value, risk/reward, margin
+        Five tools, one shared set of inputs: position size, pip value, risk/reward, margin
         &amp; leverage, and multi-trade correlation risk. Change your account balance or risk
         per trade once and it propagates everywhere below.
       </p>

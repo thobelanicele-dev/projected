@@ -87,7 +87,7 @@ export default function Home() {
     setPlan(entry.plan);
     setPositionSize(undefined);
     // Chart images are never persisted with a journal entry (avoids risking the
-    // app's localStorage quota on multi-MB base64 images) — so a saved plan
+    // app's localStorage quota on multi-MB base64 images), so a saved plan
     // never has an overlay, even if the original submission had one.
     setChartImageUrl(null);
     setCurrentEntryId(entry.id);
@@ -109,7 +109,7 @@ export default function Home() {
       <UsagePing tool="planner" />
       <h1 className="text-3xl font-semibold tracking-tight">FxInsites</h1>
       <p className="mt-2 text-zinc-400">
-        Fill in your trade idea below, field by field — no trading jargon required. The AI
+        Fill in your trade idea below, field by field; no trading jargon required. The AI
         turns it into a structured plan, checks it against risk-management rules, and flags
         any behavioral bias, so you can trade with a bit more discipline even if you&apos;re
         just starting out.

@@ -15,7 +15,7 @@ function createPool(): Pool {
   }
 
   // Supabase's pooler generally presents a publicly-trusted certificate, so
-  // strict verification (the safer default) usually works — but flipping
+  // strict verification (the safer default) usually works, but flipping
   // this blind against a live production database, with no way to test it
   // here first, risks breaking every DB call at once if it doesn't. Set
   // DATABASE_SSL_STRICT=true once you've confirmed it connects cleanly.
@@ -74,7 +74,7 @@ async function migrate(): Promise<void> {
     );
 
     -- Anonymous, aggregate-only: which tool, which day, how many opens. No
-    -- user id, no IP, nothing that identifies who — deliberately, since this
+    -- user id, no IP, nothing that identifies who, deliberately, since this
     -- exists only to answer "is this tool being used at all", not to profile
     -- anyone. See app/lib/usage.ts.
     CREATE TABLE IF NOT EXISTS tool_usage (
@@ -95,7 +95,7 @@ async function migrate(): Promise<void> {
 
   // One-time backfill: sessions used to store the raw session token directly
   // as their id (readable in plain text by anyone with DB access). Existing
-  // rows still have that raw token in `id` — hash it into the new column so
+  // rows still have that raw token in `id`; hash it into the new column so
   // lookups can move to the hash without invalidating anyone's login. New
   // sessions (see auth/session.ts) never populate `id` with the raw token.
   const unbackfilled = await pool.query<{ id: string }>(

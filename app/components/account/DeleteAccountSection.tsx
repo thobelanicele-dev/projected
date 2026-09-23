@@ -60,8 +60,8 @@ export function DeleteAccountSection() {
         <h2 className="text-sm font-medium text-red-400">Delete account</h2>
         <p className="mt-1 text-xs text-zinc-500">
           This permanently deletes your account and everything tied to it on our servers. This
-          can&apos;t be undone. Your trade journal, drafts, and checklists — stored only in this
-          browser — won&apos;t be affected, since we never had a copy of them.
+          can&apos;t be undone. Your trade journal, drafts, and checklists (stored only in this
+          browser) won&apos;t be affected, since we never had a copy of them.
         </p>
       </div>
 

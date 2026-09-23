@@ -50,7 +50,7 @@ export async function initializeTransaction(
   callbackUrl: string
 ): Promise<InitializeResult> {
   // Paystack requires `amount` on this endpoint even when a recurring `plan`
-  // is supplied — the plan itself still governs what actually gets charged
+  // is supplied; the plan itself still governs what actually gets charged
   // and on what schedule, this just satisfies the endpoint's validation.
   const amount = await getPlanAmount(planCode);
 
@@ -105,7 +105,7 @@ export interface SubscriptionDetails {
 }
 
 // Fetched fresh rather than relying on anything captured at subscription-create
-// time — disabling a subscription requires an email_token our webhook never
+// time: disabling a subscription requires an email_token our webhook never
 // stored, and this endpoint reliably returns it regardless.
 export async function fetchSubscription(subscriptionCode: string): Promise<SubscriptionDetails> {
   const res = await fetch(`https://api.paystack.co/subscription/${encodeURIComponent(subscriptionCode)}`, {

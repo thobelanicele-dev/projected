@@ -45,7 +45,7 @@ export function ChartOverlay({
 
   return (
     <div>
-      <p className="mb-2 text-xs text-zinc-500">Approximate — estimated from your image, not measured.</p>
+      <p className="mb-2 text-xs text-zinc-500">Approximate: estimated from your image, not measured.</p>
       <div className="relative overflow-hidden rounded-lg border border-zinc-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={imageUrl} alt="Your attached chart with estimated levels" className="block h-auto w-full" />

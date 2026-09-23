@@ -9,7 +9,7 @@ import { TradeChecklist } from "@/app/components/TradeChecklist";
 import { buildReportText } from "@/app/lib/reportExport";
 
 function formatPrice(price: number | null) {
-  return price === null ? "—" : price.toLocaleString(undefined, { maximumFractionDigits: 5 });
+  return price === null ? "N/A" : price.toLocaleString(undefined, { maximumFractionDigits: 5 });
 }
 
 const severityStyles: Record<TradePlan["biasFlags"][number]["severity"], string> = {
@@ -97,7 +97,7 @@ export function TradeCard({
         </button>
       </div>
 
-      {/* Overview: the diagram, chart overlay, and checklist — the "tool", not the document */}
+      {/* Overview: the diagram, chart overlay, and checklist; the "tool", not the document */}
       <div className={view === "overview" ? "mt-5 flex flex-col gap-5" : "hidden"}>
         <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-base leading-relaxed text-zinc-100">
           {plan.summary}
@@ -214,7 +214,7 @@ export function TradeCard({
                   </span>
                   <span>
                     <span className="font-medium">{check.rule}</span>
-                    {check.note && <span className="text-zinc-400"> — {check.note}</span>}
+                    {check.note && <span className="text-zinc-400">: {check.note}</span>}
                   </span>
                 </li>
               ))}
@@ -232,7 +232,7 @@ export function TradeCard({
                   className={`rounded-lg border px-3 py-2 text-sm ${severityStyles[flag.severity]}`}
                 >
                   <span className="font-medium">{flag.flag}</span>
-                  <span className="opacity-80"> — {flag.note}</span>
+                  <span className="opacity-80">: {flag.note}</span>
                 </li>
               ))}
             </ul>

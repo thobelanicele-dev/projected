@@ -248,7 +248,7 @@ function simulateTrades(candles: Candle[], signals: Signal[], exitRules: ExitRul
       signal.direction === "long"
         ? ((exitPrice - entryPrice) / entryPrice) * 100
         : ((entryPrice - exitPrice) / entryPrice) * 100;
-    // Every trade pays the spread on entry and exit regardless of outcome —
+    // Every trade pays the spread on entry and exit regardless of outcome, so
     // a "breakeven" signal is actually a small loss in real trading.
     const pnlPct = rawPnlPct - (exitRules.costPct ?? 0);
     const rMultiple = Math.round((pnlPct / exitRules.stopLossPct) * 100) / 100;

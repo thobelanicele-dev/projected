@@ -16,7 +16,7 @@ export interface RateLimitResult {
 
 /**
  * Simple in-memory fixed-window rate limiter, keyed per caller per route.
- * Lives in process memory only — resets on redeploy/restart and does not
+ * Lives in process memory only: resets on redeploy/restart and does not
  * share state across serverless instances. Good enough as a first line of
  * defense against a single abusive client hammering an AI-backed route;
  * not a substitute for per-account usage limits if this ever needs to
@@ -58,7 +58,7 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): Ra
 /**
  * Best-effort client IP from proxy headers. Spoofable by any caller that
  * isn't going through a trusted reverse proxy that sets these headers
- * itself — fine as an abuse deterrent, not an identity guarantee.
+ * itself; fine as an abuse deterrent, not an identity guarantee.
  */
 export function getClientIp(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");

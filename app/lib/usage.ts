@@ -1,6 +1,6 @@
 import { query } from "@/app/lib/db";
 
-// Anonymous, aggregate-only usage counts — see the tool_usage table comment
+// Anonymous, aggregate-only usage counts; see the tool_usage table comment
 // in db.ts. Deliberately just "which tool, which day, how many times" with
 // nothing tying a count to a specific person.
 export const TRACKED_TOOLS = ["planner", "risk-calculator", "backtest", "journal", "dashboard"] as const;

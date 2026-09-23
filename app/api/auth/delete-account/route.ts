@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         await disableSubscription(sub.subscriptionCode, sub.emailToken);
       } catch (error) {
         // A billing-API hiccup shouldn't block someone from deleting their own
-        // account — log it clearly for a rare manual follow-up and proceed.
+        // account; log it clearly for a rare manual follow-up and proceed.
         console.error(
           `Failed to cancel Paystack subscription ${user.paystack_subscription_code} for user ${session.id} during account deletion`,
           error

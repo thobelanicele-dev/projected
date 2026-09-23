@@ -258,7 +258,7 @@ export function calculateRiskReward(input: RiskRewardInput): CalcOutcome<RiskRew
   if (riskPips === 0) {
     return {
       ok: false,
-      errors: { stopLoss: "Entry and stop loss can't be the same price — risk can't be zero." },
+      errors: { stopLoss: "Entry and stop loss can't be the same price; risk can't be zero." },
     };
   }
 
@@ -337,7 +337,7 @@ export function calculateMarginLeverage(input: MarginInput): CalcOutcome<MarginR
 
   const warnings: string[] = [];
   if (marginCallWarning) {
-    warnings.push("Margin level is below 100% — this is margin call territory.");
+    warnings.push("Margin level is below 100%: this is margin call territory.");
   }
 
   return {
@@ -455,7 +455,7 @@ export function calculateCorrelationRisk(
   return {
     ok: true,
     result: { exposures, totalRiskPercent, correlatedGroups },
-    warnings: correlatedGroups.length > 0 ? ["Correlated exposure detected — see flagged groups below."] : [],
+    warnings: correlatedGroups.length > 0 ? ["Correlated exposure detected: see flagged groups below."] : [],
   };
 }
 
