@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FxInsites — Trade planning, backtesting, and journaling",
+  title: "FxInsites",
   description:
     "Trade planning, backtesting, and journaling grounded in real market data. Every plan checked against five risk-management rules; every backtest run against real price history.",
 };
