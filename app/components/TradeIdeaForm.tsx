@@ -30,6 +30,7 @@ export const POPULAR_PAIRS = [
 ];
 
 export interface TradeIdeaFields {
+  notes: string;
   pair: string;
   direction: "long" | "short";
   entryMode: "now" | "condition";
@@ -43,6 +44,7 @@ export interface TradeIdeaFields {
 }
 
 export const emptyFields: TradeIdeaFields = {
+  notes: "",
   pair: "",
   direction: "long",
   entryMode: "now",
@@ -159,6 +161,7 @@ export function buildIdeaText(f: TradeIdeaFields, context: MarketContext = {}): 
   if (f.riskPercent) parts.push(`risking about ${f.riskPercent}% of my account`);
 
   const mainSentence = parts.filter(Boolean).join(", ") + ".";
+  const notesSentence = f.notes?.trim() ? `${f.notes.trim()} ` : "";
   const priceSentence = livePrice ? ` The current market price is around ${livePrice}.` : "";
   const rangeSentence = priceRange
     ? ` Over the last ${priceRange.periodDays} days, ${f.pair} has ranged between ${priceRange.low} (low) and ${priceRange.high} (high), trending ${priceRange.trend}.`
@@ -170,19 +173,19 @@ export function buildIdeaText(f: TradeIdeaFields, context: MarketContext = {}): 
           .join("; ")}.`
       : "";
 
-  return `${mainSentence}${priceSentence}${rangeSentence}${eventsSentence}`;
+  return `${notesSentence}${mainSentence}${priceSentence}${rangeSentence}${eventsSentence}`;
 }
 
 export function InfoTip({ text }: { text: string }) {
   return (
     <details className="group">
-      <summary className="inline-flex cursor-pointer select-none items-center gap-1 text-xs text-sky-400 marker:content-none [&::-webkit-details-marker]:hidden">
-        <span className="flex h-4 w-4 items-center justify-center rounded-full border border-sky-400/60 text-[10px] leading-none">
+      <summary className="inline-flex cursor-pointer select-none items-center gap-1 text-sm text-sky-400 marker:content-none [&::-webkit-details-marker]:hidden">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-sky-400/60 text-xs leading-none">
           ?
         </span>
         What&apos;s this?
       </summary>
-      <p className="mt-1.5 max-w-md text-xs leading-relaxed text-zinc-400">{text}</p>
+      <p className="mt-1.5 max-w-md text-sm leading-relaxed text-zinc-400">{text}</p>
     </details>
   );
 }
@@ -203,11 +206,11 @@ export function Field({
   return (
     <div className="flex flex-col gap-1.5" data-tour={tourId}>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-zinc-200">{label}</span>
+        <span className="text-base font-medium text-zinc-200">{label}</span>
         {info && <InfoTip text={info} />}
       </div>
       {children}
-      {hint && <span className="text-xs text-zinc-500">{hint}</span>}
+      {hint && <span className="text-sm text-zinc-500">{hint}</span>}
     </div>
   );
 }
@@ -226,13 +229,13 @@ function ReviewRow({
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5">
       <div>
-        <p className="text-xs font-medium text-zinc-500">{label}</p>
-        <p className={`mt-0.5 text-sm ${warning ? "text-orange-400" : "text-zinc-200"}`}>{children}</p>
+        <p className="text-sm font-medium text-zinc-500">{label}</p>
+        <p className={`mt-0.5 text-base ${warning ? "text-orange-400" : "text-zinc-200"}`}>{children}</p>
       </div>
       <button
         type="button"
         onClick={onEdit}
-        className="shrink-0 text-xs font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
+        className="shrink-0 text-sm font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
       >
         Edit
       </button>
@@ -241,7 +244,7 @@ function ReviewRow({
 }
 
 export const inputClass =
-  "w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none";
+  "w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-base text-zinc-50 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none";
 
 const STEP_LABELS = [
   "Get started",
@@ -435,7 +438,13 @@ export function TradeIdeaForm({
   }
 
   function applyTemplate(template: Template) {
-    loadFieldsAndUnlock({ ...emptyFields, ...template.fields }, 1, template.hints);
+    // Preserve any notes the trader already typed — a template only sets the
+    // shape of an idea and shouldn't silently discard their own words.
+    loadFieldsAndUnlock(
+      { ...emptyFields, notes: fields.notes, ...template.fields },
+      1,
+      template.hints
+    );
   }
 
   useEffect(() => {
@@ -602,11 +611,11 @@ export function TradeIdeaForm({
     if (missingForPositionSize === "stopLoss") {
       return (
         <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-3">
-          <p className="text-xs text-orange-300">Add a stop-loss price to see your position size.</p>
+          <p className="text-sm text-orange-300">Add a stop-loss price to see your position size.</p>
           <button
             type="button"
             onClick={() => goToStep(4)}
-            className="mt-1.5 text-xs font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
+            className="mt-1.5 text-sm font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
           >
             Go to stop loss
           </button>
@@ -615,15 +624,15 @@ export function TradeIdeaForm({
     }
     if (missingForPositionSize === "entry") {
       return (
-        <p className="text-xs text-zinc-500">
+        <p className="text-sm text-zinc-500">
           Add an entry price (or wait for the live price) to see position size.
         </p>
       );
     }
     if (missingForPositionSize === "pair") {
-      return <p className="text-xs text-zinc-500">Pick an instrument to see position size.</p>;
+      return <p className="text-sm text-zinc-500">Pick an instrument to see position size.</p>;
     }
-    return <p className="text-xs text-zinc-500">Add an account balance to see position size.</p>;
+    return <p className="text-sm text-zinc-500">Add an account balance to see position size.</p>;
   }
 
   function goBack() {
@@ -690,11 +699,11 @@ export function TradeIdeaForm({
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
       {restoredDraft && (
         <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2">
-          <span className="text-xs text-zinc-400">We saved where you left off.</span>
+          <span className="text-sm text-zinc-400">We saved where you left off.</span>
           <button
             type="button"
             onClick={startOver}
-            className="text-xs font-medium text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
+            className="text-sm font-medium text-zinc-400 underline underline-offset-2 hover:text-zinc-200"
           >
             Start over
           </button>
@@ -708,7 +717,7 @@ export function TradeIdeaForm({
             style={{ width: `${((step + 1) / STEP_COUNT) * 100}%` }}
           />
         </div>
-        <span className="shrink-0 text-xs text-zinc-500">
+        <span className="shrink-0 text-sm text-zinc-500">
           Step {step + 1} of {STEP_COUNT} — {STEP_LABELS[step]}
         </span>
       </div>
@@ -722,7 +731,7 @@ export function TradeIdeaForm({
             disabled={i > maxStepVisited}
             aria-label={`Step ${i + 1}: ${label}`}
             title={label}
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-medium transition-colors ${
+            className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-colors ${
               i === step
                 ? "bg-emerald-400 text-black"
                 : i <= maxStepVisited
@@ -738,26 +747,33 @@ export function TradeIdeaForm({
       {step === 0 && (
       <div className="flex flex-col gap-3" data-tour="templates">
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <p className="text-sm font-medium text-zinc-200">What&apos;s your trade idea?</p>
-          <p className="mt-1 text-xs text-zinc-500">
-            Bring something you&apos;ve actually noticed — a pattern, a level, a reaction to
-            news. The next few steps walk you through describing it in your own words, and we&apos;ll
-            structure it and check it against good risk practice. We won&apos;t hand you a strategy
-            to use instead — this is about building yours.
+          <p className="text-base font-medium text-zinc-200">What&apos;s your trade idea?</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            Bring something you&apos;ve actually noticed — a pattern, a level, a reaction to news.
+            Describe it below in your own words; the next few steps turn it into a structured plan
+            and check it against good risk practice. We won&apos;t hand you a strategy to use
+            instead — this is about building yours.
           </p>
+          <textarea
+            value={fields.notes}
+            onChange={(e) => update("notes", e.target.value)}
+            placeholder="e.g. GBP/USD keeps bouncing off 1.2650 and it's testing that level again right now…"
+            rows={4}
+            className={`${inputClass} mt-3 resize-y`}
+          />
         </div>
 
         <button
           type="button"
           onClick={() => setShowTemplates((v) => !v)}
-          className="self-start text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-zinc-300"
+          className="self-start text-sm font-medium text-zinc-500 underline underline-offset-2 hover:text-zinc-300"
         >
           {showTemplates ? "Hide examples" : "Never had a trade idea before? See a couple of examples"}
         </button>
 
         {showTemplates && (
           <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            <p className="text-xs text-zinc-500">
+            <p className="text-sm text-zinc-500">
               These only set the shape of an idea — instrument, direction, whether entry waits on a
               condition. You&apos;ll still describe what you&apos;re actually seeing yourself on the
               next few steps.
@@ -768,7 +784,7 @@ export function TradeIdeaForm({
                   key={t.label}
                   type="button"
                   onClick={() => applyTemplate(t)}
-                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left text-xs transition-colors hover:border-zinc-600"
+                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left text-sm transition-colors hover:border-zinc-600"
                 >
                   <span className="block font-medium text-zinc-100">{t.label}</span>
                   <span className="mt-0.5 block text-zinc-500">{t.description}</span>
@@ -813,33 +829,33 @@ export function TradeIdeaForm({
           </select>
         )}
         {priceStatus === "loading" && (
-          <span className="text-xs text-zinc-500">Fetching live price…</span>
+          <span className="text-sm text-zinc-500">Fetching live price…</span>
         )}
         {priceStatus === "error" && (
-          <span className="text-xs text-zinc-500">
+          <span className="text-sm text-zinc-500">
             Live price unavailable — no problem, you can still describe everything in words below.
           </span>
         )}
         {priceStatus === "ready" && livePrice !== null && (
-          <span className="text-xs text-emerald-400">
+          <span className="text-sm text-emerald-400">
             Current price: <span className="font-medium">{livePrice}</span> — use this as a
             reference point for your entry, stop, and target.
           </span>
         )}
         {rangeStatus === "ready" && priceRange && (
-          <span className="text-xs text-sky-400">
+          <span className="text-sm text-sky-400">
             {priceRange.periodDays}-day range: <span className="font-medium">{priceRange.low}</span>{" "}
             – <span className="font-medium">{priceRange.high}</span> (trending {priceRange.trend})
           </span>
         )}
         {calendarStatus === "ready" && calendarEvents.length > 0 && (
           <div className="mt-1 rounded-lg border border-orange-500/30 bg-orange-500/5 p-2.5">
-            <p className="text-xs font-medium text-orange-400">
+            <p className="text-sm font-medium text-orange-400">
               Upcoming news that could move this market:
             </p>
             <ul className="mt-1 space-y-0.5">
               {calendarEvents.map((e, i) => (
-                <li key={i} className="text-xs text-zinc-400">
+                <li key={i} className="text-sm text-zinc-400">
                   <span className="text-zinc-300">{e.event}</span> ({e.country},{" "}
                   <span
                     className={e.impact.toLowerCase() === "high" ? "text-red-400" : "text-orange-300"}
@@ -864,7 +880,7 @@ export function TradeIdeaForm({
           <button
             type="button"
             onClick={() => update("direction", "long")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
               fields.direction === "long"
                 ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
@@ -875,7 +891,7 @@ export function TradeIdeaForm({
           <button
             type="button"
             onClick={() => update("direction", "short")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
               fields.direction === "short"
                 ? "border-red-500 bg-red-500/15 text-red-300"
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
@@ -896,7 +912,7 @@ export function TradeIdeaForm({
           <button
             type="button"
             onClick={() => update("entryMode", "now")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
               fields.entryMode === "now"
                 ? "border-zinc-500 bg-zinc-800 text-zinc-50"
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
@@ -907,7 +923,7 @@ export function TradeIdeaForm({
           <button
             type="button"
             onClick={() => update("entryMode", "condition")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
               fields.entryMode === "condition"
                 ? "border-zinc-500 bg-zinc-800 text-zinc-50"
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
@@ -964,7 +980,7 @@ export function TradeIdeaForm({
           />
         </div>
         {noStopLossDefined && (
-          <p className="mt-1 text-xs text-orange-400">
+          <p className="mt-1 text-sm text-orange-400">
             You haven&apos;t set a stop loss yet. Every experienced trader defines one before entering —
             even just a reason in words is better than nothing.
           </p>
@@ -1011,10 +1027,10 @@ export function TradeIdeaForm({
             onChange={(e) => update("riskPercent", e.target.value)}
             className={`${inputClass} max-w-[120px]`}
           />
-          <span className="text-sm text-zinc-400">% of account</span>
+          <span className="text-base text-zinc-400">% of account</span>
         </div>
         {riskTooHigh && (
-          <p className="mt-1 text-xs text-orange-400">
+          <p className="mt-1 text-sm text-orange-400">
             {fields.riskPercent}% is higher than what most experienced traders risk on one trade —
             a short losing streak could hurt a lot more than it might feel like right now.
           </p>
@@ -1026,7 +1042,7 @@ export function TradeIdeaForm({
         <>
           <Field label="Account balance" hint="Powers the position size below.">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-zinc-400">$</span>
+              <span className="text-base text-zinc-400">$</span>
               <input
                 type="number"
                 min="0"
@@ -1066,7 +1082,7 @@ export function TradeIdeaForm({
             <button
               type="button"
               onClick={removeChartImage}
-              className="text-xs text-zinc-400 hover:text-zinc-200"
+              className="text-sm text-zinc-400 hover:text-zinc-200"
             >
               Remove
             </button>
@@ -1076,18 +1092,18 @@ export function TradeIdeaForm({
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={handleChartFileChange}
-            className="text-sm text-zinc-400 file:mr-3 file:rounded-lg file:border file:border-zinc-800 file:bg-zinc-950 file:px-3 file:py-1.5 file:text-sm file:text-zinc-200 hover:file:border-zinc-600"
+            className="text-base text-zinc-400 file:mr-3 file:rounded-lg file:border file:border-zinc-800 file:bg-zinc-950 file:px-3 file:py-1.5 file:text-base file:text-zinc-200 hover:file:border-zinc-600"
           />
         )}
-        {chartError && <span className="text-xs text-orange-400">{chartError}</span>}
+        {chartError && <span className="text-sm text-orange-400">{chartError}</span>}
       </Field>
       )}
 
       {step === 9 && (
         <div className="flex flex-col gap-3">
           <div>
-            <p className="text-sm font-medium text-zinc-200">Review your plan</p>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="text-base font-medium text-zinc-200">Review your plan</p>
+            <p className="mt-1 text-sm text-zinc-500">
               Here&apos;s everything you&apos;ve entered. Check it over, then build your plan.
             </p>
           </div>
@@ -1162,7 +1178,7 @@ export function TradeIdeaForm({
           <button
             type="button"
             onClick={goBack}
-            className="rounded-full border border-zinc-700 px-5 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500"
+            className="rounded-full border border-zinc-700 px-5 py-2.5 text-base font-medium text-zinc-300 transition-colors hover:border-zinc-500"
           >
             Back
           </button>
@@ -1171,12 +1187,12 @@ export function TradeIdeaForm({
           type="submit"
           disabled={isLastStep ? !canSubmit : pairStepBlocked}
           data-tour={isLastStep ? "submit" : undefined}
-          className="self-start rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+          className="self-start rounded-full bg-zinc-50 px-5 py-2.5 text-base font-medium text-black transition-colors hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isLastStep ? (loading ? "Building your plan…" : "Build trade plan") : "Next"}
         </button>
         {isLastStep && loading && (
-          <p className="text-xs text-zinc-500" aria-live="polite">
+          <p className="text-sm text-zinc-500" aria-live="polite">
             {LOADING_MESSAGES[loadingMessageIndex]}
           </p>
         )}
