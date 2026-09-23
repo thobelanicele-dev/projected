@@ -25,15 +25,31 @@ export interface RsiParams {
   overbought: number;
 }
 
-export type StrategyParams = MaCrossoverParams | BreakoutParams | RsiParams;
+export interface BollingerParams {
+  type: "bollinger";
+  period: number;
+  stdDevMultiplier: number;
+}
 
-export interface ExitRules {
-  stopLossPct: number;
-  takeProfitPct: number;
+export interface MacdParams {
+  type: "macd";
+  fastPeriod: number;
+  slowPeriod: number;
+  signalPeriod: number;
+}
+
+export type StrategyParams = MaCrossoverParams | BreakoutParams | RsiParams | BollingerParams | MacdParams;
+
+interface BaseExitRules {
   maxHoldingDays?: number;
   /** Round-trip trading cost (spread + slippage + commission) as % of entry price, charged on every trade regardless of outcome. */
   costPct?: number;
 }
+
+export type ExitRules =
+  | (BaseExitRules & { mode: "percent"; stopLossPct: number; takeProfitPct: number })
+  | (BaseExitRules & { mode: "atr"; atrPeriod: number; stopAtrMultiple: number; rewardMultiple: number })
+  | (BaseExitRules & { mode: "structural"; swingLookback: number; rewardMultiple: number });
 
 export interface SimulatedTrade {
   direction: "long" | "short";
@@ -96,6 +112,33 @@ function ema(values: number[], period: number): (number | null)[] {
     out.push(prev);
   }
   return out;
+}
+
+function rollingStdDev(values: number[], period: number): (number | null)[] {
+  const out: (number | null)[] = [];
+  for (let i = 0; i < values.length; i++) {
+    if (i < period - 1) {
+      out.push(null);
+      continue;
+    }
+    const window = values.slice(i - period + 1, i + 1);
+    const mean = window.reduce((a, b) => a + b, 0) / period;
+    const variance = window.reduce((a, b) => a + (b - mean) ** 2, 0) / period;
+    out.push(Math.sqrt(variance));
+  }
+  return out;
+}
+
+// Simplified ATR: true range smoothed with a plain moving average rather than
+// Wilder's exact recursive smoothing. Close enough for a stop/target distance,
+// not presented as a precise technical-analysis figure.
+export function atr(candles: Candle[], period: number): (number | null)[] {
+  const trueRanges = candles.map((c, i) => {
+    if (i === 0) return c.high - c.low;
+    const prevClose = candles[i - 1].close;
+    return Math.max(c.high - c.low, Math.abs(c.high - prevClose), Math.abs(c.low - prevClose));
+  });
+  return sma(trueRanges, period);
 }
 
 function rsi(values: number[], period: number): (number | null)[] {
@@ -170,6 +213,60 @@ function rsiSignals(candles: Candle[], params: RsiParams): Signal[] {
   return signals;
 }
 
+export function bollingerSignals(candles: Candle[], params: BollingerParams): Signal[] {
+  const closes = candles.map((c) => c.close);
+  const mean = sma(closes, params.period);
+  const stdDev = rollingStdDev(closes, params.period);
+
+  const signals: Signal[] = [];
+  for (let i = 1; i < candles.length; i++) {
+    const m = mean[i];
+    const s = stdDev[i];
+    if (m === null || s === null) continue;
+    const upper = m + params.stdDevMultiplier * s;
+    const lower = m - params.stdDevMultiplier * s;
+    const prevClose = closes[i - 1];
+    const currClose = closes[i];
+    if (prevClose >= lower && currClose < lower) signals.push({ index: i, direction: "long" });
+    else if (prevClose <= upper && currClose > upper) signals.push({ index: i, direction: "short" });
+  }
+  return signals;
+}
+
+export function macdSignals(candles: Candle[], params: MacdParams): Signal[] {
+  const closes = candles.map((c) => c.close);
+  const fastEma = ema(closes, params.fastPeriod);
+  const slowEma = ema(closes, params.slowPeriod);
+  const macdLine = closes.map((_, i) =>
+    fastEma[i] !== null && slowEma[i] !== null ? fastEma[i]! - slowEma[i]! : null
+  );
+
+  // The signal line is an EMA "of" the MACD line, which itself starts with a
+  // run of nulls (the slow EMA's warm-up). Compute the EMA over just the
+  // non-null suffix, then re-align it back to the full-length array.
+  const firstValidIndex = macdLine.findIndex((v) => v !== null);
+  const signalLine: (number | null)[] = new Array(macdLine.length).fill(null);
+  if (firstValidIndex !== -1) {
+    const suffix = macdLine.slice(firstValidIndex) as number[];
+    const suffixSignal = ema(suffix, params.signalPeriod);
+    suffixSignal.forEach((v, j) => {
+      signalLine[firstValidIndex + j] = v;
+    });
+  }
+
+  const signals: Signal[] = [];
+  for (let i = 1; i < candles.length; i++) {
+    const m0 = macdLine[i - 1];
+    const m1 = macdLine[i];
+    const s0 = signalLine[i - 1];
+    const s1 = signalLine[i];
+    if (m0 === null || m1 === null || s0 === null || s1 === null) continue;
+    if (m0 <= s0 && m1 > s1) signals.push({ index: i, direction: "long" });
+    else if (m0 >= s0 && m1 < s1) signals.push({ index: i, direction: "short" });
+  }
+  return signals;
+}
+
 function generateSignals(candles: Candle[], strategy: StrategyParams): Signal[] {
   switch (strategy.type) {
     case "ma_crossover":
@@ -178,7 +275,61 @@ function generateSignals(candles: Candle[], strategy: StrategyParams): Signal[] 
       return breakoutSignals(candles, strategy);
     case "rsi":
       return rsiSignals(candles, strategy);
+    case "bollinger":
+      return bollingerSignals(candles, strategy);
+    case "macd":
+      return macdSignals(candles, strategy);
   }
+}
+
+// Returns null when the computed stop distance is zero or negative (e.g. a
+// swing high/low that coincides with the entry price) — that setup can't
+// produce a meaningful R-multiple, so the caller skips the trade entirely
+// rather than dividing by zero.
+export function computeStopAndTarget(
+  candles: Candle[],
+  entryIndex: number,
+  direction: "long" | "short",
+  entryPrice: number,
+  exitRules: ExitRules
+): { stopPrice: number; targetPrice: number; riskPct: number } | null {
+  if (exitRules.mode === "percent") {
+    const stopPrice =
+      direction === "long"
+        ? entryPrice * (1 - exitRules.stopLossPct / 100)
+        : entryPrice * (1 + exitRules.stopLossPct / 100);
+    const targetPrice =
+      direction === "long"
+        ? entryPrice * (1 + exitRules.takeProfitPct / 100)
+        : entryPrice * (1 - exitRules.takeProfitPct / 100);
+    if (exitRules.stopLossPct <= 0) return null;
+    return { stopPrice, targetPrice, riskPct: exitRules.stopLossPct };
+  }
+
+  if (exitRules.mode === "atr") {
+    const atrValues = atr(candles, exitRules.atrPeriod);
+    const atrAtEntry = atrValues[entryIndex - 1];
+    if (atrAtEntry === null || atrAtEntry === undefined || atrAtEntry <= 0) return null;
+    const stopDistance = atrAtEntry * exitRules.stopAtrMultiple;
+    const targetDistance = stopDistance * exitRules.rewardMultiple;
+    const stopPrice = direction === "long" ? entryPrice - stopDistance : entryPrice + stopDistance;
+    const targetPrice = direction === "long" ? entryPrice + targetDistance : entryPrice - targetDistance;
+    const riskPct = (stopDistance / entryPrice) * 100;
+    return riskPct > 0 ? { stopPrice, targetPrice, riskPct } : null;
+  }
+
+  // structural
+  const windowStart = Math.max(0, entryIndex - exitRules.swingLookback);
+  const window = candles.slice(windowStart, entryIndex);
+  if (window.length === 0) return null;
+  const swingLow = Math.min(...window.map((c) => c.low));
+  const swingHigh = Math.max(...window.map((c) => c.high));
+  const stopPrice = direction === "long" ? swingLow : swingHigh;
+  const stopDistance = Math.abs(entryPrice - stopPrice);
+  const targetDistance = stopDistance * exitRules.rewardMultiple;
+  const targetPrice = direction === "long" ? entryPrice + targetDistance : entryPrice - targetDistance;
+  const riskPct = (stopDistance / entryPrice) * 100;
+  return riskPct > 0 ? { stopPrice, targetPrice, riskPct } : null;
 }
 
 function simulateTrades(candles: Candle[], signals: Signal[], exitRules: ExitRules): SimulatedTrade[] {
@@ -191,14 +342,9 @@ function simulateTrades(candles: Candle[], signals: Signal[], exitRules: ExitRul
 
     const entryCandle = candles[entryIndex];
     const entryPrice = entryCandle.open;
-    const stopPrice =
-      signal.direction === "long"
-        ? entryPrice * (1 - exitRules.stopLossPct / 100)
-        : entryPrice * (1 + exitRules.stopLossPct / 100);
-    const targetPrice =
-      signal.direction === "long"
-        ? entryPrice * (1 + exitRules.takeProfitPct / 100)
-        : entryPrice * (1 - exitRules.takeProfitPct / 100);
+    const exit = computeStopAndTarget(candles, entryIndex, signal.direction, entryPrice, exitRules);
+    if (exit === null) continue;
+    const { stopPrice, targetPrice, riskPct } = exit;
 
     const maxIndex = exitRules.maxHoldingDays
       ? Math.min(candles.length - 1, entryIndex + exitRules.maxHoldingDays)
@@ -251,7 +397,7 @@ function simulateTrades(candles: Candle[], signals: Signal[], exitRules: ExitRul
     // Every trade pays the spread on entry and exit regardless of outcome, so
     // a "breakeven" signal is actually a small loss in real trading.
     const pnlPct = rawPnlPct - (exitRules.costPct ?? 0);
-    const rMultiple = Math.round((pnlPct / exitRules.stopLossPct) * 100) / 100;
+    const rMultiple = Math.round((pnlPct / riskPct) * 100) / 100;
 
     trades.push({
       direction: signal.direction,

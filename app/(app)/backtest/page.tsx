@@ -5,11 +5,15 @@ import { BacktestForm } from "@/app/components/BacktestForm";
 import { BacktestResults } from "@/app/components/BacktestResults";
 import { runBacktest } from "@/app/lib/backtestEngine";
 import type { BacktestResult, Candle, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
+import { readAndClearBacktestSeed, type BacktestSeed } from "@/app/lib/backtestSeed";
 import { UsagePing } from "@/app/components/UsagePing";
 
 export default function BacktestPage() {
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [loading, setLoading] = useState(false);
+  // Read once on mount (lazy initializer) — this is a one-shot handoff from the
+  // planner, not something that should re-trigger on a later re-render.
+  const [initialSeed] = useState<BacktestSeed | null>(() => readAndClearBacktestSeed());
 
   function handleRun(candles: Candle[], strategy: StrategyParams, exitRules: ExitRules) {
     setLoading(true);
@@ -31,7 +35,7 @@ export default function BacktestPage() {
         the same deterministic simulation, so the results are trustworthy.
       </p>
 
-      <BacktestForm onRun={handleRun} loading={loading} />
+      <BacktestForm onRun={handleRun} loading={loading} initialSeed={initialSeed} />
 
       {result && <BacktestResults result={result} />}
     </>

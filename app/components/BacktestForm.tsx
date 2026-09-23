@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { POPULAR_PAIRS } from "@/app/components/TradeIdeaForm";
 import { parseCandleCsv } from "@/app/lib/parseCandles";
 import type { Candle, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
+import type { BacktestSeed } from "@/app/lib/backtestSeed";
 
 type StrategyType = StrategyParams["type"];
 
@@ -11,12 +12,24 @@ const DEFAULT_PARAMS: Record<StrategyType, StrategyParams> = {
   ma_crossover: { type: "ma_crossover", fastPeriod: 10, slowPeriod: 30, maKind: "sma" },
   breakout: { type: "breakout", lookbackDays: 20 },
   rsi: { type: "rsi", period: 14, oversold: 30, overbought: 70 },
+  bollinger: { type: "bollinger", period: 20, stdDevMultiplier: 2 },
+  macd: { type: "macd", fastPeriod: 12, slowPeriod: 26, signalPeriod: 9 },
 };
 
 const STRATEGY_LABELS: Record<StrategyType, string> = {
   ma_crossover: "Moving average crossover",
   breakout: "N-day breakout",
   rsi: "RSI oversold / overbought",
+  bollinger: "Bollinger Band reversion",
+  macd: "MACD crossover",
+};
+
+type ExitMode = ExitRules["mode"];
+
+const EXIT_MODE_LABELS: Record<ExitMode, string> = {
+  percent: "Fixed %",
+  atr: "ATR-based",
+  structural: "Swing structure",
 };
 
 const inputClass =
@@ -43,9 +56,11 @@ function Field({
 export function BacktestForm({
   onRun,
   loading,
+  initialSeed,
 }: {
   onRun: (candles: Candle[], strategy: StrategyParams, exitRules: ExitRules) => void;
   loading: boolean;
+  initialSeed?: BacktestSeed | null;
 }) {
   const [pair, setPair] = useState("EUR/USD");
   const [dataSource, setDataSource] = useState<"market" | "csv">("market");
@@ -61,8 +76,11 @@ export function BacktestForm({
   const [ruleMode, setRuleMode] = useState<"template" | "freetext">("template");
   const [strategyType, setStrategyType] = useState<StrategyType>("ma_crossover");
   const [params, setParams] = useState<Record<StrategyType, StrategyParams>>(DEFAULT_PARAMS);
-  const [stopLossPct, setStopLossPct] = useState("2");
-  const [takeProfitPct, setTakeProfitPct] = useState("6");
+
+  const [exitMode, setExitMode] = useState<ExitMode>("percent");
+  const [percentParams, setPercentParams] = useState({ stopLossPct: "2", takeProfitPct: "6" });
+  const [atrParams, setAtrParams] = useState({ atrPeriod: "14", stopAtrMultiple: "1.5", rewardMultiple: "2" });
+  const [structuralParams, setStructuralParams] = useState({ swingLookback: "10", rewardMultiple: "2" });
   const [costPct, setCostPct] = useState("0.05");
 
   const [freeText, setFreeText] = useState("");
@@ -117,14 +135,14 @@ export function BacktestForm({
       .catch(() => setCsvError("Couldn't read that file."));
   }
 
-  function handleInterpret() {
-    if (!freeText.trim() || interpreting) return;
+  function runInterpret(description: string, overrideStops?: { stopLossPct: number | null; takeProfitPct: number | null }) {
+    if (!description.trim() || interpreting) return;
     setInterpreting(true);
     setInterpretError(null);
     fetch("/api/backtest/interpret", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ description: freeText }),
+      body: JSON.stringify({ description }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -134,26 +152,75 @@ export function BacktestForm({
         }
         setStrategyType(data.strategy.type);
         setParams((prev) => ({ ...prev, [data.strategy.type]: data.strategy }));
-        setStopLossPct(String(data.stopLossPct));
-        setTakeProfitPct(String(data.takeProfitPct));
+        setExitMode("percent");
+        setPercentParams({
+          // Real numbers from a trader's own plan beat an AI-guessed default.
+          stopLossPct: String(overrideStops?.stopLossPct ?? data.stopLossPct),
+          takeProfitPct: String(overrideStops?.takeProfitPct ?? data.takeProfitPct),
+        });
         setExplanation(data.explanation);
       })
       .catch(() => setInterpretError("Couldn't reach the server."))
       .finally(() => setInterpreting(false));
   }
 
+  function handleInterpret() {
+    runInterpret(freeText);
+  }
+
+  // One-shot seed from a generated trade plan ("Test this pattern
+  // historically"): switches to the free-text flow and auto-interprets it.
+  // Loading price history and running the backtest stay manual, explicit
+  // steps, this doesn't add a surprise network call beyond the interpret call.
+  useEffect(() => {
+    if (!initialSeed) return;
+    const timeout = setTimeout(() => {
+      if (POPULAR_PAIRS.some((p) => p.value === initialSeed.pair)) setPair(initialSeed.pair);
+      setRuleMode("freetext");
+      setFreeText(initialSeed.description);
+      runInterpret(initialSeed.description, {
+        stopLossPct: initialSeed.stopLossPct,
+        takeProfitPct: initialSeed.takeProfitPct,
+      });
+    }, 0);
+    return () => clearTimeout(timeout);
+    // Runs once on mount only — initialSeed is a one-shot handoff, not a live prop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function buildExitRules(): ExitRules | null {
+    const cost = parseFloat(costPct);
+    const costValue = isNaN(cost) ? 0 : cost;
+
+    if (exitMode === "percent") {
+      const sl = parseFloat(percentParams.stopLossPct);
+      const tp = parseFloat(percentParams.takeProfitPct);
+      if (isNaN(sl) || isNaN(tp) || sl <= 0 || tp <= 0) return null;
+      return { mode: "percent", stopLossPct: sl, takeProfitPct: tp, costPct: costValue };
+    }
+
+    if (exitMode === "atr") {
+      const period = parseInt(atrParams.atrPeriod, 10);
+      const stopMultiple = parseFloat(atrParams.stopAtrMultiple);
+      const rewardMultiple = parseFloat(atrParams.rewardMultiple);
+      if (isNaN(period) || isNaN(stopMultiple) || isNaN(rewardMultiple) || period <= 0 || stopMultiple <= 0 || rewardMultiple <= 0) {
+        return null;
+      }
+      return { mode: "atr", atrPeriod: period, stopAtrMultiple: stopMultiple, rewardMultiple, costPct: costValue };
+    }
+
+    const swingLookback = parseInt(structuralParams.swingLookback, 10);
+    const rewardMultiple = parseFloat(structuralParams.rewardMultiple);
+    if (isNaN(swingLookback) || isNaN(rewardMultiple) || swingLookback <= 0 || rewardMultiple <= 0) return null;
+    return { mode: "structural", swingLookback, rewardMultiple, costPct: costValue };
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!candles || loading) return;
-    const sl = parseFloat(stopLossPct);
-    const tp = parseFloat(takeProfitPct);
-    if (isNaN(sl) || isNaN(tp) || sl <= 0 || tp <= 0) return;
-    const cost = parseFloat(costPct);
-    onRun(candles, params[strategyType], {
-      stopLossPct: sl,
-      takeProfitPct: tp,
-      costPct: isNaN(cost) ? 0 : cost,
-    });
+    const exitRules = buildExitRules();
+    if (!exitRules) return;
+    onRun(candles, params[strategyType], exitRules);
   }
 
   const canRun = !!candles && candles.length > 30 && !loading;
@@ -393,41 +460,180 @@ export function BacktestForm({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Field label="Stop loss %" hint="How far price moves against you before you're out.">
-          <input
-            type="number"
-            min={0.1}
-            step={0.1}
-            value={stopLossPct}
-            onChange={(e) => setStopLossPct(e.target.value)}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Take profit %" hint="How far price moves in your favor before you bank it.">
-          <input
-            type="number"
-            min={0.1}
-            step={0.1}
-            value={takeProfitPct}
-            onChange={(e) => setTakeProfitPct(e.target.value)}
-            className={inputClass}
-          />
-        </Field>
-        <Field
-          label="Trading cost %"
-          hint="Spread + slippage, charged on every trade; even 'breakeven' ones lose this."
-        >
-          <input
-            type="number"
-            min={0}
-            step={0.01}
-            value={costPct}
-            onChange={(e) => setCostPct(e.target.value)}
-            className={inputClass}
-          />
-        </Field>
-      </div>
+      {strategyType === "bollinger" && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Period" hint="Bars used for the moving average and standard deviation.">
+            <input
+              type="number"
+              min={2}
+              value={(params.bollinger as Extract<StrategyParams, { type: "bollinger" }>).period}
+              onChange={(e) => updateParam("bollinger", { period: parseInt(e.target.value, 10) || 2 })}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Band width (× std dev)">
+            <input
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={(params.bollinger as Extract<StrategyParams, { type: "bollinger" }>).stdDevMultiplier}
+              onChange={(e) => updateParam("bollinger", { stdDevMultiplier: parseFloat(e.target.value) || 2 })}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      )}
+
+      {strategyType === "macd" && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Field label="Fast period">
+            <input
+              type="number"
+              min={2}
+              value={(params.macd as Extract<StrategyParams, { type: "macd" }>).fastPeriod}
+              onChange={(e) => updateParam("macd", { fastPeriod: parseInt(e.target.value, 10) || 2 })}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Slow period">
+            <input
+              type="number"
+              min={3}
+              value={(params.macd as Extract<StrategyParams, { type: "macd" }>).slowPeriod}
+              onChange={(e) => updateParam("macd", { slowPeriod: parseInt(e.target.value, 10) || 3 })}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Signal period">
+            <input
+              type="number"
+              min={2}
+              value={(params.macd as Extract<StrategyParams, { type: "macd" }>).signalPeriod}
+              onChange={(e) => updateParam("macd", { signalPeriod: parseInt(e.target.value, 10) || 2 })}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      )}
+
+      <Field label="How do you want to set stops/targets?">
+        <div className="flex gap-3">
+          {(Object.keys(EXIT_MODE_LABELS) as ExitMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setExitMode(mode)}
+              className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+                exitMode === mode
+                  ? "border-zinc-500 bg-zinc-800 text-zinc-50"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
+              }`}
+            >
+              {EXIT_MODE_LABELS[mode]}
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      {exitMode === "percent" && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Stop loss %" hint="How far price moves against you before you're out.">
+            <input
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={percentParams.stopLossPct}
+              onChange={(e) => setPercentParams((p) => ({ ...p, stopLossPct: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Take profit %" hint="How far price moves in your favor before you bank it.">
+            <input
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={percentParams.takeProfitPct}
+              onChange={(e) => setPercentParams((p) => ({ ...p, takeProfitPct: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      )}
+
+      {exitMode === "atr" && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Field label="ATR period">
+            <input
+              type="number"
+              min={1}
+              value={atrParams.atrPeriod}
+              onChange={(e) => setAtrParams((p) => ({ ...p, atrPeriod: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Stop distance (× ATR)">
+            <input
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={atrParams.stopAtrMultiple}
+              onChange={(e) => setAtrParams((p) => ({ ...p, stopAtrMultiple: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Reward multiple" hint="Target = this many times the ATR stop distance.">
+            <input
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={atrParams.rewardMultiple}
+              onChange={(e) => setAtrParams((p) => ({ ...p, rewardMultiple: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      )}
+
+      {exitMode === "structural" && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field
+            label="Swing lookback (bars)"
+            hint="Stop is placed at the swing low/high over this many prior bars."
+          >
+            <input
+              type="number"
+              min={1}
+              value={structuralParams.swingLookback}
+              onChange={(e) => setStructuralParams((p) => ({ ...p, swingLookback: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Reward multiple" hint="Target = this many times the swing stop distance.">
+            <input
+              type="number"
+              min={0.1}
+              step={0.1}
+              value={structuralParams.rewardMultiple}
+              onChange={(e) => setStructuralParams((p) => ({ ...p, rewardMultiple: e.target.value }))}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+      )}
+
+      <Field
+        label="Trading cost %"
+        hint="Spread + slippage, charged on every trade; even 'breakeven' ones lose this."
+      >
+        <input
+          type="number"
+          min={0}
+          step={0.01}
+          value={costPct}
+          onChange={(e) => setCostPct(e.target.value)}
+          className={`${inputClass} max-w-[200px]`}
+        />
+      </Field>
 
       <button
         type="submit"
