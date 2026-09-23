@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { POPULAR_PAIRS } from "@/app/components/TradeIdeaForm";
+import { POPULAR_PAIRS, InfoTip } from "@/app/components/TradeIdeaForm";
 import { parseCandleCsv } from "@/app/lib/parseCandles";
 import type { Candle, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
 import type { BacktestSeed } from "@/app/lib/backtestSeed";
@@ -24,6 +24,17 @@ const STRATEGY_LABELS: Record<StrategyType, string> = {
   macd: "MACD crossover",
 };
 
+const STRATEGY_DESCRIPTIONS: Record<StrategyType, string> = {
+  ma_crossover:
+    "Compares a short-term average price to a longer-term one. When the short-term average catches up and crosses above the long-term one, that's read as 'things are picking up' and it buys. When it crosses below, it sells.",
+  breakout:
+    "Watches the highest and lowest price over your chosen lookback window. If today's price pushes past that highest point, it bets the climb keeps going. If it falls below the lowest point, it bets the same in reverse.",
+  rsi: "Asks 'has this move gone too far, too fast?' on a 0-100 scale. A very low reading means it's fallen hard and fast, so it bets on a bounce back up. A very high reading means it's risen hard and fast, so it bets on a pullback down.",
+  bollinger:
+    "Draws a normal wobble range around the average price, based on how much it's been bouncing around lately. If price suddenly pokes outside that range, it bets the price snaps back toward the middle, like a rubber band stretched too far.",
+  macd: "A more sensitive cousin of the moving average crossover. Instead of comparing two averages directly, it tracks the gap between them and watches for that gap to shift direction, so it tends to react a bit quicker.",
+};
+
 type ExitMode = ExitRules["mode"];
 
 const EXIT_MODE_LABELS: Record<ExitMode, string> = {
@@ -38,15 +49,20 @@ const inputClass =
 function Field({
   label,
   hint,
+  info,
   children,
 }: {
   label: string;
   hint?: string;
+  info?: string;
   children: React.ReactNode;
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium text-zinc-200">{label}</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium text-zinc-200">{label}</span>
+        {info && <InfoTip text={info} />}
+      </div>
       {children}
       {hint && <span className="text-xs text-zinc-500">{hint}</span>}
     </label>
@@ -367,7 +383,7 @@ export function BacktestForm({
         </div>
       )}
 
-      <Field label="Strategy template">
+      <Field label="Strategy template" info={STRATEGY_DESCRIPTIONS[strategyType]}>
         <select
           value={strategyType}
           onChange={(e) => setStrategyType(e.target.value as StrategyType)}
