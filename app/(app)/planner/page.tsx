@@ -6,7 +6,13 @@ import { TradeCard } from "@/app/components/TradeCard";
 import { TradeIdeaForm, emptyFields, type ChartImage, type TradeIdeaFields } from "@/app/components/TradeIdeaForm";
 import type { ResultStat } from "@/app/components/RiskCalcSummary";
 import type { TradePlan } from "@/app/api/plan/route";
-import { addPlanToJournal, loadJournal, reconstructFieldsFromEntry, type JournalEntry } from "@/app/lib/journal";
+import {
+  addPlanToJournal,
+  loadJournal,
+  reconstructFieldsFromEntry,
+  deleteJournalEntry,
+  type JournalEntry,
+} from "@/app/lib/journal";
 import { writeBacktestSeed } from "@/app/lib/backtestSeed";
 import { UsagePing } from "@/app/components/UsagePing";
 
@@ -99,6 +105,20 @@ export default function Home() {
     if (!fields) return;
     window.dispatchEvent(new CustomEvent("fxinsites:load-planner-fields", { detail: fields }));
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleDeleteRecent(id: string) {
+    const updated = deleteJournalEntry(id);
+    setRecent(updated.filter((e) => e.source === "planner").slice(0, 5));
+    // If the deleted entry is the one currently shown above, clear it too,
+    // rather than leaving the card displaying a plan that's no longer saved.
+    if (id === currentEntryId) {
+      setPlan(null);
+      setPositionSize(undefined);
+      setChartImageUrl(null);
+      setCurrentEntryId(null);
+      setJustSaved(false);
+    }
   }
 
   function viewSavedPlan(entry: JournalEntry) {
@@ -208,15 +228,26 @@ export default function Home() {
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs text-zinc-500">{entry.plan?.summary}</p>
                 </button>
-                {reconstructFieldsFromEntry(entry, emptyFields) && (
+                <div className="mt-2 flex items-center justify-between">
+                  {reconstructFieldsFromEntry(entry, emptyFields) ? (
+                    <button
+                      type="button"
+                      onClick={() => loadEntryIntoPlanner(entry)}
+                      className="text-xs font-medium text-sky-400 hover:text-sky-300"
+                    >
+                      Use as a starting point →
+                    </button>
+                  ) : (
+                    <span />
+                  )}
                   <button
                     type="button"
-                    onClick={() => loadEntryIntoPlanner(entry)}
-                    className="mt-2 text-xs font-medium text-sky-400 hover:text-sky-300"
+                    onClick={() => handleDeleteRecent(entry.id)}
+                    className="text-xs text-red-400 hover:text-red-300"
                   >
-                    Use as a starting point →
+                    Delete
                   </button>
-                )}
+                </div>
               </li>
             ))}
           </ul>
