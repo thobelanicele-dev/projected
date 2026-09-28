@@ -148,10 +148,8 @@ export default function Home() {
       <UsagePing tool="planner" />
       <h1 className="text-3xl font-semibold tracking-tight">FxInsites</h1>
       <p className="mt-2 text-zinc-400">
-        Fill in your trade idea below, field by field; no trading jargon required. The AI
-        turns it into a structured plan, checks it against risk-management rules, and flags
-        any behavioral bias, so you can trade with a bit more discipline even if you&apos;re
-        just starting out.
+        Describe your trade idea in plain English. We&apos;ll structure it, check your risk, and
+        flag anything that looks risky.
       </p>
 
       <TradeIdeaForm onSubmit={handleSubmit} loading={loading} />

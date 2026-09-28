@@ -746,10 +746,7 @@ export function TradeIdeaForm({
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <p className="text-base font-medium text-zinc-200">What&apos;s your trade idea?</p>
           <p className="mt-1 text-sm text-zinc-500">
-            Describe what you&apos;re going to do, in plain English: which pair, which direction,
-            and how much you&apos;re willing to risk. The next few steps turn it into a structured
-            plan and check it against good risk practice. We won&apos;t hand you a strategy to use
-            instead. This is about building yours.
+            Which pair, which direction, and how much you&apos;re risking. In your own words.
           </p>
           <textarea
             value={fields.notes}
@@ -758,15 +755,17 @@ export function TradeIdeaForm({
             rows={4}
             className={`${inputClass} mt-3 resize-y`}
           />
+          <div className="mt-3 flex items-center gap-3">
+            <span className="text-sm text-zinc-500">or</span>
+            <button
+              type="button"
+              onClick={() => setShowTemplates((v) => !v)}
+              className="rounded-full border border-zinc-700 px-3 py-1.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500"
+            >
+              Templates
+            </button>
+          </div>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setShowTemplates((v) => !v)}
-          className="self-start text-sm font-medium text-zinc-500 underline underline-offset-2 hover:text-zinc-300"
-        >
-          {showTemplates ? "Hide examples" : "Never had a trade idea before? See a couple of examples"}
-        </button>
 
         {showTemplates && (
           <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
