@@ -1,69 +1,8 @@
 import Link from "next/link";
 import { getSession } from "@/app/lib/auth/session";
-import { PricingCTA } from "@/app/components/PricingCTA";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { CountUp } from "@/app/components/CountUp";
-
-const TIERS = [
-  {
-    name: "Basic",
-    tier: "basic" as const,
-    price: 9,
-    tagline: "For occasional planning and review",
-    highlighted: false,
-    cta: "Start with Basic",
-    limits: [
-      "30 AI trade plans / month",
-      "10 backtest runs / month",
-      "Journal up to 50 trades",
-      "1 year of backtest data",
-      "MT4 & TradingView import",
-    ],
-  },
-  {
-    name: "Plus",
-    tier: "plus" as const,
-    price: 20,
-    tagline: "For a regular trading routine",
-    highlighted: true,
-    cta: "Start with Plus",
-    limits: [
-      "100 AI trade plans / month",
-      "50 backtest runs / month",
-      "Journal up to 500 trades",
-      "2 years of backtest data",
-      "MT4 & TradingView import",
-    ],
-  },
-  {
-    name: "Premium",
-    tier: "premium" as const,
-    price: 30,
-    tagline: "For unrestricted use",
-    highlighted: false,
-    cta: "Start with Premium",
-    limits: [
-      "Unlimited AI trade plans",
-      "Unlimited backtest runs",
-      "Unlimited journal history",
-      "2 years of backtest data",
-      "MT4 & TradingView import",
-    ],
-  },
-];
-
-const LIMIT_ROWS: { label: string; values: [string, string, string] }[] = [
-  { label: "AI trade plans", values: ["30 / mo", "100 / mo", "Unlimited"] },
-  { label: "Backtest runs", values: ["10 / mo", "50 / mo", "Unlimited"] },
-  { label: "Journal trades", values: ["50", "500", "Unlimited"] },
-  { label: "Backtest history depth", values: ["1 year", "2 years", "2 years"] },
-  { label: "Live pricing & 30-day range", values: ["Included", "Included", "Included"] },
-  { label: "Risk-rule & bias checks", values: ["Included", "Included", "Included"] },
-  { label: "Risk calculator (all 5 tools)", values: ["Included", "Included", "Included"] },
-  { label: "MT4 / TradingView import", values: ["Included", "Included", "Included"] },
-  { label: "Exit-price verification", values: ["Included", "Included", "Included"] },
-];
 
 const CAPABILITIES = [
   { value: 5, suffix: "", label: "safety checks run on every trade plan" },
@@ -89,14 +28,6 @@ const STEPS = [
     title: "See how it actually went",
     body: "Log the result. We check it against real price history, so your record stays honest.",
   },
-];
-
-const EARLY_FEEDBACK = [
-  "The risk checks catch things I would've missed: no stop loss, sizing too big, chasing a move I'd already missed.",
-  "I don't know most trading jargon, and it still made sense to me.",
-  "The backtests deduct spread and slippage instead of showing a fantasy win rate.",
-  "Having every plan in one journal, checked against what actually happened, changed how I review my own trading.",
-  "It slows me down before I enter a trade, which is exactly what I needed.",
 ];
 
 const GRID_FEATURES = [
@@ -134,8 +65,8 @@ const GRID_FEATURES = [
 
 const FAQS = [
   {
-    q: "Do all plans include all four tools?",
-    a: "Yes. Tiers differ only in monthly usage limits, not in feature access.",
+    q: "Is everything included during the beta?",
+    a: "Yes. All four tools are fully available, free, while we're in beta.",
   },
   {
     q: "Is this suitable if I have no trading experience?",
@@ -261,7 +192,7 @@ export default async function LandingPage() {
           <nav className="hidden items-center gap-8 text-sm text-zinc-500 md:flex">
             <a href="#how" className="hover:text-zinc-200">How it works</a>
             <a href="#features" className="hover:text-zinc-200">Product</a>
-            <a href="#pricing" className="hover:text-zinc-200">Pricing</a>
+            <a href="#beta" className="hover:text-zinc-200">Beta</a>
             <a href="#faq" className="hover:text-zinc-200">FAQ</a>
           </nav>
           <div className="flex items-center gap-5">
@@ -309,10 +240,10 @@ export default async function LandingPage() {
                 {isLoggedIn ? "Open the planner" : "Get Started"}
               </Link>
               <a
-                href="#pricing"
+                href="#beta"
                 className="border border-zinc-700 px-6 py-3 text-sm text-zinc-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-500"
               >
-                View pricing
+                About the beta
               </a>
             </div>
           </Reveal>
@@ -382,108 +313,34 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Early feedback */}
-      <section className="mx-auto w-full max-w-6xl border-t border-zinc-900 px-6 py-24">
-        <Reveal>
-          <Eyebrow>Early feedback</Eyebrow>
-          <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
-            What early testers are noticing
-          </h3>
+      {/* Beta */}
+      <section
+        id="beta"
+        className="border-t border-zinc-900 bg-gradient-to-b from-emerald-500/[0.08] to-transparent py-24"
+      >
+        <Reveal className="mx-auto w-full max-w-2xl px-6 text-center">
+          <div className="flex justify-center">
+            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-400 shadow-[0_0_12px_-4px_rgba(52,211,153,0.6)]">
+              Open beta
+            </span>
+          </div>
+          <h2 className="mt-4 text-2xl font-medium tracking-tight text-zinc-50">
+            FxInsites is in open beta
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-zinc-400">
+            We&apos;re still refining things and want real traders putting it to work. Every
+            tool, the planner, journal, backtester, and risk calculator, is fully available,
+            free, while we&apos;re in beta.
+          </p>
+          <div className="mt-8">
+            <Link
+              href={isLoggedIn ? "/planner" : "/signup"}
+              className="inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
+            >
+              {isLoggedIn ? "Open the planner" : "Get early access"}
+            </Link>
+          </div>
         </Reveal>
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {EARLY_FEEDBACK.map((quote, i) => (
-            <Reveal key={quote} delay={i * 80}>
-              <div className="h-full border border-zinc-800 bg-zinc-950 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
-                <span className="text-2xl leading-none text-emerald-400/50">&ldquo;</span>
-                <p className="mt-1 text-sm leading-relaxed text-zinc-300">{quote}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="border-t border-zinc-900 py-24">
-        <div className="mx-auto w-full max-w-6xl px-6">
-          <Reveal>
-            <Eyebrow>Pricing</Eyebrow>
-            <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
-              All four tools on every tier
-            </h2>
-            <p className="mt-2 max-w-lg text-sm text-zinc-500">
-              All four tools, every tier. Limits differ, features don&apos;t. 7-day free trial
-              included.
-            </p>
-          </Reveal>
-
-          <div className="mt-10 grid grid-cols-1 divide-y divide-zinc-900 border border-zinc-900 md:grid-cols-3 md:divide-x md:divide-y-0">
-            {TIERS.map((tier, i) => (
-              <Reveal
-                key={tier.name}
-                delay={i * 100}
-                className={`relative flex flex-col p-6 transition-all duration-300 ${
-                  tier.highlighted
-                    ? "bg-gradient-to-b from-emerald-500/[0.08] to-transparent"
-                    : "hover:bg-zinc-950/50"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-medium text-zinc-100">{tier.name}</h3>
-                  {tier.highlighted && (
-                    <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-400 shadow-[0_0_12px_-4px_rgba(52,211,153,0.6)]">
-                      Most used
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-sm text-zinc-500">{tier.tagline}</p>
-                <p className="mt-4">
-                  <span className="text-3xl font-medium text-zinc-100">${tier.price}</span>
-                  <span className="text-sm text-zinc-500"> / month</span>
-                </p>
-                <ul className="mt-6 flex-1 space-y-2">
-                  {tier.limits.map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
-                      <Dot />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <PricingCTA
-                  tier={tier.tier}
-                  label={tier.cta}
-                  isLoggedIn={isLoggedIn}
-                  highlighted={tier.highlighted}
-                />
-              </Reveal>
-            ))}
-          </div>
-
-          {/* Limits comparison table */}
-          <div className="mt-8 overflow-x-auto border border-zinc-900">
-            <table className="w-full min-w-[560px] text-sm">
-              <thead>
-                <tr className="border-b border-zinc-900 text-left">
-                  <th className="px-5 py-3 font-medium text-zinc-500">Included</th>
-                  <th className="px-5 py-3 text-center font-medium text-zinc-400">Basic</th>
-                  <th className="px-5 py-3 text-center font-medium text-zinc-100">Plus</th>
-                  <th className="px-5 py-3 text-center font-medium text-zinc-400">Premium</th>
-                </tr>
-              </thead>
-              <tbody>
-                {LIMIT_ROWS.map((row) => (
-                  <tr key={row.label} className="border-b border-zinc-900 last:border-0">
-                    <td className="px-5 py-3 text-zinc-400">{row.label}</td>
-                    {row.values.map((v, i) => (
-                      <td key={i} className="px-5 py-3 text-center text-zinc-300">
-                        {v}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </section>
 
       {/* FAQ */}
