@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/app/lib/auth/session";
-import { isTrackedTool, recordToolUsage } from "@/app/lib/usage";
+import { isTrackedTool, recordToolUsage, recordUserToolUsage } from "@/app/lib/usage";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 
 const RATE_LIMIT = 30;
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await recordToolUsage(tool);
+    await recordUserToolUsage(session.id, tool);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Recording tool usage failed", error);

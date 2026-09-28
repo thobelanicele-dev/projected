@@ -332,6 +332,10 @@ export default async function LandingPage() {
             tool, the planner, journal, backtester, and risk calculator, is fully available,
             free, while we&apos;re in beta.
           </p>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-emerald-300">
+            The first 5 people to sign up, verify their email, try a tool, and leave a
+            review get a $5 Amazon gift card.
+          </p>
           <div className="mt-8">
             <Link
               href={isLoggedIn ? "/planner" : "/signup"}

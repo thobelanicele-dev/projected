@@ -84,6 +84,13 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
             >
               Account settings
             </Link>
+            <Link
+              href="/beta-reward"
+              onClick={() => setOpen(false)}
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
+            >
+              Beta reward
+            </Link>
             <button
               type="button"
               onClick={() => {

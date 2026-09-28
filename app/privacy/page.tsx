@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPageLayout title="Privacy Policy" updated="September 22, 2026">
+    <LegalPageLayout title="Privacy Policy" updated="September 28, 2026">
       <LegalSection title="Overview">
         <p>
           FxInsites (&quot;we&quot;, &quot;us&quot;) is a trade planning, backtesting, and journaling
@@ -82,6 +82,13 @@ export default function PrivacyPage() {
           being used. This is just a running number per tool per day; it&apos;s never linked to
           your account, your email, or any other identifying information, and it&apos;s separate
           from the essential login cookie above.
+        </p>
+        <p className="mt-3">
+          One deliberate exception: during our beta reward program, which tools the first 5
+          signups open is recorded against their account, not anonymously, solely to verify
+          that reward&apos;s &quot;used a tool&quot; requirement. This only applies to
+          participants in that program. If you submit a review through the beta reward page,
+          its text and rating are stored tied to your account as well.
         </p>
       </LegalSection>
 
