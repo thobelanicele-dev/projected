@@ -64,7 +64,7 @@ function Marker({
       aria-valuenow={draggable ? price : undefined}
       className={draggable ? "cursor-ns-resize outline-none" : undefined}
     >
-      {draggable && <circle cx={SPINE_X} cy={y} r={12} className="fill-transparent" />}
+      {draggable && <circle cx={SPINE_X} cy={y} r={22} className="fill-transparent" />}
       <line
         x1={SPINE_X - 8}
         y1={y}
