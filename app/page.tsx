@@ -219,11 +219,6 @@ export default async function LandingPage() {
 
         <div className="mx-auto w-full max-w-4xl">
           <Reveal>
-            <div className="mb-5 flex justify-center">
-              <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-400 shadow-[0_0_12px_-4px_rgba(52,211,153,0.6)]">
-                Open beta, free for now
-              </span>
-            </div>
             <h1 className="text-4xl font-medium leading-[1.15] tracking-tight text-zinc-50 sm:text-5xl">
               Trade with a plan,
               <br />
