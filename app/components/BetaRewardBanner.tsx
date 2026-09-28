@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { acknowledgeBetaBanner, hasAcknowledgedBetaBanner } from "@/app/lib/betaRewardBanner";
 
-// Only ever rendered by (app)/layout.tsx for one of the first 5 signups who
-// hasn't finished the beta reward checklist yet, so it doesn't need to
-// re-check eligibility itself, just whether it's been dismissed before.
+// Only ever rendered by (app)/layout.tsx for one of the first FIRST_N_COUNT
+// signups (see app/lib/betaReward.ts) who hasn't finished the beta reward
+// checklist yet, so it doesn't need to re-check eligibility itself, just
+// whether it's been dismissed before.
 export function BetaRewardBanner() {
   const [visible, setVisible] = useState(false);
 

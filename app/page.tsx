@@ -3,6 +3,7 @@ import { getSession } from "@/app/lib/auth/session";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { CountUp } from "@/app/components/CountUp";
+import { FIRST_N_COUNT } from "@/app/lib/betaReward";
 
 const CAPABILITIES = [
   { value: 5, suffix: "", label: "safety checks run on every trade plan" },
@@ -333,8 +334,8 @@ export default async function LandingPage() {
             free, while we&apos;re in beta.
           </p>
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-emerald-300">
-            The first 5 people to sign up, verify their email, try a tool, and leave a
-            review get a $5 Amazon gift card.
+            The first {FIRST_N_COUNT} people to sign up, verify their email, try a tool, and
+            leave a review get a $5 Amazon gift card.
           </p>
           <div className="mt-8">
             <Link

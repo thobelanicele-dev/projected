@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/app/lib/auth/session";
-import { isInFirstFive, hasUsedAnyTool, getReview } from "@/app/lib/betaReward";
+import { isInFirstFive, hasUsedAnyTool, getReview, FIRST_N_COUNT } from "@/app/lib/betaReward";
 import { BetaReviewForm } from "@/app/components/BetaReviewForm";
 
 function ChecklistItem({ done, label }: { done: boolean; label: string }) {
@@ -25,8 +25,8 @@ export default async function BetaRewardPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Beta reward</h1>
         <p className="text-sm text-zinc-500">
-          Beta reward slots are full, the $5 Amazon gift card was reserved for the first 5
-          people to sign up.
+          Beta reward slots are full, the $5 Amazon gift card was reserved for the first{" "}
+          {FIRST_N_COUNT} people to sign up.
         </p>
       </div>
     );
@@ -41,8 +41,8 @@ export default async function BetaRewardPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Beta reward</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          You&apos;re one of the first 5 people to sign up. Complete these to unlock a $5
-          Amazon gift card.
+          You&apos;re one of the first {FIRST_N_COUNT} people to sign up. Complete these to
+          unlock a $5 Amazon gift card.
         </p>
       </div>
 

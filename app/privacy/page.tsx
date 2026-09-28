@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPageLayout, LegalSection } from "@/app/components/LegalPageLayout";
+import { FIRST_N_COUNT } from "@/app/lib/betaReward";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | FxInsites",
@@ -84,8 +85,9 @@ export default function PrivacyPage() {
           from the essential login cookie above.
         </p>
         <p className="mt-3">
-          One deliberate exception: during our beta reward program, which tools the first 5
-          signups open is recorded against their account, not anonymously, solely to verify
+          One deliberate exception: during our beta reward program, which tools the first{" "}
+          {FIRST_N_COUNT} signups open is recorded against their account, not anonymously, solely
+          to verify
           that reward&apos;s &quot;used a tool&quot; requirement. This only applies to
           participants in that program. If you submit a review through the beta reward page,
           its text and rating are stored tied to your account as well.

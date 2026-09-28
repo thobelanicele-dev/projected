@@ -1,6 +1,6 @@
 import { query } from "@/app/lib/db";
 
-export const FIRST_N_COUNT = 5;
+export const FIRST_N_COUNT = 10;
 
 // "First N signups" is a stable historical fact once N accounts exist, so
 // it's just queried live rather than stored as a flag anywhere.
