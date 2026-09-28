@@ -746,15 +746,15 @@ export function TradeIdeaForm({
         <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
           <p className="text-base font-medium text-zinc-200">What&apos;s your trade idea?</p>
           <p className="mt-1 text-sm text-zinc-500">
-            Bring something you&apos;ve actually noticed: a pattern, a level, a reaction to news.
-            Describe it below in your own words; the next few steps turn it into a structured plan
-            and check it against good risk practice. We won&apos;t hand you a strategy to use
+            Describe what you&apos;re going to do, in plain English: which pair, which direction,
+            and how much you&apos;re willing to risk. The next few steps turn it into a structured
+            plan and check it against good risk practice. We won&apos;t hand you a strategy to use
             instead. This is about building yours.
           </p>
           <textarea
             value={fields.notes}
             onChange={(e) => update("notes", e.target.value)}
-            placeholder="e.g. GBP/USD keeps bouncing off 1.2650 and it's testing that level again right now…"
+            placeholder="e.g. I want to go long on GBP/USD, risking $50 if it breaks back below 1.2650"
             rows={4}
             className={`${inputClass} mt-3 resize-y`}
           />
