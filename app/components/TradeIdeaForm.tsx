@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CalendarEvent } from "@/app/api/calendar/route";
 import type { PriceRange } from "@/app/api/history/route";
 import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSummary";
+import { PricePlanLadder } from "@/app/components/PricePlanLadder";
 import {
   calculatePositionSize,
   getPipSize,
@@ -796,34 +797,52 @@ export function TradeIdeaForm({
       <div className="flex flex-col gap-5">
       <Field label="What are you trading?" tourId="pair">
         {customPair ? (
-          <input
-            type="text"
-            value={fields.pair}
-            onChange={(e) => update("pair", e.target.value)}
-            placeholder="e.g. EUR/JPY"
-            className={inputClass}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={fields.pair}
+              onChange={(e) => update("pair", e.target.value)}
+              placeholder="e.g. EUR/JPY"
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setCustomPair(false);
+                update("pair", "");
+              }}
+              className="shrink-0 text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-300"
+            >
+              Choose from list
+            </button>
+          </div>
         ) : (
-          <select
-            value={fields.pair}
-            onChange={(e) => {
-              if (e.target.value === "__other__") {
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {POPULAR_PAIRS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => update("pair", p.value)}
+                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                  fields.pair === p.value
+                    ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
+                    : "border-zinc-800 bg-zinc-950 text-zinc-300 hover:border-zinc-700"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
                 setCustomPair(true);
                 update("pair", "");
-              } else {
-                update("pair", e.target.value);
-              }
-            }}
-            className={inputClass}
-          >
-            <option value="">Select an instrument…</option>
-            {POPULAR_PAIRS.map((p) => (
-              <option key={p.value} value={p.value}>
-                {p.label}
-              </option>
-            ))}
-            <option value="__other__">Other…</option>
-          </select>
+              }}
+              className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:border-zinc-700"
+            >
+              Other…
+            </button>
+          </div>
         )}
         {priceStatus === "loading" && (
           <span className="text-sm text-zinc-500">Fetching live price…</span>
@@ -869,30 +888,30 @@ export function TradeIdeaForm({
 
       <Field
         label="Which way do you think it's going?"
-        hint="Long bets the price rises; short bets it falls. Short is the more advanced of the two, stick with long until you're comfortable."
+        info="Long bets the price rises: you buy now, hoping to sell later for more. Short bets it falls: you effectively sell first, planning to buy back lower. Short is the more advanced of the two, stick with long until you're comfortable."
       >
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => update("direction", "long")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-3 text-base font-medium transition-colors ${
               fields.direction === "long"
                 ? "border-emerald-500 bg-emerald-500/15 text-emerald-300"
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
             }`}
           >
-            Long: price will go up
+            <span aria-hidden="true">↑</span> Long
           </button>
           <button
             type="button"
             onClick={() => update("direction", "short")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-3 text-base font-medium transition-colors ${
               fields.direction === "short"
                 ? "border-red-500 bg-red-500/15 text-red-300"
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
             }`}
           >
-            Short: price will go down
+            <span aria-hidden="true">↓</span> Short
           </button>
         </div>
       </Field>
@@ -903,8 +922,18 @@ export function TradeIdeaForm({
       <div className="flex flex-col gap-5">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-base font-medium text-zinc-200">Your price plan</span>
-          <InfoTip text="Entry is where your trade opens, stop loss is your exact exit point if it goes wrong, and take profit is where you'd bank a win. A stop loss especially matters: without one, a bad trade has no limit on what it can cost you. Don't know exact prices? Describe each one in words instead, that's still enough to work with." />
+          <InfoTip text="Entry is where your trade opens, stop loss is your exact exit point if it goes wrong, and take profit is where you'd bank a win. A stop loss especially matters: without one, a bad trade has no limit on what it can cost you. Drag the markers below, or just type prices in the boxes underneath." />
         </div>
+
+        <PricePlanLadder
+          pair={fields.pair}
+          entryMode={fields.entryMode}
+          livePrice={priceStatus === "ready" ? livePrice : null}
+          entryPrice={fields.entryPrice}
+          stopLossPrice={fields.stopLossPrice}
+          takeProfitPrice={fields.takeProfitPrice}
+          onChange={update}
+        />
 
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium text-zinc-300">Entry</span>
@@ -1009,17 +1038,24 @@ export function TradeIdeaForm({
             label="How much of your account are you risking?"
             info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss, not how much you're putting into the trade overall. Most experienced traders risk 1 to 2% per trade; keeping it small means no single bad trade can seriously damage your account."
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <input
-                type="number"
-                min="0.1"
-                max="100"
+                type="range"
+                min="0.5"
+                max="5"
                 step="0.1"
                 value={fields.riskPercent}
                 onChange={(e) => update("riskPercent", e.target.value)}
-                className={`${inputClass} max-w-[120px]`}
+                className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-800 accent-emerald-400"
               />
-              <span className="text-base text-zinc-400">% of account</span>
+              <span className="w-28 shrink-0 text-right text-base font-medium text-zinc-100">
+                {fields.riskPercent}% of account
+                {positionSizeOutcome?.ok && (
+                  <span className="block text-sm font-normal text-zinc-400">
+                    ${positionSizeOutcome.result.riskAmount.toLocaleString()} at risk
+                  </span>
+                )}
+              </span>
             </div>
             {riskTooHigh && (
               <p className="mt-1 text-sm text-orange-400">
