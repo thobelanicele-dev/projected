@@ -248,13 +248,9 @@ export const inputClass =
 
 const STEP_LABELS = [
   "Get started",
-  "Instrument",
-  "Direction",
-  "Entry",
-  "Stop loss",
-  "Take profit",
-  "Risk",
-  "Account balance",
+  "Instrument & direction",
+  "Price plan",
+  "Risk & account",
   "Chart (optional)",
   "Review",
 ];
@@ -614,7 +610,7 @@ export function TradeIdeaForm({
           <p className="text-sm text-orange-300">Add a stop-loss price to see your position size.</p>
           <button
             type="button"
-            onClick={() => goToStep(4)}
+            onClick={() => goToStep(2)}
             className="mt-1.5 text-sm font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
           >
             Go to stop loss
@@ -797,6 +793,7 @@ export function TradeIdeaForm({
       )}
 
       {step === 1 && (
+      <div className="flex flex-col gap-5">
       <Field label="What are you trading?" tourId="pair">
         {customPair ? (
           <input
@@ -869,12 +866,10 @@ export function TradeIdeaForm({
           </div>
         )}
       </Field>
-      )}
 
-      {step === 2 && (
       <Field
         label="Which way do you think it's going?"
-        info="'Long' means you think the price will rise: you buy now, hoping to sell later for more. 'Short' means you think the price will fall: you effectively sell first, planning to buy back later at a lower price. Short trades are a more advanced concept, so stick with Long until you're comfortable."
+        hint="Long bets the price rises; short bets it falls. Short is the more advanced of the two, stick with long until you're comfortable."
       >
         <div className="flex gap-3">
           <button
@@ -901,145 +896,140 @@ export function TradeIdeaForm({
           </button>
         </div>
       </Field>
+      </div>
       )}
 
-      {step === 3 && (
-      <Field
-        label="When do you want to enter?"
-        info="Your 'entry' is the price where your trade actually opens. 'Right now' jumps in immediately at whatever the current price happens to be. 'Wait for a price/condition' means you only enter once something specific happens first (e.g. the price reaching a certain level), which usually gives you more control than jumping in blind."
-      >
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => update("entryMode", "now")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
-              fields.entryMode === "now"
-                ? "border-zinc-500 bg-zinc-800 text-zinc-50"
-                : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
-            }`}
-          >
-            Right now (market)
-          </button>
-          <button
-            type="button"
-            onClick={() => update("entryMode", "condition")}
-            className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
-              fields.entryMode === "condition"
-                ? "border-zinc-500 bg-zinc-800 text-zinc-50"
-                : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
-            }`}
-          >
-            Wait for a price / condition
-          </button>
+      {step === 2 && (
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-base font-medium text-zinc-200">Your price plan</span>
+          <InfoTip text="Entry is where your trade opens, stop loss is your exact exit point if it goes wrong, and take profit is where you'd bank a win. A stop loss especially matters: without one, a bad trade has no limit on what it can cost you. Don't know exact prices? Describe each one in words instead, that's still enough to work with." />
         </div>
-        {fields.entryMode === "condition" && (
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-zinc-300">Entry</span>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => update("entryMode", "now")}
+              className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
+                fields.entryMode === "now"
+                  ? "border-zinc-500 bg-zinc-800 text-zinc-50"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
+              }`}
+            >
+              Right now (market)
+            </button>
+            <button
+              type="button"
+              onClick={() => update("entryMode", "condition")}
+              className={`flex-1 rounded-lg border px-4 py-2.5 text-base font-medium transition-colors ${
+                fields.entryMode === "condition"
+                  ? "border-zinc-500 bg-zinc-800 text-zinc-50"
+                  : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
+              }`}
+            >
+              Wait for a price / condition
+            </button>
+          </div>
+          {fields.entryMode === "condition" && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <input
+                type="text"
+                value={fields.entryPrice}
+                onChange={(e) => update("entryPrice", e.target.value)}
+                placeholder="Entry price (optional), e.g. 2410"
+                className={inputClass}
+              />
+              <input
+                type="text"
+                value={fields.entryCondition}
+                onChange={(e) => update("entryCondition", e.target.value)}
+                placeholder={
+                  activeHints?.entryCondition ??
+                  "What has to happen first? e.g. it breaks above the London high"
+                }
+                className={inputClass}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2" data-tour="stop-loss">
+          <span className="text-sm font-medium text-red-400">Stop loss</span>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
               type="text"
-              value={fields.entryPrice}
-              onChange={(e) => update("entryPrice", e.target.value)}
-              placeholder="Entry price (optional), e.g. 2410"
+              value={fields.stopLossPrice}
+              onChange={(e) => update("stopLossPrice", e.target.value)}
+              placeholder="Stop loss price, e.g. 2395"
               className={inputClass}
             />
             <input
               type="text"
-              value={fields.entryCondition}
-              onChange={(e) => update("entryCondition", e.target.value)}
-              placeholder={
-                activeHints?.entryCondition ??
-                "What has to happen first? e.g. it breaks above the London high"
-              }
+              value={fields.stopLossCondition}
+              onChange={(e) => update("stopLossCondition", e.target.value)}
+              placeholder={activeHints?.stopLossCondition ?? "Why there? e.g. below the recent swing low"}
               className={inputClass}
             />
           </div>
-        )}
-      </Field>
-      )}
-
-      {step === 4 && (
-      <Field
-        label="Stop loss: where you'll get out if you're wrong"
-        hint="The most important field. Don't skip it."
-        info="A stop loss is a safety net: an exact point where you'll automatically exit if the trade goes against you. Without one, a bad trade has no limit on how much it can cost you. Don't know the exact price? Leave it blank and just describe it in words on the right. That's still enough to work with."
-        tourId="stop-loss"
-      >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <input
-            type="text"
-            value={fields.stopLossPrice}
-            onChange={(e) => update("stopLossPrice", e.target.value)}
-            placeholder="Stop loss price, e.g. 2395"
-            className={inputClass}
-          />
-          <input
-            type="text"
-            value={fields.stopLossCondition}
-            onChange={(e) => update("stopLossCondition", e.target.value)}
-            placeholder={activeHints?.stopLossCondition ?? "Why there? e.g. below the recent swing low"}
-            className={inputClass}
-          />
+          {noStopLossDefined && (
+            <p className="text-sm text-orange-400">
+              You haven&apos;t set a stop loss yet. Every experienced trader defines one before
+              entering; even just a reason in words is better than nothing.
+            </p>
+          )}
         </div>
-        {noStopLossDefined && (
-          <p className="mt-1 text-sm text-orange-400">
-            You haven&apos;t set a stop loss yet. Every experienced trader defines one before entering;
-            even just a reason in words is better than nothing.
-          </p>
-        )}
-      </Field>
-      )}
 
-      {step === 5 && (
-      <Field
-        label="Take profit: where you'll bank the win"
-        info="A take profit is the price where you plan to exit and lock in your gains if the trade goes your way. It doesn't have to be exact; even a rough idea of 'where' helps you judge whether the potential win is worth the risk. Don't know the exact price? Leave it blank and describe it in words instead."
-      >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <input
-            type="text"
-            value={fields.takeProfitPrice}
-            onChange={(e) => update("takeProfitPrice", e.target.value)}
-            placeholder="Take profit price, e.g. 2450"
-            className={inputClass}
-          />
-          <input
-            type="text"
-            value={fields.takeProfitCondition}
-            onChange={(e) => update("takeProfitCondition", e.target.value)}
-            placeholder={activeHints?.takeProfitCondition ?? "Why there? e.g. the Asian range high"}
-            className={inputClass}
-          />
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-emerald-400">Take profit</span>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <input
+              type="text"
+              value={fields.takeProfitPrice}
+              onChange={(e) => update("takeProfitPrice", e.target.value)}
+              placeholder="Take profit price, e.g. 2450"
+              className={inputClass}
+            />
+            <input
+              type="text"
+              value={fields.takeProfitCondition}
+              onChange={(e) => update("takeProfitCondition", e.target.value)}
+              placeholder={activeHints?.takeProfitCondition ?? "Why there? e.g. the Asian range high"}
+              className={inputClass}
+            />
+          </div>
         </div>
-      </Field>
+      </div>
       )}
 
-      {step === 6 && (
-      <Field
-        label="How much of your account are you risking?"
-        info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss, not how much you're putting into the trade overall. Most experienced traders risk 1 to 2% per trade; keeping it small means no single bad trade can seriously damage your account."
-      >
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            min="0.1"
-            max="100"
-            step="0.1"
-            value={fields.riskPercent}
-            onChange={(e) => update("riskPercent", e.target.value)}
-            className={`${inputClass} max-w-[120px]`}
-          />
-          <span className="text-base text-zinc-400">% of account</span>
-        </div>
-        {riskTooHigh && (
-          <p className="mt-1 text-sm text-orange-400">
-            {fields.riskPercent}% is higher than what most experienced traders risk on one trade;
-            a short losing streak could hurt a lot more than it might feel like right now.
-          </p>
-        )}
-      </Field>
-      )}
+      {step === 3 && (
+        <div className="flex flex-col gap-5">
+          <Field
+            label="How much of your account are you risking?"
+            info="This is how much of your total trading money you're willing to lose if this trade hits your stop loss, not how much you're putting into the trade overall. Most experienced traders risk 1 to 2% per trade; keeping it small means no single bad trade can seriously damage your account."
+          >
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0.1"
+                max="100"
+                step="0.1"
+                value={fields.riskPercent}
+                onChange={(e) => update("riskPercent", e.target.value)}
+                className={`${inputClass} max-w-[120px]`}
+              />
+              <span className="text-base text-zinc-400">% of account</span>
+            </div>
+            {riskTooHigh && (
+              <p className="mt-1 text-sm text-orange-400">
+                {fields.riskPercent}% is higher than what most experienced traders risk on one
+                trade; a short losing streak could hurt a lot more than it might feel like right
+                now.
+              </p>
+            )}
+          </Field>
 
-      {step === 7 && (
-        <>
           <Field label="Account balance" hint="Powers the position size below.">
             <div className="flex items-center gap-2">
               <span className="text-base text-zinc-400">$</span>
@@ -1063,10 +1053,10 @@ export function TradeIdeaForm({
           ) : (
             renderMissingPositionSizeHint()
           )}
-        </>
+        </div>
       )}
 
-      {step === 8 && (
+      {step === 4 && (
       <Field
         label="Attach a chart screenshot (optional)"
         hint="Checked against the plan above. Never overrides it."
@@ -1099,7 +1089,7 @@ export function TradeIdeaForm({
       </Field>
       )}
 
-      {step === 9 && (
+      {step === 5 && (
         <div className="flex flex-col gap-3">
           <div>
             <p className="text-base font-medium text-zinc-200">Review your plan</p>
@@ -1112,13 +1102,13 @@ export function TradeIdeaForm({
             {fields.pair || "Not set"}
           </ReviewRow>
 
-          <ReviewRow label="Direction" onEdit={() => goToStep(2)}>
+          <ReviewRow label="Direction" onEdit={() => goToStep(1)}>
             {fields.direction === "long"
               ? "Long: you expect the price to go up"
               : "Short: you expect the price to go down"}
           </ReviewRow>
 
-          <ReviewRow label="Entry" onEdit={() => goToStep(3)}>
+          <ReviewRow label="Entry" onEdit={() => goToStep(2)}>
             {fields.entryMode === "now"
               ? "Entering right now, at market price"
               : [
@@ -1129,7 +1119,7 @@ export function TradeIdeaForm({
                   .join(", ") || "Waiting for a condition (not described yet)"}
           </ReviewRow>
 
-          <ReviewRow label="Stop loss" onEdit={() => goToStep(4)} warning={noStopLossDefined}>
+          <ReviewRow label="Stop loss" onEdit={() => goToStep(2)} warning={noStopLossDefined}>
             {noStopLossDefined
               ? "No stop loss set yet. Go back and add one."
               : [
@@ -1140,7 +1130,7 @@ export function TradeIdeaForm({
                   .join(", ")}
           </ReviewRow>
 
-          <ReviewRow label="Take profit" onEdit={() => goToStep(5)}>
+          <ReviewRow label="Take profit" onEdit={() => goToStep(2)}>
             {[
               fields.takeProfitPrice && `At ${fields.takeProfitPrice}`,
               fields.takeProfitCondition && fields.takeProfitCondition,
@@ -1149,12 +1139,12 @@ export function TradeIdeaForm({
               .join(", ") || "Not set (optional)"}
           </ReviewRow>
 
-          <ReviewRow label="Risk per trade" onEdit={() => goToStep(6)} warning={riskTooHigh}>
+          <ReviewRow label="Risk per trade" onEdit={() => goToStep(3)} warning={riskTooHigh}>
             {fields.riskPercent}% of your account
             {riskTooHigh ? ", higher than most experienced traders risk on one trade" : ""}
           </ReviewRow>
 
-          <ReviewRow label="Account & position size" onEdit={() => goToStep(7)}>
+          <ReviewRow label="Account & position size" onEdit={() => goToStep(3)}>
             <div className="flex flex-col gap-2">
               <span>${accountBalance} account balance</span>
               {positionSizeOutcome && positionSizeStats ? (
@@ -1167,7 +1157,7 @@ export function TradeIdeaForm({
             </div>
           </ReviewRow>
 
-          <ReviewRow label="Chart" onEdit={() => goToStep(8)}>
+          <ReviewRow label="Chart" onEdit={() => goToStep(4)}>
             {chartPreviewUrl ? "Screenshot attached" : "No chart attached"}
           </ReviewRow>
         </div>

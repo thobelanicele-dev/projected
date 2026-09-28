@@ -1,7 +1,7 @@
 import type { TradeIdeaFields } from "@/app/components/TradeIdeaForm";
 
 const STORAGE_KEY = "fxinsites.plannerDraft";
-const VERSION = 1;
+const VERSION = 2; // bumped when the wizard's step numbering changed (10 steps -> 6)
 const MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000; // 2 weeks; an older draft isn't worth resurrecting
 
 export interface PlannerDraft {

@@ -37,13 +37,13 @@ export const TOUR_STEPS: TourStep[] = [
     target: '[data-tour="stop-loss"]',
     title: "The most important field",
     body: "Your stop loss caps how much you can lose. Always fill this in, even just the reason, if you don't know the exact price.",
-    plannerStep: 4,
+    plannerStep: 2,
   },
   {
     target: '[data-tour="submit"]',
     title: "Build your plan",
     body: "We'll check it for common mistakes and flag anything risky before you trade. The planner walks you through it step by step, ending with a review; this button appears on the last step.",
-    plannerStep: 9,
+    plannerStep: 5,
   },
   {
     target: '[data-tour="nav-risk-calculator"]',
