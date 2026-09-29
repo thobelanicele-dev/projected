@@ -40,7 +40,7 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
   }
 
   const initial = user.username.charAt(0).toUpperCase();
-  const planLabel = user.plan ? (PLAN_LABELS[user.plan] ?? user.plan) : "Free";
+  const planLabel = user.plan ? (PLAN_LABELS[user.plan] ?? user.plan) : "Beta";
 
   return (
     <div ref={menuRef} className="fixed right-6 top-6 z-40">
@@ -62,7 +62,7 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
 
           <div className="flex items-center justify-between px-3 py-2.5 text-sm">
             <span className="text-zinc-400">Plan</span>
-            <span className="text-zinc-200">{planLabel}</span>
+            <span className={user.plan ? "text-zinc-200" : "text-emerald-400"}>{planLabel}</span>
           </div>
 
           <div className="mt-1 border-t border-zinc-800 pt-1">
