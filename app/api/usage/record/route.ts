@@ -7,7 +7,13 @@ const RATE_LIMIT = 30;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
-  const session = await getSession();
+  let session;
+  try {
+    session = await getSession();
+  } catch (error) {
+    console.error("Session lookup failed", error);
+    return NextResponse.json({ error: "Something went wrong on our end." }, { status: 503 });
+  }
   if (!session) {
     return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
   }

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPageLayout title="Privacy Policy" updated="September 28, 2026">
+    <LegalPageLayout title="Privacy Policy" updated="September 29, 2026">
       <LegalSection title="Overview">
         <p>
           FxInsites (&quot;we&quot;, &quot;us&quot;) is a trade planning, backtesting, and journaling
@@ -26,8 +26,9 @@ export default function PrivacyPage() {
         <p>
           <strong className="text-zinc-200">Trade plan inputs:</strong> when you use the planner, the
           instrument, direction, entry/stop/target details, risk percentage, and any chart screenshot
-          you attach are sent to our AI provider to generate your plan, and the result is saved to
-          your account so it appears in your journal.
+          you attach are sent to our AI provider to generate your plan. The result itself is not saved
+          to your account; like the rest of your journal, it&apos;s kept only in your browser&apos;s
+          local storage (see below).
         </p>
         <p>
           <strong className="text-zinc-200">IP address:</strong> used briefly to apply rate limits

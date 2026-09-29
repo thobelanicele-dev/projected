@@ -58,8 +58,8 @@ export default async function BillingCallbackPage({
               <p className="mt-2 text-sm text-zinc-400">
                 If you completed checkout, this may just be a delay. Check back in a minute, or try again.
               </p>
-              <Link href="/#pricing" className="mt-4 inline-block text-sky-400 hover:text-sky-300">
-                Back to pricing
+              <Link href="/planner" className="mt-4 inline-block text-sky-400 hover:text-sky-300">
+                Back to the app
               </Link>
             </>
           )}

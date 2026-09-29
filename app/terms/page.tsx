@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPageLayout title="Terms &amp; Conditions" updated="September 8, 2026">
+    <LegalPageLayout title="Terms &amp; Conditions" updated="September 29, 2026">
       <LegalSection title="Acceptance of these terms">
         <p>
           By creating an account or using FxInsites, you agree to these terms. If you don&apos;t
@@ -24,6 +24,14 @@ export default function TermsPage() {
           </strong>{" "}
           Nothing on this site should be taken as a recommendation to buy, sell, or hold any
           financial instrument.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Beta period">
+        <p>
+          FxInsites is currently in an open beta, free to use for everyone until November 15,
+          2026. After that date, continuing to use the service will require upgrading to a paid
+          plan; an upgrade option will be added to your account starting November 16, 2026.
         </p>
       </LegalSection>
 

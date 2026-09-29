@@ -62,18 +62,7 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
 
           <div className="flex items-center justify-between px-3 py-2.5 text-sm">
             <span className="text-zinc-400">Plan</span>
-            <span className="flex items-center gap-2">
-              <span className="text-zinc-200">{planLabel}</span>
-              {!user.plan && (
-                <Link
-                  href="/#pricing"
-                  onClick={() => setOpen(false)}
-                  className="text-xs font-medium text-sky-400 hover:text-sky-300"
-                >
-                  Upgrade
-                </Link>
-              )}
-            </span>
+            <span className="text-zinc-200">{planLabel}</span>
           </div>
 
           <div className="mt-1 border-t border-zinc-800 pt-1">
