@@ -1,6 +1,7 @@
 import { query } from "@/app/lib/db";
+import { FIRST_N_COUNT } from "@/app/lib/betaRewardConfig";
 
-export const FIRST_N_COUNT = 10;
+export { FIRST_N_COUNT };
 
 // "First N signups" is a stable historical fact once N accounts exist, so
 // it's just queried live rather than stored as a flag anywhere.

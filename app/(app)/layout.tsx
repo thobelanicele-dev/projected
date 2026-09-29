@@ -4,6 +4,7 @@ import { Sidebar } from "@/app/components/Sidebar";
 import { ProfileMenu } from "@/app/components/ProfileMenu";
 import { ProductTour, TOUR_STEPS } from "@/app/components/ProductTour";
 import { BetaRewardBanner } from "@/app/components/BetaRewardBanner";
+import { BetaRewardPopup } from "@/app/components/BetaRewardPopup";
 import { getSession } from "@/app/lib/auth/session";
 import { isInFirstFive, hasUsedAnyTool, getReview } from "@/app/lib/betaReward";
 
@@ -30,6 +31,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </main>
       <ProfileMenu user={session} />
       <ProductTour steps={TOUR_STEPS} />
+      <BetaRewardPopup />
     </div>
   );
 }
