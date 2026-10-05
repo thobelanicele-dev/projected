@@ -38,7 +38,7 @@ export default function RiskCalculatorPage() {
         <SharedInputsPanel />
       </div>
 
-      <div className="mt-6 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-6 flex gap-2 overflow-x-auto pb-1" data-tour="risk-tabs">
         {TABS.map((tab) => (
           <button
             key={tab.key}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 import { discardUnscopedKey, userScopedKey } from "@/app/lib/userScopedStorage";
 
@@ -15,6 +16,13 @@ export interface TourStep {
    * before it looks for the target element.
    */
   plannerStep?: number;
+  /**
+   * Set when the target only exists on a different page than wherever the
+   * tour currently is (e.g. risk calculator fields while the tour started on
+   * the planner). The tour navigates there first, then looks for the target
+   * once that page has rendered.
+   */
+  route?: string;
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -28,29 +36,45 @@ export const TOUR_STEPS: TourStep[] = [
     title: "Start with your own idea",
     body: "Describe something you've actually noticed; we'll structure it and check it, not hand you one. Stuck? There's a quick example link here too.",
     plannerStep: 0,
+    route: "/planner",
   },
   {
     target: '[data-tour="pair"]',
     title: "Pick what you're trading",
     body: "Choose a common pair, or type your own.",
     plannerStep: 1,
+    route: "/planner",
   },
   {
     target: '[data-tour="stop-loss"]',
     title: "The most important field",
     body: "Your stop loss caps how much you can lose. Always fill this in, even just the reason, if you don't know the exact price.",
     plannerStep: 2,
+    route: "/planner",
   },
   {
     target: '[data-tour="submit"]',
     title: "Build your plan",
     body: "We'll check it for common mistakes and flag anything risky before you trade. The planner walks you through it step by step, ending with a review; this button appears on the last step.",
     plannerStep: 5,
+    route: "/planner",
   },
   {
     target: '[data-tour="nav-risk-calculator"]',
     title: "Risk calculator",
     body: "Work out position size, margin, and correlation before you trade.",
+  },
+  {
+    target: '[data-tour="risk-shared-inputs"]',
+    title: "One set of inputs, every tool",
+    body: "Set your account balance and risk per trade once here; all five tools below use it, so you don't re-enter it five times.",
+    route: "/risk-calculator",
+  },
+  {
+    target: '[data-tour="risk-tabs"]',
+    title: "Five tools in one place",
+    body: "Position size, pip value, risk/reward, margin & leverage, and correlation risk, switch between them anytime.",
+    route: "/risk-calculator",
   },
   {
     target: '[data-tour="nav-backtest"]',
@@ -71,6 +95,8 @@ const TOOLTIP_MARGIN = 12;
 
 export function ProductTour({ steps }: { steps: TourStep[] }) {
   const userId = useCurrentUserId();
+  const router = useRouter();
+  const pathname = usePathname();
   const [stepIndex, setStepIndex] = useState<number | null>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
@@ -95,6 +121,15 @@ export function ProductTour({ steps }: { steps: TourStep[] }) {
   useEffect(() => {
     if (stepIndex === null) return;
     const step = steps[stepIndex];
+
+    // Navigate there first if the target lives on a different page; this
+    // effect re-runs once `pathname` reflects the new route, and only then
+    // falls through to the planner-step/element-lookup logic below.
+    if (step.route && pathname !== step.route) {
+      const timeout = setTimeout(() => setRect(null), 0); // avoid flashing the old tooltip position mid-navigation
+      router.push(step.route);
+      return () => clearTimeout(timeout);
+    }
 
     if (step.plannerStep !== undefined) {
       window.dispatchEvent(new CustomEvent("fxinsites:set-planner-step", { detail: step.plannerStep }));
@@ -140,7 +175,7 @@ export function ProductTour({ steps }: { steps: TourStep[] }) {
       clearTimeout(lookupTimeout);
       cleanup?.();
     };
-  }, [stepIndex, steps]);
+  }, [stepIndex, steps, pathname, router]);
 
   function finish() {
     window.localStorage.setItem(userScopedKey(BASE_STORAGE_KEY, userId), "1");

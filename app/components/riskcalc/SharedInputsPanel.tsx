@@ -59,7 +59,7 @@ export function SharedInputsPanel() {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5" data-tour="risk-shared-inputs">
       <p className="text-xs uppercase tracking-wide text-zinc-500">Shared inputs</p>
       <p className="mt-1 text-xs text-zinc-500">
         These apply across all five tools below; change one and every tab updates.
