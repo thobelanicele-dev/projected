@@ -83,7 +83,7 @@ interface Signal {
   direction: "long" | "short";
 }
 
-function sma(values: number[], period: number): (number | null)[] {
+export function sma(values: number[], period: number): (number | null)[] {
   const out: (number | null)[] = [];
   let sum = 0;
   for (let i = 0; i < values.length; i++) {
@@ -94,7 +94,7 @@ function sma(values: number[], period: number): (number | null)[] {
   return out;
 }
 
-function ema(values: number[], period: number): (number | null)[] {
+export function ema(values: number[], period: number): (number | null)[] {
   const out: (number | null)[] = [];
   const k = 2 / (period + 1);
   let prev: number | null = null;
@@ -114,7 +114,7 @@ function ema(values: number[], period: number): (number | null)[] {
   return out;
 }
 
-function rollingStdDev(values: number[], period: number): (number | null)[] {
+export function rollingStdDev(values: number[], period: number): (number | null)[] {
   const out: (number | null)[] = [];
   for (let i = 0; i < values.length; i++) {
     if (i < period - 1) {
@@ -141,7 +141,7 @@ export function atr(candles: Candle[], period: number): (number | null)[] {
   return sma(trueRanges, period);
 }
 
-function rsi(values: number[], period: number): (number | null)[] {
+export function rsi(values: number[], period: number): (number | null)[] {
   const out: (number | null)[] = new Array(values.length).fill(null);
   if (values.length < period + 1) return out;
 
@@ -198,7 +198,7 @@ function breakoutSignals(candles: Candle[], params: BreakoutParams): Signal[] {
   return signals;
 }
 
-function rsiSignals(candles: Candle[], params: RsiParams): Signal[] {
+export function rsiSignals(candles: Candle[], params: RsiParams): Signal[] {
   const closes = candles.map((c) => c.close);
   const values = rsi(closes, params.period);
 
@@ -233,10 +233,17 @@ export function bollingerSignals(candles: Candle[], params: BollingerParams): Si
   return signals;
 }
 
-export function macdSignals(candles: Candle[], params: MacdParams): Signal[] {
+// Shared by macdSignals and the custom-strategy indicator system below, so
+// both read the exact same MACD math rather than two copies that could drift.
+export function computeMacdLines(
+  candles: Candle[],
+  fastPeriod: number,
+  slowPeriod: number,
+  signalPeriod: number
+): { macdLine: (number | null)[]; signalLine: (number | null)[] } {
   const closes = candles.map((c) => c.close);
-  const fastEma = ema(closes, params.fastPeriod);
-  const slowEma = ema(closes, params.slowPeriod);
+  const fastEma = ema(closes, fastPeriod);
+  const slowEma = ema(closes, slowPeriod);
   const macdLine = closes.map((_, i) =>
     fastEma[i] !== null && slowEma[i] !== null ? fastEma[i]! - slowEma[i]! : null
   );
@@ -248,11 +255,22 @@ export function macdSignals(candles: Candle[], params: MacdParams): Signal[] {
   const signalLine: (number | null)[] = new Array(macdLine.length).fill(null);
   if (firstValidIndex !== -1) {
     const suffix = macdLine.slice(firstValidIndex) as number[];
-    const suffixSignal = ema(suffix, params.signalPeriod);
+    const suffixSignal = ema(suffix, signalPeriod);
     suffixSignal.forEach((v, j) => {
       signalLine[firstValidIndex + j] = v;
     });
   }
+
+  return { macdLine, signalLine };
+}
+
+export function macdSignals(candles: Candle[], params: MacdParams): Signal[] {
+  const { macdLine, signalLine } = computeMacdLines(
+    candles,
+    params.fastPeriod,
+    params.slowPeriod,
+    params.signalPeriod
+  );
 
   const signals: Signal[] = [];
   for (let i = 1; i < candles.length; i++) {
@@ -280,6 +298,143 @@ function generateSignals(candles: Candle[], strategy: StrategyParams): Signal[] 
     case "macd":
       return macdSignals(candles, strategy);
   }
+}
+
+// --- Custom strategy builder ------------------------------------------------
+// A separate, more general path from the 5 fixed templates above: instead of
+// picking one named combination, a trader composes their own entry rules out
+// of indicator primitives (reusing the exact same sma/ema/rsi/stddev/MACD
+// math the fixed templates use, so the numbers behave identically) and plain
+// comparison operators. The result still funnels into the same
+// simulateTrades/computeBacktestStats pipeline below, so a custom strategy
+// gets exactly the same trade simulation and stats as a template one.
+
+export type Indicator =
+  | { kind: "price" }
+  | { kind: "sma"; period: number }
+  | { kind: "ema"; period: number }
+  | { kind: "rsi"; period: number }
+  | { kind: "bollinger_upper"; period: number; stdDevMultiplier: number }
+  | { kind: "bollinger_lower"; period: number; stdDevMultiplier: number }
+  | { kind: "macd_line"; fastPeriod: number; slowPeriod: number; signalPeriod: number }
+  | { kind: "macd_signal"; fastPeriod: number; slowPeriod: number; signalPeriod: number }
+  | { kind: "highest_high"; lookback: number }
+  | { kind: "lowest_low"; lookback: number }
+  | { kind: "constant"; value: number };
+
+export type ComparisonOperator = "crosses_above" | "crosses_below" | "greater_than" | "less_than";
+
+export interface Condition {
+  left: Indicator;
+  operator: ComparisonOperator;
+  right: Indicator;
+}
+
+export interface CustomStrategy {
+  id: string;
+  name: string;
+  // Every condition in the list must be true on the same bar (AND) for that
+  // side to signal. An empty list never signals, rather than matching every bar.
+  longConditions: Condition[];
+  shortConditions: Condition[];
+  createdAt: number;
+}
+
+export function computeIndicatorSeries(candles: Candle[], indicator: Indicator): (number | null)[] {
+  const closes = candles.map((c) => c.close);
+
+  switch (indicator.kind) {
+    case "price":
+      return closes;
+    case "constant":
+      return closes.map(() => indicator.value);
+    case "sma":
+      return sma(closes, indicator.period);
+    case "ema":
+      return ema(closes, indicator.period);
+    case "rsi":
+      return rsi(closes, indicator.period);
+    case "bollinger_upper":
+    case "bollinger_lower": {
+      const mean = sma(closes, indicator.period);
+      const stdDev = rollingStdDev(closes, indicator.period);
+      return closes.map((_, i) => {
+        const m = mean[i];
+        const s = stdDev[i];
+        if (m === null || s === null) return null;
+        return indicator.kind === "bollinger_upper"
+          ? m + indicator.stdDevMultiplier * s
+          : m - indicator.stdDevMultiplier * s;
+      });
+    }
+    case "macd_line":
+      return computeMacdLines(candles, indicator.fastPeriod, indicator.slowPeriod, indicator.signalPeriod)
+        .macdLine;
+    case "macd_signal":
+      return computeMacdLines(candles, indicator.fastPeriod, indicator.slowPeriod, indicator.signalPeriod)
+        .signalLine;
+    // Matches breakoutSignals' own window (excludes the current bar, so
+    // there's no lookahead into the bar the condition is being checked on).
+    case "highest_high":
+      return closes.map((_, i) => {
+        if (i < indicator.lookback) return null;
+        const window = candles.slice(i - indicator.lookback, i);
+        return Math.max(...window.map((c) => c.high));
+      });
+    case "lowest_low":
+      return closes.map((_, i) => {
+        if (i < indicator.lookback) return null;
+        const window = candles.slice(i - indicator.lookback, i);
+        return Math.min(...window.map((c) => c.low));
+      });
+  }
+}
+
+function evaluateConditionAt(
+  leftSeries: (number | null)[],
+  operator: ComparisonOperator,
+  rightSeries: (number | null)[],
+  i: number
+): boolean {
+  const l1 = leftSeries[i];
+  const r1 = rightSeries[i];
+  if (l1 === null || r1 === null) return false;
+
+  if (operator === "greater_than") return l1 > r1;
+  if (operator === "less_than") return l1 < r1;
+
+  if (i === 0) return false;
+  const l0 = leftSeries[i - 1];
+  const r0 = rightSeries[i - 1];
+  if (l0 === null || r0 === null) return false;
+
+  return operator === "crosses_above" ? l0 <= r0 && l1 > r1 : l0 >= r0 && l1 < r1;
+}
+
+export function generateCustomSignals(candles: Candle[], strategy: CustomStrategy): Signal[] {
+  // Compute each distinct indicator series once, even when the same
+  // indicator (e.g. "price") appears in several conditions.
+  const seriesCache = new Map<string, (number | null)[]>();
+  function seriesFor(indicator: Indicator): (number | null)[] {
+    const key = JSON.stringify(indicator);
+    const cached = seriesCache.get(key);
+    if (cached) return cached;
+    const series = computeIndicatorSeries(candles, indicator);
+    seriesCache.set(key, series);
+    return series;
+  }
+
+  function allConditionsMet(conditions: Condition[], i: number): boolean {
+    if (conditions.length === 0) return false;
+    return conditions.every((c) => evaluateConditionAt(seriesFor(c.left), c.operator, seriesFor(c.right), i));
+  }
+
+  const signals: Signal[] = [];
+  for (let i = 1; i < candles.length; i++) {
+    if (allConditionsMet(strategy.longConditions, i)) signals.push({ index: i, direction: "long" });
+    else if (allConditionsMet(strategy.shortConditions, i)) signals.push({ index: i, direction: "short" });
+  }
+  return signals;
 }
 
 // Returns null when the computed stop distance is zero or negative (e.g. a
@@ -449,13 +604,24 @@ function computeBacktestStats(trades: SimulatedTrade[]): BacktestStats {
   };
 }
 
+function runFromSignals(candles: Candle[], signals: Signal[], exitRules: ExitRules): BacktestResult {
+  const trades = simulateTrades(candles, signals, exitRules);
+  const stats = computeBacktestStats(trades);
+  return { trades, stats };
+}
+
 export function runBacktest(
   candles: Candle[],
   strategy: StrategyParams,
   exitRules: ExitRules
 ): BacktestResult {
-  const signals = generateSignals(candles, strategy);
-  const trades = simulateTrades(candles, signals, exitRules);
-  const stats = computeBacktestStats(trades);
-  return { trades, stats };
+  return runFromSignals(candles, generateSignals(candles, strategy), exitRules);
+}
+
+export function runCustomBacktest(
+  candles: Candle[],
+  strategy: CustomStrategy,
+  exitRules: ExitRules
+): BacktestResult {
+  return runFromSignals(candles, generateCustomSignals(candles, strategy), exitRules);
 }

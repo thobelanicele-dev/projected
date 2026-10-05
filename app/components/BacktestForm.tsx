@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { POPULAR_PAIRS, InfoTip } from "@/app/components/TradeIdeaForm";
 import { parseCandleCsv } from "@/app/lib/parseCandles";
-import type { Candle, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
+import type { Candle, CustomStrategy, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
 import type { BacktestSeed } from "@/app/lib/backtestSeed";
+import { CustomStrategyBuilder, emptyCustomStrategy } from "@/app/components/CustomStrategyBuilder";
 
 type StrategyType = StrategyParams["type"];
 
@@ -74,7 +75,7 @@ export function BacktestForm({
   loading,
   initialSeed,
 }: {
-  onRun: (candles: Candle[], strategy: StrategyParams, exitRules: ExitRules) => void;
+  onRun: (candles: Candle[], strategy: StrategyParams | CustomStrategy, exitRules: ExitRules) => void;
   loading: boolean;
   initialSeed?: BacktestSeed | null;
 }) {
@@ -89,9 +90,10 @@ export function BacktestForm({
   const [csvSkipped, setCsvSkipped] = useState(0);
   const [csvError, setCsvError] = useState<string | null>(null);
 
-  const [ruleMode, setRuleMode] = useState<"template" | "freetext">("template");
+  const [ruleMode, setRuleMode] = useState<"template" | "freetext" | "custom">("template");
   const [strategyType, setStrategyType] = useState<StrategyType>("ma_crossover");
   const [params, setParams] = useState<Record<StrategyType, StrategyParams>>(DEFAULT_PARAMS);
+  const [customStrategy, setCustomStrategy] = useState<CustomStrategy>(emptyCustomStrategy());
 
   const [exitMode, setExitMode] = useState<ExitMode>("percent");
   const [percentParams, setPercentParams] = useState({ stopLossPct: "2", takeProfitPct: "6" });
@@ -231,15 +233,24 @@ export function BacktestForm({
     return { mode: "structural", swingLookback, rewardMultiple, costPct: costValue };
   }
 
+  const hasCustomConditions =
+    customStrategy.longConditions.length > 0 || customStrategy.shortConditions.length > 0;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!candles || loading) return;
     const exitRules = buildExitRules();
     if (!exitRules) return;
+    if (ruleMode === "custom") {
+      if (!hasCustomConditions) return;
+      onRun(candles, customStrategy, exitRules);
+      return;
+    }
     onRun(candles, params[strategyType], exitRules);
   }
 
-  const canRun = !!candles && candles.length > 30 && !loading;
+  const canRun =
+    !!candles && candles.length > 30 && !loading && (ruleMode !== "custom" || hasCustomConditions);
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
@@ -350,8 +361,23 @@ export function BacktestForm({
           >
             Describe in plain English
           </button>
+          <button
+            type="button"
+            onClick={() => setRuleMode("custom")}
+            className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+              ruleMode === "custom"
+                ? "border-zinc-500 bg-zinc-800 text-zinc-50"
+                : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
+            }`}
+          >
+            Build your own
+          </button>
         </div>
       </Field>
+
+      {ruleMode === "custom" && (
+        <CustomStrategyBuilder value={customStrategy} onChange={setCustomStrategy} />
+      )}
 
       {ruleMode === "freetext" && (
         <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
@@ -383,6 +409,8 @@ export function BacktestForm({
         </div>
       )}
 
+      {ruleMode !== "custom" && (
+      <>
       <Field label="Strategy template" info={STRATEGY_DESCRIPTIONS[strategyType]}>
         <select
           value={strategyType}
@@ -530,6 +558,8 @@ export function BacktestForm({
             />
           </Field>
         </div>
+      )}
+      </>
       )}
 
       <Field label="How do you want to set stops/targets?">

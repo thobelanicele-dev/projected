@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { BacktestForm } from "@/app/components/BacktestForm";
 import { BacktestResults } from "@/app/components/BacktestResults";
-import { runBacktest } from "@/app/lib/backtestEngine";
-import type { BacktestResult, Candle, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
+import { runBacktest, runCustomBacktest } from "@/app/lib/backtestEngine";
+import type { BacktestResult, Candle, CustomStrategy, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
 import { readAndClearBacktestSeed, type BacktestSeed } from "@/app/lib/backtestSeed";
 import { UsagePing } from "@/app/components/UsagePing";
 import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
@@ -17,12 +17,16 @@ export default function BacktestPage() {
   // planner, not something that should re-trigger on a later re-render.
   const [initialSeed] = useState<BacktestSeed | null>(() => readAndClearBacktestSeed(userId));
 
-  function handleRun(candles: Candle[], strategy: StrategyParams, exitRules: ExitRules) {
+  function handleRun(candles: Candle[], strategy: StrategyParams | CustomStrategy, exitRules: ExitRules) {
     setLoading(true);
     setResult(null);
     // Runs entirely client-side: pure math, no server round trip needed.
     setTimeout(() => {
-      setResult(runBacktest(candles, strategy, exitRules));
+      const outcome =
+        "longConditions" in strategy
+          ? runCustomBacktest(candles, strategy, exitRules)
+          : runBacktest(candles, strategy, exitRules);
+      setResult(outcome);
       setLoading(false);
     }, 0);
   }

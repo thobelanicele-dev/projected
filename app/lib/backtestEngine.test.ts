@@ -2,10 +2,15 @@ import { describe, expect, it } from "vitest";
 import {
   atr,
   bollingerSignals,
+  computeIndicatorSeries,
   computeStopAndTarget,
+  generateCustomSignals,
   macdSignals,
+  rsiSignals,
   runBacktest,
+  runCustomBacktest,
   type Candle,
+  type CustomStrategy,
 } from "./backtestEngine";
 
 function makeFlatCandles(count: number, price: number, range = 2): Candle[] {
@@ -130,6 +135,129 @@ describe("runBacktest with the structural exit mode", () => {
       { type: "ma_crossover", fastPeriod: 3, slowPeriod: 8, maKind: "sma" },
       { mode: "structural", swingLookback: 5, rewardMultiple: 2 }
     );
+    for (const trade of result.trades) {
+      expect(Number.isFinite(trade.rMultiple)).toBe(true);
+    }
+  });
+});
+
+describe("computeIndicatorSeries", () => {
+  const candles: Candle[] = Array.from({ length: 10 }, (_, i) => ({
+    date: `d${i}`,
+    open: 100 + i,
+    high: 100 + i + 1,
+    low: 100 + i - 1,
+    close: 100 + i,
+  }));
+
+  it("price returns the raw close series", () => {
+    expect(computeIndicatorSeries(candles, { kind: "price" })).toEqual(candles.map((c) => c.close));
+  });
+
+  it("constant returns the same value for every bar", () => {
+    expect(computeIndicatorSeries(candles, { kind: "constant", value: 42 })).toEqual(
+      candles.map(() => 42)
+    );
+  });
+
+  it("highest_high/lowest_low exclude the current bar, matching breakoutSignals' own window", () => {
+    const highs = computeIndicatorSeries(candles, { kind: "highest_high", lookback: 3 });
+    const lows = computeIndicatorSeries(candles, { kind: "lowest_low", lookback: 3 });
+    // At i=5, the window is bars 2,3,4 (highs 103,104,105 / lows 101,102,103).
+    expect(highs[5]).toBeCloseTo(105, 5);
+    expect(lows[5]).toBeCloseTo(101, 5);
+    expect(highs[2]).toBeNull(); // not enough prior bars yet
+  });
+});
+
+describe("generateCustomSignals", () => {
+  // A slow sine wave, same shape used for the trusted macdSignals test above,
+  // gives RSI repeated, unambiguous oversold/overbought swings to compare against.
+  const closes = Array.from({ length: 200 }, (_, i) => 100 + Math.sin(i / 15) * 10);
+  const oscillatingCandles: Candle[] = closes.map((c, i) => ({
+    date: `d${i}`,
+    open: c,
+    high: c,
+    low: c,
+    close: c,
+  }));
+
+  it("reproduces rsiSignals exactly when built to mirror the same oversold/overbought logic", () => {
+    const trusted = rsiSignals(oscillatingCandles, { type: "rsi", period: 14, oversold: 30, overbought: 70 });
+
+    const customRsi: CustomStrategy = {
+      id: "test",
+      name: "RSI oversold/overbought, custom-built",
+      longConditions: [
+        { left: { kind: "rsi", period: 14 }, operator: "crosses_below", right: { kind: "constant", value: 30 } },
+      ],
+      shortConditions: [
+        { left: { kind: "rsi", period: 14 }, operator: "crosses_above", right: { kind: "constant", value: 70 } },
+      ],
+      createdAt: 0,
+    };
+    const custom = generateCustomSignals(oscillatingCandles, customRsi);
+
+    expect(custom).toEqual(trusted);
+    expect(trusted.length).toBeGreaterThan(0); // sanity: the comparison isn't vacuously true on zero signals
+  });
+
+  it("requires every condition on a side to be true (AND), not just one of them", () => {
+    // "price crosses_above sma(20)" fires plenty on its own; pairing it with an
+    // RSI filter that's almost never satisfied should suppress most/all of it.
+    const looseStrategy: CustomStrategy = {
+      id: "loose",
+      name: "price crosses above its own average",
+      longConditions: [{ left: { kind: "price" }, operator: "crosses_above", right: { kind: "sma", period: 20 } }],
+      shortConditions: [],
+      createdAt: 0,
+    };
+    const strictStrategy: CustomStrategy = {
+      ...looseStrategy,
+      id: "strict",
+      longConditions: [
+        ...looseStrategy.longConditions,
+        // RSI above 95 is an extreme, rarely-true filter on a plain sine wave.
+        { left: { kind: "rsi", period: 14 }, operator: "greater_than", right: { kind: "constant", value: 95 } },
+      ],
+    };
+
+    const looseSignals = generateCustomSignals(oscillatingCandles, looseStrategy);
+    const strictSignals = generateCustomSignals(oscillatingCandles, strictStrategy);
+
+    expect(looseSignals.length).toBeGreaterThan(0);
+    expect(strictSignals.length).toBeLessThan(looseSignals.length);
+  });
+
+  it("never signals on either side when a conditions list is empty", () => {
+    const strategy: CustomStrategy = {
+      id: "empty",
+      name: "nothing defined",
+      longConditions: [],
+      shortConditions: [],
+      createdAt: 0,
+    };
+    expect(generateCustomSignals(oscillatingCandles, strategy)).toEqual([]);
+  });
+
+  it("runCustomBacktest produces finite R-multiples through the same simulation pipeline", () => {
+    const strategy: CustomStrategy = {
+      id: "test",
+      name: "ema crossover, custom-built",
+      longConditions: [
+        { left: { kind: "ema", period: 5 }, operator: "crosses_above", right: { kind: "ema", period: 20 } },
+      ],
+      shortConditions: [
+        { left: { kind: "ema", period: 5 }, operator: "crosses_below", right: { kind: "ema", period: 20 } },
+      ],
+      createdAt: 0,
+    };
+    const result = runCustomBacktest(oscillatingCandles, strategy, {
+      mode: "percent",
+      stopLossPct: 2,
+      takeProfitPct: 6,
+    });
+    expect(result.trades.length).toBeGreaterThan(0);
     for (const trade of result.trades) {
       expect(Number.isFinite(trade.rMultiple)).toBe(true);
     }
