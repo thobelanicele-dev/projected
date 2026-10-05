@@ -29,9 +29,9 @@ export default function TermsPage() {
 
       <LegalSection title="Beta period">
         <p>
-          FxInsites is currently in an open beta, free to use for everyone until November 15,
-          2026. After that date, continuing to use the service will require upgrading to a paid
-          plan; an upgrade option will be added to your account starting November 16, 2026.
+          FxInsites is currently in an open beta, free to use for everyone. We&apos;ll give
+          advance notice on this page and in the app before introducing any paid plans; you
+          won&apos;t be charged without that notice.
         </p>
       </LegalSection>
 

@@ -330,7 +330,7 @@ export default async function LandingPage() {
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-zinc-400">
             We&apos;re still refining things and want real traders putting it to work. Every
             tool, the planner, journal, backtester, and risk calculator, is fully available,
-            free, until November 15.
+            free, during the beta.
           </p>
           <div className="mt-8">
             <Link
@@ -376,7 +376,7 @@ export default async function LandingPage() {
             Start with a single trade plan.
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-            Free to use during the beta, until November 15.
+            Free to use during the beta.
           </p>
           <div className="mt-8">
             <Link
