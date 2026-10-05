@@ -56,7 +56,7 @@ export default function JournalPage() {
         const result = parseTradeCsv(text);
         if (result.validCount === 0) {
           setImportError(
-            "Couldn't find any recognizable trades in that file. Expected columns like symbol/type/open price/close price (MT4 or TradingView export format)."
+            "Couldn't find any recognizable trades in that file. Expected columns like symbol, direction, and entry/exit price, whichever broker or platform it came from."
           );
           return;
         }
@@ -105,8 +105,8 @@ export default function JournalPage() {
       <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
         <p className="text-sm font-medium text-zinc-200">Import past trades</p>
         <p className="mt-1 text-xs text-zinc-500">
-          Upload a CSV export from MT4 (Account History → Save as Report) or TradingView (trade
-          history export). These land as closed trades with no AI plan attached.
+          Upload a CSV export of your trade history from any broker or platform. These land as
+          closed trades with no AI plan attached.
         </p>
         <label className="mt-3 inline-flex cursor-pointer items-center rounded-full border border-zinc-700 px-4 py-1.5 text-xs text-zinc-200 hover:border-zinc-500">
           Choose CSV file

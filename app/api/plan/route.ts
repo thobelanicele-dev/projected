@@ -45,13 +45,20 @@ const tradePlanSchema = z.object({
     })
   ),
   riskRewardRatio: z.number().nullable(),
-  ruleChecks: z.array(
-    z.object({
-      rule: z.string(),
-      passed: z.boolean(),
-      note: z.string(),
-    })
-  ),
+  // Exactly 5, matching the 5 named checks the system prompt instructs below
+  // (defined stop loss, defined position size/risk %, favorable risk:reward,
+  // no averaging into losers, clear invalidation level) — enforced here so
+  // the landing page's "5 safety checks run on every trade plan" is a
+  // guarantee, not just an instruction the model might not follow exactly.
+  ruleChecks: z
+    .array(
+      z.object({
+        rule: z.string(),
+        passed: z.boolean(),
+        note: z.string(),
+      })
+    )
+    .length(5),
   biasFlags: z.array(
     z.object({
       flag: z.string(),
@@ -122,7 +129,7 @@ const SYSTEM_PROMPT = `You are a disciplined trading mentor coaching a beginner,
 
 Go deep on reasoning, not just numbers. For the entry, explain what should actually be observed before pulling the trigger (a confirmed break, a retest, a candle close) so the trader doesn't jump in on a fakeout. For the stop loss, explain the structural or logical reason for that exact level, and separately explain what it would mean for the original idea if that stop gets hit, so a loss becomes a lesson, not just a number. For each take profit, explain why that level is realistic and what could make price fall short or run past it. Write these as 2-3 real, specific sentences each, grounded in the trade's own details, not generic boilerplate.
 
-Then run a rule-set check against standard risk-management practices (defined stop loss, defined position size or risk %, favorable risk:reward, no averaging into losers, clear invalidation level) and mark each as passed or failed based on the idea as described.
+Then run a rule-set check against exactly these 5 standard risk-management practices, in this order: defined stop loss, defined position size or risk %, favorable risk:reward, no averaging into losers, clear invalidation level. Return exactly 5 ruleChecks, one per practice, each marked passed or failed based on the idea as described.
 
 Then flag any cognitive/behavioral biases evident in the idea's phrasing (e.g. revenge trading, FOMO/chasing, overconfidence, confirmation bias, no stop loss, moving the goalposts, oversized position, ignoring higher timeframe context). Only include a bias flag if there is real evidence for it in the text; do not invent flags that aren't supported.
 

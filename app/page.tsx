@@ -7,9 +7,9 @@ import { CountUp } from "@/app/components/CountUp";
 const CAPABILITIES = [
   { value: 5, suffix: "", label: "safety checks run on every trade plan" },
   { value: 5, suffix: "", label: "simple calculators for safer position sizing" },
-  { value: 3, suffix: "", label: "ready-made strategies you can test instantly" },
+  { value: 5, suffix: "", label: "ready-made strategies you can test instantly" },
   { value: 2, suffix: " yrs", label: "of real price history to practice with" },
-  { value: 2, suffix: "", label: "ways to bring in trades you've already made" },
+  { value: 2, suffix: "", label: "ways trades land in your journal: planned or imported" },
 ];
 
 const STEPS = [
@@ -26,7 +26,7 @@ const STEPS = [
   {
     n: "03",
     title: "See how it actually went",
-    body: "Log the result. We check it against real price history, so your record stays honest.",
+    body: "Log the result. We check it against the plan you made, not just your memory of it.",
   },
 ];
 
@@ -34,7 +34,7 @@ const GRID_FEATURES = [
   {
     eyebrow: "Trade journal",
     title: "Your history, kept honest",
-    body: "Every plan saves automatically and gets checked against real price history, not just what you remember.",
+    body: "Every plan saves automatically and gets checked against what actually happened, not just what you remember.",
     stats: [
       ["Win rate", "58%"],
       ["Avg R", "0.8R"],
@@ -73,8 +73,8 @@ const FAQS = [
     a: "Yes. Every field explains itself in plain language; no prior terminology assumed.",
   },
   {
-    q: "Can I import my existing MT4 or TradingView history?",
-    a: "Yes. Export a CSV from either one and we'll parse it straight into your journal.",
+    q: "Can I import my existing trade history?",
+    a: "Yes. Export a CSV from your broker or platform, whichever one you use, and if it has standard columns like symbol, entry/exit price, and date, we'll parse it straight into your journal.",
   },
   {
     q: "Does the system generate trade signals?",
@@ -123,6 +123,7 @@ function FeatureCard({
           </div>
         ))}
       </div>
+      <p className="mt-1.5 text-[10px] text-zinc-600">Illustrative example, not real account data.</p>
     </div>
   );
 }
@@ -166,6 +167,7 @@ function PlannerMock() {
         FLAG: entry proposed at market, immediately following a large directional move, with no
         stated confirmation condition.
       </div>
+      <p className="mt-2 text-[10px] text-zinc-600">Illustrative example, not a real trade plan.</p>
     </div>
   );
 }
@@ -297,7 +299,7 @@ export default async function LandingPage() {
             </p>
             <ul className="mt-6 space-y-2 text-sm text-zinc-400">
               <li className="flex gap-2"><Dot />Flags bad habits: chasing price, revenge trading, oversized bets</li>
-              <li className="flex gap-2"><Dot />Checked against the real, current price, not guesswork</li>
+              <li className="flex gap-2"><Dot />Checked against the real, live price when you&apos;re entering at market</li>
               <li className="flex gap-2"><Dot />Every question explains itself: no jargon</li>
             </ul>
           </div>

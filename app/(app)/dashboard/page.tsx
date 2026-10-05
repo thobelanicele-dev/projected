@@ -59,8 +59,8 @@ export default function DashboardPage() {
       </p>
       <p className="mt-1 text-xs text-zinc-500">
         This only counts trades you built with the AI planner, marked closed, and told us the
-        real result for. Trades imported from MT4/TradingView don&apos;t have an AI plan
-        attached, so they&apos;re left out of this part.
+        real result for. Imported trades don&apos;t have an AI plan attached, so they&apos;re
+        left out of this part.
       </p>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label="Trades we can check" value={String(accuracy.comparableCount)} />
