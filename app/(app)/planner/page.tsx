@@ -13,26 +13,9 @@ import {
   deleteJournalEntry,
   type JournalEntry,
 } from "@/app/lib/journal";
-import { writeBacktestSeed } from "@/app/lib/backtestSeed";
+import { buildSeedFromPlan, writeBacktestSeed } from "@/app/lib/backtestSeed";
 import { UsagePing } from "@/app/components/UsagePing";
 import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
-
-// Builds a plain-English restatement of the plan's own pattern (using the AI's
-// clean reasoning fields, not the trader's possibly-rough original wording) for
-// the backtester's free-text interpreter to work from.
-function describePlanForBacktest(plan: TradePlan): string {
-  const parts = [
-    `${plan.direction === "long" ? "Go long" : "Go short"} ${plan.instrument} when ${plan.entry.condition}.`,
-    plan.stopLoss.reasoning ? `Stop: ${plan.stopLoss.reasoning}` : "",
-    plan.takeProfits[0]?.reasoning ? `Target: ${plan.takeProfits[0].reasoning}` : "",
-  ];
-  return parts.filter(Boolean).join(" ");
-}
-
-function pctFromPrices(entry: number | null, other: number | null): number | null {
-  if (entry === null || other === null || entry === 0) return null;
-  return Math.abs((entry - other) / entry) * 100;
-}
 
 function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString(undefined, {
@@ -175,12 +158,7 @@ export default function Home() {
                 href="/backtest"
                 onClick={() =>
                   writeBacktestSeed(
-                    {
-                      pair: plan.instrument,
-                      description: describePlanForBacktest(plan),
-                      stopLossPct: pctFromPrices(plan.entry.price, plan.stopLoss.price),
-                      takeProfitPct: pctFromPrices(plan.entry.price, plan.takeProfits[0]?.price ?? null),
-                    },
+                    buildSeedFromPlan(plan),
                     userId
                   )
                 }

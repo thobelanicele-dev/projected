@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { POPULAR_PAIRS, InfoTip } from "@/app/components/TradeIdeaForm";
 import { parseCandleCsv } from "@/app/lib/parseCandles";
 import type { Candle, CustomStrategy, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
-import type { BacktestSeed } from "@/app/lib/backtestSeed";
+import { buildSeedFromPlan, type BacktestSeed } from "@/app/lib/backtestSeed";
 import { CustomStrategyBuilder, emptyCustomStrategy } from "@/app/components/CustomStrategyBuilder";
+import { loadJournal, type JournalEntry } from "@/app/lib/journal";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 type StrategyType = StrategyParams["type"];
 
@@ -79,6 +81,16 @@ export function BacktestForm({
   loading: boolean;
   initialSeed?: BacktestSeed | null;
 }) {
+  const userId = useCurrentUserId();
+  const [savedPlans, setSavedPlans] = useState<JournalEntry[]>([]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSavedPlans(loadJournal(userId).filter((e) => e.source === "planner" && e.plan));
+    }, 0);
+    return () => clearTimeout(timeout);
+  }, [userId]);
+
   const [pair, setPair] = useState("EUR/USD");
   const [dataSource, setDataSource] = useState<"market" | "csv">("market");
   const [lookbackDays, setLookbackDays] = useState("365");
@@ -184,6 +196,19 @@ export function BacktestForm({
 
   function handleInterpret() {
     runInterpret(freeText);
+  }
+
+  // Standing version of the planner's one-shot "Test this pattern
+  // historically" link: any previously saved plan sitting in the journal can
+  // be pulled in here later too, not just the one just built.
+  function handleLoadSavedPlan(entryId: string) {
+    const entry = savedPlans.find((e) => e.id === entryId);
+    if (!entry?.plan) return;
+    const seed = buildSeedFromPlan(entry.plan);
+    if (POPULAR_PAIRS.some((p) => p.value === seed.pair)) setPair(seed.pair);
+    setRuleMode("freetext");
+    setFreeText(seed.description);
+    runInterpret(seed.description, { stopLossPct: seed.stopLossPct, takeProfitPct: seed.takeProfitPct });
   }
 
   // One-shot seed from a generated trade plan ("Test this pattern
@@ -374,6 +399,29 @@ export function BacktestForm({
           </button>
         </div>
       </Field>
+
+      {savedPlans.length > 0 && (
+        <Field label="Or test a plan you already built" hint="Loads its pattern and re-interprets it here.">
+          <select
+            defaultValue=""
+            onChange={(e) => {
+              if (e.target.value) handleLoadSavedPlan(e.target.value);
+              e.target.value = "";
+            }}
+            className={inputClass}
+          >
+            <option value="" disabled>
+              Choose a saved plan…
+            </option>
+            {savedPlans.map((entry) => (
+              <option key={entry.id} value={entry.id}>
+                {entry.instrument} {entry.direction === "long" ? "Long" : "Short"} —{" "}
+                {new Date(entry.createdAt).toLocaleDateString()}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       {ruleMode === "custom" && (
         <CustomStrategyBuilder value={customStrategy} onChange={setCustomStrategy} />
