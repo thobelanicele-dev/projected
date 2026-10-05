@@ -8,14 +8,16 @@ import { AccuracyTable } from "@/app/components/AccuracyTable";
 import { loadJournal, computeStats, type JournalEntry } from "@/app/lib/journal";
 import { computeAccuracyStats } from "@/app/lib/dashboardStats";
 import { UsagePing } from "@/app/components/UsagePing";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 export default function DashboardPage() {
+  const userId = useCurrentUserId();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setEntries(loadJournal()), 0);
+    const timeout = setTimeout(() => setEntries(loadJournal(userId)), 0);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [userId]);
 
   const stats = computeStats(entries);
   const accuracy = computeAccuracyStats(entries);

@@ -1,5 +1,6 @@
 import type { TradePlan } from "@/app/api/plan/route";
 import type { TradeIdeaFields } from "@/app/components/TradeIdeaForm";
+import { migrateUnscopedKey, userScopedKey } from "@/app/lib/userScopedStorage";
 
 export type TradeStatus = "planned" | "open" | "closed";
 export type TradeOutcome = "win" | "loss" | "breakeven";
@@ -42,8 +43,14 @@ export interface JournalStats {
   equityCurve: { id: string; cumulativeR: number }[];
 }
 
-const STORAGE_KEY = "fxinsites.journal";
+const BASE_STORAGE_KEY = "fxinsites.journal";
 const MAX_ENTRIES = 200;
+
+function storageKey(userId: string): string {
+  const key = userScopedKey(BASE_STORAGE_KEY, userId);
+  migrateUnscopedKey(BASE_STORAGE_KEY, key);
+  return key;
+}
 
 function normalizeEntry(e: JournalEntry): JournalEntry {
   if (e.instrument && e.direction && e.source) return e;
@@ -55,10 +62,10 @@ function normalizeEntry(e: JournalEntry): JournalEntry {
   };
 }
 
-export function loadJournal(): JournalEntry[] {
+export function loadJournal(userId: string): JournalEntry[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey(userId));
     const parsed = raw ? (JSON.parse(raw) as JournalEntry[]) : [];
     return parsed.map(normalizeEntry);
   } catch {
@@ -66,14 +73,19 @@ export function loadJournal(): JournalEntry[] {
   }
 }
 
-function persist(entries: JournalEntry[]): JournalEntry[] {
+function persist(entries: JournalEntry[], userId: string): JournalEntry[] {
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    window.localStorage.setItem(storageKey(userId), JSON.stringify(entries));
   }
   return entries;
 }
 
-export function addPlanToJournal(ideaText: string, plan: TradePlan, fields: TradeIdeaFields): JournalEntry[] {
+export function addPlanToJournal(
+  ideaText: string,
+  plan: TradePlan,
+  fields: TradeIdeaFields,
+  userId: string
+): JournalEntry[] {
   const entry: JournalEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: Date.now(),
@@ -85,7 +97,7 @@ export function addPlanToJournal(ideaText: string, plan: TradePlan, fields: Trad
     fields,
     status: "planned",
   };
-  return persist([entry, ...loadJournal()].slice(0, MAX_ENTRIES));
+  return persist([entry, ...loadJournal(userId)].slice(0, MAX_ENTRIES), userId);
 }
 
 // Reconstructs the wizard fields for "Use as a starting point": the exact
@@ -117,25 +129,26 @@ export function reconstructFieldsFromEntry(
   };
 }
 
-export function addImportedEntries(newEntries: JournalEntry[]): JournalEntry[] {
-  return persist([...newEntries, ...loadJournal()].slice(0, MAX_ENTRIES));
+export function addImportedEntries(newEntries: JournalEntry[], userId: string): JournalEntry[] {
+  return persist([...newEntries, ...loadJournal(userId)].slice(0, MAX_ENTRIES), userId);
 }
 
 export function updateJournalEntry(
   id: string,
-  updates: Partial<Omit<JournalEntry, "id" | "createdAt" | "ideaText" | "plan">>
+  updates: Partial<Omit<JournalEntry, "id" | "createdAt" | "ideaText" | "plan">>,
+  userId: string
 ): JournalEntry[] {
-  const entries = loadJournal().map((e) => (e.id === id ? { ...e, ...updates } : e));
-  return persist(entries);
+  const entries = loadJournal(userId).map((e) => (e.id === id ? { ...e, ...updates } : e));
+  return persist(entries, userId);
 }
 
-export function deleteJournalEntry(id: string): JournalEntry[] {
-  return persist(loadJournal().filter((e) => e.id !== id));
+export function deleteJournalEntry(id: string, userId: string): JournalEntry[] {
+  return persist(loadJournal(userId).filter((e) => e.id !== id), userId);
 }
 
-export function clearJournal(): void {
+export function clearJournal(userId: string): void {
   if (typeof window !== "undefined") {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(storageKey(userId));
   }
 }
 

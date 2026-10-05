@@ -15,6 +15,7 @@ import {
 } from "@/app/lib/journal";
 import { writeBacktestSeed } from "@/app/lib/backtestSeed";
 import { UsagePing } from "@/app/components/UsagePing";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 // Builds a plain-English restatement of the plan's own pattern (using the AI's
 // clean reasoning fields, not the trader's possibly-rough original wording) for
@@ -43,6 +44,7 @@ function formatTimestamp(ts: number): string {
 }
 
 export default function Home() {
+  const userId = useCurrentUserId();
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<TradePlan | null>(null);
   const [positionSize, setPositionSize] = useState<ResultStat[] | undefined>(undefined);
@@ -54,11 +56,11 @@ export default function Home() {
 
   useEffect(() => {
     const timeout = setTimeout(
-      () => setRecent(loadJournal().filter((e) => e.source === "planner").slice(0, 5)),
+      () => setRecent(loadJournal(userId).filter((e) => e.source === "planner").slice(0, 5)),
       0
     );
     return () => clearTimeout(timeout);
-  }, []);
+  }, [userId]);
 
   async function handleSubmit(
     ideaText: string,
@@ -90,7 +92,7 @@ export default function Home() {
       setPositionSize(newPositionSize);
       setChartImageUrl(chartImage ? `data:${chartImage.mediaType};base64,${chartImage.data}` : null);
       setJustSaved(true);
-      const updated = addPlanToJournal(ideaText, data.plan, fields);
+      const updated = addPlanToJournal(ideaText, data.plan, fields, userId);
       setCurrentEntryId(updated[0]?.id ?? null);
       setRecent(updated.filter((e) => e.source === "planner").slice(0, 5));
     } catch {
@@ -108,7 +110,7 @@ export default function Home() {
   }
 
   function handleDeleteRecent(id: string) {
-    const updated = deleteJournalEntry(id);
+    const updated = deleteJournalEntry(id, userId);
     setRecent(updated.filter((e) => e.source === "planner").slice(0, 5));
     // If the deleted entry is the one currently shown above, clear it too,
     // rather than leaving the card displaying a plan that's no longer saved.

@@ -16,29 +16,31 @@ import {
 } from "@/app/lib/journal";
 import { parseTradeCsv, rowsToJournalEntries, type ImportResult } from "@/app/lib/importTrades";
 import { UsagePing } from "@/app/components/UsagePing";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 export default function JournalPage() {
+  const userId = useCurrentUserId();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [importPreview, setImportPreview] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setEntries(loadJournal()), 0);
+    const timeout = setTimeout(() => setEntries(loadJournal(userId)), 0);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [userId]);
 
   const stats = computeStats(entries);
 
   function handleUpdate(id: string, updates: Partial<JournalEntry>) {
-    setEntries(updateJournalEntry(id, updates));
+    setEntries(updateJournalEntry(id, updates, userId));
   }
 
   function handleDelete(id: string) {
-    setEntries(deleteJournalEntry(id));
+    setEntries(deleteJournalEntry(id, userId));
   }
 
   function handleClear() {
-    clearJournal();
+    clearJournal(userId);
     setEntries([]);
   }
 
@@ -66,7 +68,7 @@ export default function JournalPage() {
   function handleConfirmImport() {
     if (!importPreview) return;
     const newEntries = rowsToJournalEntries(importPreview.rows);
-    setEntries(addImportedEntries(newEntries));
+    setEntries(addImportedEntries(newEntries, userId));
     setImportPreview(null);
   }
 

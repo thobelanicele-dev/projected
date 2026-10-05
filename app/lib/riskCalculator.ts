@@ -1,3 +1,5 @@
+import { migrateUnscopedKey, userScopedKey } from "@/app/lib/userScopedStorage";
+
 export type AccountCurrency = "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "NZD";
 
 export const ACCOUNT_CURRENCIES: AccountCurrency[] = [
@@ -461,12 +463,18 @@ export function calculateCorrelationRisk(
 
 // --- Shared-input persistence --------------------------------------------------
 
-const STORAGE_KEY = "fxinsites.riskCalcShared";
+const BASE_STORAGE_KEY = "fxinsites.riskCalcShared";
 
-export function getStoredSharedInputs(): SharedInputs | null {
+function sharedInputsStorageKey(userId: string): string {
+  const key = userScopedKey(BASE_STORAGE_KEY, userId);
+  migrateUnscopedKey(BASE_STORAGE_KEY, key);
+  return key;
+}
+
+export function getStoredSharedInputs(userId: string): SharedInputs | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(sharedInputsStorageKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<SharedInputs>;
     return { ...DEFAULT_SHARED_INPUTS, ...parsed };
@@ -475,7 +483,7 @@ export function getStoredSharedInputs(): SharedInputs | null {
   }
 }
 
-export function setStoredSharedInputs(inputs: SharedInputs): void {
+export function setStoredSharedInputs(inputs: SharedInputs, userId: string): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(inputs));
+  window.localStorage.setItem(sharedInputsStorageKey(userId), JSON.stringify(inputs));
 }

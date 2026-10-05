@@ -13,6 +13,7 @@ import {
   DEFAULT_SHARED_INPUTS,
 } from "@/app/lib/riskCalculator";
 import { loadPlannerDraft, savePlannerDraft, clearPlannerDraft } from "@/app/lib/plannerDraft";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 export const POPULAR_PAIRS = [
   { value: "EUR/USD", label: "EUR/USD" },
@@ -266,6 +267,7 @@ export function TradeIdeaForm({
   ) => void;
   loading: boolean;
 }) {
+  const userId = useCurrentUserId();
   const [step, setStep] = useState(0);
   const [maxStepVisited, setMaxStepVisited] = useState(0);
   const [fields, setFields] = useState<TradeIdeaFields>(emptyFields);
@@ -318,21 +320,21 @@ export function TradeIdeaForm({
     setStep(0);
     setMaxStepVisited(0);
     setRestoredDraft(false);
-    clearPlannerDraft();
+    clearPlannerDraft(userId);
   }
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const stored = getStoredSharedInputs();
+      const stored = getStoredSharedInputs(userId);
       if (stored) setAccountBalance(String(stored.accountBalance));
     }, 0);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [userId]);
 
   // Restore an in-progress plan if the user refreshed or came back later.
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const draft = loadPlannerDraft();
+      const draft = loadPlannerDraft(userId);
       if (!draft) return;
       const isMeaningful = draft.step > 0 || JSON.stringify(draft.fields) !== JSON.stringify(emptyFields);
       if (!isMeaningful) return;
@@ -343,17 +345,17 @@ export function TradeIdeaForm({
       setRestoredDraft(true);
     }, 0);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [userId]);
 
   // Save the in-progress plan as the user goes, so a refresh doesn't lose it.
   // (The chart image itself isn't persisted, only whether one was attached,
   // to avoid risking the whole app's localStorage quota on a multi-MB image.)
   useEffect(() => {
     const timeout = setTimeout(() => {
-      savePlannerDraft({ fields, step, maxStepVisited, hadChartImage: chartImage !== null });
+      savePlannerDraft({ fields, step, maxStepVisited, hadChartImage: chartImage !== null }, userId);
     }, 400);
     return () => clearTimeout(timeout);
-  }, [fields, step, maxStepVisited, chartImage]);
+  }, [fields, step, maxStepVisited, chartImage, userId]);
 
   // The product tour highlights fields that now only exist on their own wizard
   // step, so it dispatches this event to jump the wizard there before it looks
@@ -402,7 +404,10 @@ export function TradeIdeaForm({
     setAccountBalance(value);
     const parsed = parseFloat(value);
     if (!isNaN(parsed) && parsed > 0) {
-      setStoredSharedInputs({ ...(getStoredSharedInputs() ?? DEFAULT_SHARED_INPUTS), accountBalance: parsed });
+      setStoredSharedInputs(
+        { ...(getStoredSharedInputs(userId) ?? DEFAULT_SHARED_INPUTS), accountBalance: parsed },
+        userId
+      );
     }
   }
 
@@ -591,7 +596,7 @@ export function TradeIdeaForm({
     }
 
     if (!canSubmit) return;
-    clearPlannerDraft();
+    clearPlannerDraft(userId);
     onSubmit(
       buildIdeaText(fields, {
         livePrice: priceStatus === "ready" ? livePrice : null,

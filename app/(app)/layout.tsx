@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
 import { ProfileMenu } from "@/app/components/ProfileMenu";
 import { ProductTour, TOUR_STEPS } from "@/app/components/ProductTour";
+import { CurrentUserProvider } from "@/app/components/CurrentUserProvider";
 import { getSession } from "@/app/lib/auth/session";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -15,7 +16,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-black text-zinc-50">
       <Sidebar />
       <main className="flex flex-1 justify-center px-6 py-16">
-        <div className="w-full max-w-2xl">{children}</div>
+        <div className="w-full max-w-2xl">
+          <CurrentUserProvider userId={session.id}>{children}</CurrentUserProvider>
+        </div>
       </main>
       <ProfileMenu user={session} />
       <ProductTour steps={TOUR_STEPS} />

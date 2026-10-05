@@ -10,6 +10,7 @@ import {
   type RiskMode,
   type SharedInputs,
 } from "@/app/lib/riskCalculator";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 interface RiskCalcSharedContextValue {
   shared: SharedInputs;
@@ -27,23 +28,24 @@ interface RiskCalcSharedContextValue {
 const RiskCalcSharedContext = createContext<RiskCalcSharedContextValue | null>(null);
 
 export function RiskCalcSharedProvider({ children }: { children: React.ReactNode }) {
+  const userId = useCurrentUserId();
   const [shared, setShared] = useState<SharedInputs>(DEFAULT_SHARED_INPUTS);
   const [hydrated, setHydrated] = useState(false);
   const [lastPositionSizeUnits, setLastPositionSizeUnits] = useState<number | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const stored = getStoredSharedInputs();
+      const stored = getStoredSharedInputs(userId);
       if (stored) setShared(stored);
       setHydrated(true);
     }, 0);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [userId]);
 
   function update(partial: Partial<SharedInputs>) {
     setShared((prev) => {
       const next = { ...prev, ...partial };
-      setStoredSharedInputs(next);
+      setStoredSharedInputs(next, userId);
       return next;
     });
   }
