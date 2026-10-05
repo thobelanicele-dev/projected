@@ -61,8 +61,9 @@ export default function PrivacyPage() {
           <li>To send account-related emails (verification, password reset) via Resend.</li>
           <li>To process payments via Paystack, if you subscribe to a paid plan.</li>
           <li>
-            To fetch live prices and historical price ranges from Twelvedata, only the instrument
-            symbol or a date range is sent to this provider, never anything that identifies you.
+            To fetch live prices, historical price ranges, and economic-calendar data from Twelvedata
+            and Financial Modeling Prep, only the instrument symbol or a date range is sent to these
+            providers, never anything that identifies you.
           </li>
         </ul>
       </LegalSection>
