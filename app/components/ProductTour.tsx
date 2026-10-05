@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
+import { discardUnscopedKey, userScopedKey } from "@/app/lib/userScopedStorage";
 
 export interface TourStep {
   target: string;
@@ -62,18 +64,20 @@ export const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-const STORAGE_KEY = "fxinsites.tourSeen";
+const BASE_STORAGE_KEY = "fxinsites.tourSeen";
 const RESTART_EVENT = "fxinsites:replay-tour";
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_MARGIN = 12;
 
 export function ProductTour({ steps }: { steps: TourStep[] }) {
+  const userId = useCurrentUserId();
   const [stepIndex, setStepIndex] = useState<number | null>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      const seen = window.localStorage.getItem(STORAGE_KEY);
+      discardUnscopedKey(BASE_STORAGE_KEY);
+      const seen = window.localStorage.getItem(userScopedKey(BASE_STORAGE_KEY, userId));
       if (!seen) setStepIndex(0);
     }, 0);
 
@@ -86,7 +90,7 @@ export function ProductTour({ steps }: { steps: TourStep[] }) {
       clearTimeout(timeout);
       window.removeEventListener(RESTART_EVENT, handleRestart);
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (stepIndex === null) return;
@@ -139,7 +143,7 @@ export function ProductTour({ steps }: { steps: TourStep[] }) {
   }, [stepIndex, steps]);
 
   function finish() {
-    window.localStorage.setItem(STORAGE_KEY, "1");
+    window.localStorage.setItem(userScopedKey(BASE_STORAGE_KEY, userId), "1");
     setStepIndex(null);
     setRect(null);
   }

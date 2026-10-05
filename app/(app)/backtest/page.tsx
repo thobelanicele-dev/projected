@@ -7,13 +7,15 @@ import { runBacktest } from "@/app/lib/backtestEngine";
 import type { BacktestResult, Candle, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
 import { readAndClearBacktestSeed, type BacktestSeed } from "@/app/lib/backtestSeed";
 import { UsagePing } from "@/app/components/UsagePing";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 export default function BacktestPage() {
+  const userId = useCurrentUserId();
   const [result, setResult] = useState<BacktestResult | null>(null);
   const [loading, setLoading] = useState(false);
   // Read once on mount (lazy initializer) — this is a one-shot handoff from the
   // planner, not something that should re-trigger on a later re-render.
-  const [initialSeed] = useState<BacktestSeed | null>(() => readAndClearBacktestSeed());
+  const [initialSeed] = useState<BacktestSeed | null>(() => readAndClearBacktestSeed(userId));
 
   function handleRun(candles: Candle[], strategy: StrategyParams, exitRules: ExitRules) {
     setLoading(true);

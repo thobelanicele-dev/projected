@@ -25,3 +25,17 @@ export function migrateUnscopedKey(baseKey: string, scopedKey: string): void {
     // ignore; worst case the old shared data just stays put
   }
 }
+
+// For flags where there's nothing worth preserving (e.g. "has this account
+// seen the onboarding tour") migrating the old value forward would just
+// reproduce the leak: whichever account loads first inherits a stale
+// "already seen" flag and still never gets onboarded. This discards the old
+// unscoped key outright instead, so every account starts fresh.
+export function discardUnscopedKey(baseKey: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(baseKey);
+  } catch {
+    // ignore
+  }
+}

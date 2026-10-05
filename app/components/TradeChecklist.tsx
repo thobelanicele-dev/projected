@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { TradePlan } from "@/app/api/plan/route";
 import { loadChecklist, toggleChecklistItem } from "@/app/lib/planChecklist";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 interface ChecklistItem {
   id: string;
@@ -16,10 +17,11 @@ export function TradeChecklist({ plan, journalEntryId }: { plan: TradePlan; jour
     ...plan.keyRisks.map((text, i) => ({ id: `keyRisks-${i}`, text: `Risk to watch: ${text}` })),
   ];
 
-  const [checked, setChecked] = useState<Record<string, boolean>>(() => loadChecklist(journalEntryId));
+  const userId = useCurrentUserId();
+  const [checked, setChecked] = useState<Record<string, boolean>>(() => loadChecklist(journalEntryId, userId));
 
   function toggle(id: string) {
-    setChecked(toggleChecklistItem(journalEntryId, id, !checked[id]));
+    setChecked(toggleChecklistItem(journalEntryId, id, !checked[id], userId));
   }
 
   if (items.length === 0) return null;

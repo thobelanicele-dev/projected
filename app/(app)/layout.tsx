@@ -13,15 +13,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-black text-zinc-50">
-      <Sidebar />
-      <main className="flex flex-1 justify-center px-6 py-16">
-        <div className="w-full max-w-2xl">
-          <CurrentUserProvider userId={session.id}>{children}</CurrentUserProvider>
-        </div>
-      </main>
-      <ProfileMenu user={session} />
-      <ProductTour steps={TOUR_STEPS} />
-    </div>
+    <CurrentUserProvider userId={session.id}>
+      <div className="flex min-h-screen bg-black text-zinc-50">
+        <Sidebar />
+        <main className="flex flex-1 justify-center px-6 py-16">
+          <div className="w-full max-w-2xl">{children}</div>
+        </main>
+        <ProfileMenu user={session} />
+        <ProductTour steps={TOUR_STEPS} />
+      </div>
+    </CurrentUserProvider>
   );
 }

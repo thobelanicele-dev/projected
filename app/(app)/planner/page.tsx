@@ -174,12 +174,15 @@ export default function Home() {
               <Link
                 href="/backtest"
                 onClick={() =>
-                  writeBacktestSeed({
-                    pair: plan.instrument,
-                    description: describePlanForBacktest(plan),
-                    stopLossPct: pctFromPrices(plan.entry.price, plan.stopLoss.price),
-                    takeProfitPct: pctFromPrices(plan.entry.price, plan.takeProfits[0]?.price ?? null),
-                  })
+                  writeBacktestSeed(
+                    {
+                      pair: plan.instrument,
+                      description: describePlanForBacktest(plan),
+                      stopLossPct: pctFromPrices(plan.entry.price, plan.stopLoss.price),
+                      takeProfitPct: pctFromPrices(plan.entry.price, plan.takeProfits[0]?.price ?? null),
+                    },
+                    userId
+                  )
                 }
                 className="text-xs font-medium text-sky-400 underline underline-offset-2 hover:text-sky-300"
               >
