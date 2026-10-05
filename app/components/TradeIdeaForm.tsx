@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { CalendarEvent } from "@/app/api/calendar/route";
 import type { PriceRange } from "@/app/api/history/route";
 import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSummary";
 import { PricePlanLadder } from "@/app/components/PricePlanLadder";
@@ -110,26 +109,13 @@ const TEMPLATES: Template[] = [
   },
 ];
 
-function formatEventTime(iso: string): string {
-  const eventDate = new Date(iso);
-  if (isNaN(eventDate.getTime())) return iso;
-
-  const diffMs = eventDate.getTime() - Date.now();
-  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
-
-  if (diffHours < 1) return "very soon";
-  if (diffHours < 24) return `in about ${diffHours}h`;
-  return `in about ${Math.round(diffHours / 24)}d`;
-}
-
 export interface MarketContext {
   livePrice?: number | null;
   priceRange?: PriceRange | null;
-  events?: CalendarEvent[];
 }
 
 export function buildIdeaText(f: TradeIdeaFields, context: MarketContext = {}): string {
-  const { livePrice, priceRange, events } = context;
+  const { livePrice, priceRange } = context;
   const dirWord = f.direction === "long" ? "go long on" : "go short on";
   const parts: string[] = [`Looking to ${dirWord} ${f.pair}`];
 
@@ -167,14 +153,8 @@ export function buildIdeaText(f: TradeIdeaFields, context: MarketContext = {}): 
   const rangeSentence = priceRange
     ? ` Over the last ${priceRange.periodDays} days, ${f.pair} has ranged between ${priceRange.low} (low) and ${priceRange.high} (high), trending ${priceRange.trend}.`
     : "";
-  const eventsSentence =
-    events && events.length > 0
-      ? ` Upcoming economic events to be aware of: ${events
-          .map((e) => `${e.event} (${e.country}, ${e.impact} impact) ${formatEventTime(e.time)}`)
-          .join("; ")}.`
-      : "";
 
-  return `${notesSentence}${mainSentence}${priceSentence}${rangeSentence}${eventsSentence}`;
+  return `${notesSentence}${mainSentence}${priceSentence}${rangeSentence}`;
 }
 
 export function InfoTip({ text }: { text: string }) {
@@ -295,10 +275,6 @@ export function TradeIdeaForm({
   const [customPair, setCustomPair] = useState(false);
   const [livePrice, setLivePrice] = useState<number | null>(null);
   const [priceStatus, setPriceStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [calendarStatus, setCalendarStatus] = useState<"idle" | "loading" | "ready" | "error">(
-    "idle"
-  );
   const [priceRange, setPriceRange] = useState<PriceRange | null>(null);
   const [rangeStatus, setRangeStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [accountBalance, setAccountBalance] = useState("10000");
@@ -480,37 +456,6 @@ export function TradeIdeaForm({
 
     const timeout = setTimeout(() => {
       if (!symbol) {
-        setCalendarEvents([]);
-        setCalendarStatus("idle");
-        return;
-      }
-
-      setCalendarStatus("loading");
-      fetch(`/api/calendar?pair=${encodeURIComponent(symbol)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data.events)) {
-            setCalendarEvents(data.events);
-            setCalendarStatus("ready");
-          } else {
-            setCalendarEvents([]);
-            setCalendarStatus("error");
-          }
-        })
-        .catch(() => {
-          setCalendarEvents([]);
-          setCalendarStatus("error");
-        });
-    }, 500);
-
-    return () => clearTimeout(timeout);
-  }, [fields.pair]);
-
-  useEffect(() => {
-    const symbol = fields.pair.trim();
-
-    const timeout = setTimeout(() => {
-      if (!symbol) {
         setPriceRange(null);
         setRangeStatus("idle");
         return;
@@ -651,7 +596,6 @@ export function TradeIdeaForm({
       buildIdeaText(fields, {
         livePrice: priceStatus === "ready" ? livePrice : null,
         priceRange: rangeStatus === "ready" ? priceRange : null,
-        events: calendarStatus === "ready" ? calendarEvents : undefined,
       }),
       fields,
       chartImage ?? undefined,
@@ -862,26 +806,6 @@ export function TradeIdeaForm({
             {priceRange.periodDays}-day range: <span className="font-medium">{priceRange.low}</span>{" "}
             to <span className="font-medium">{priceRange.high}</span> (trending {priceRange.trend})
           </span>
-        )}
-        {calendarStatus === "ready" && calendarEvents.length > 0 && (
-          <div className="mt-1 rounded-lg border border-orange-500/30 bg-orange-500/5 p-2.5">
-            <p className="text-sm font-medium text-orange-400">
-              Upcoming news that could move this market:
-            </p>
-            <ul className="mt-1 space-y-0.5">
-              {calendarEvents.map((e, i) => (
-                <li key={i} className="text-sm text-zinc-400">
-                  <span className="text-zinc-300">{e.event}</span> ({e.country},{" "}
-                  <span
-                    className={e.impact.toLowerCase() === "high" ? "text-red-400" : "text-orange-300"}
-                  >
-                    {e.impact} impact
-                  </span>
-                  ), {formatEventTime(e.time)}
-                </li>
-              ))}
-            </ul>
-          </div>
         )}
       </Field>
 

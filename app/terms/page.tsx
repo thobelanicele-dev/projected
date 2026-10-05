@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPageLayout title="Terms &amp; Conditions" updated="September 29, 2026">
+    <LegalPageLayout title="Terms &amp; Conditions" updated="October 5, 2026">
       <LegalSection title="Acceptance of these terms">
         <p>
           By creating an account or using FxInsites, you agree to these terms. If you don&apos;t
@@ -116,8 +116,8 @@ export default function TermsPage() {
       <LegalSection title="Contact">
         <p>
           Questions about these terms? Email{" "}
-          <a href="mailto:hello@fxinsites.com" className="text-sky-400 hover:text-sky-300">
-            hello@fxinsites.com
+          <a href="mailto:support.fxinsites@gmail.com" className="text-sky-400 hover:text-sky-300">
+            support.fxinsites@gmail.com
           </a>
           .
         </p>

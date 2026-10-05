@@ -18,15 +18,3 @@ export async function recordToolUsage(tool: TrackedTool): Promise<void> {
     [tool]
   );
 }
-
-// Unlike recordToolUsage above, this ties usage to a specific account. It
-// exists only to verify the beta reward program's "used a tool" requirement
-// for the small number of users participating in it, and is disclosed in the
-// Privacy Policy as a deliberate exception to the anonymous counter above.
-export async function recordUserToolUsage(userId: string, tool: TrackedTool): Promise<void> {
-  await query(
-    `INSERT INTO user_tool_usage (user_id, tool, first_used_at) VALUES ($1, $2, $3)
-     ON CONFLICT (user_id, tool) DO NOTHING`,
-    [userId, tool, Date.now()]
-  );
-}

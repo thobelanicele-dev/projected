@@ -19,8 +19,8 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       </h1>
       <p className="mt-3 max-w-sm text-sm text-zinc-500">
         Please try again in a moment. If this keeps happening, let us know at{" "}
-        <a href="mailto:hello@fxinsites.com" className="text-sky-400 hover:text-sky-300">
-          hello@fxinsites.com
+        <a href="mailto:support.fxinsites@gmail.com" className="text-sky-400 hover:text-sky-300">
+          support.fxinsites@gmail.com
         </a>
         .
       </p>

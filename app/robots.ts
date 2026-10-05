@@ -16,7 +16,6 @@ export default function robots(): MetadataRoute.Robots {
         "/backtest",
         "/journal",
         "/dashboard",
-        "/beta-reward",
         "/forgot-password",
         "/reset-password",
         "/verify-email",

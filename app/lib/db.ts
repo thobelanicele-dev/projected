@@ -84,26 +84,6 @@ async function migrate(): Promise<void> {
       PRIMARY KEY (tool, day)
     );
 
-    -- Per-user, unlike tool_usage above: records that a specific account has
-    -- opened a given tool at least once. Exists only to verify the beta
-    -- reward program's "used a tool" requirement; disclosed in the Privacy
-    -- Policy. See app/lib/usage.ts.
-    CREATE TABLE IF NOT EXISTS user_tool_usage (
-      user_id UUID NOT NULL REFERENCES users(id),
-      tool TEXT NOT NULL,
-      first_used_at BIGINT NOT NULL,
-      PRIMARY KEY (user_id, tool)
-    );
-
-    -- One review per user, for the beta reward program's "left a review"
-    -- requirement. See app/lib/betaReward.ts.
-    CREATE TABLE IF NOT EXISTS beta_reviews (
-      user_id UUID PRIMARY KEY REFERENCES users(id),
-      rating SMALLINT NOT NULL,
-      body TEXT NOT NULL,
-      created_at BIGINT NOT NULL
-    );
-
     ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_status TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_customer_code TEXT;

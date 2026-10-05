@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { LegalPageLayout, LegalSection } from "@/app/components/LegalPageLayout";
-import { FIRST_N_COUNT } from "@/app/lib/betaReward";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | FxInsites",
@@ -8,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPageLayout title="Privacy Policy" updated="September 29, 2026">
+    <LegalPageLayout title="Privacy Policy" updated="October 5, 2026">
       <LegalSection title="Overview">
         <p>
           FxInsites (&quot;we&quot;, &quot;us&quot;) is a trade planning, backtesting, and journaling
@@ -62,9 +61,8 @@ export default function PrivacyPage() {
           <li>To send account-related emails (verification, password reset) via Resend.</li>
           <li>To process payments via Paystack, if you subscribe to a paid plan.</li>
           <li>
-            To fetch live prices, historical price ranges, and economic-calendar data from Twelvedata
-            and Financial Modeling Prep, only the instrument symbol or a date range is sent to these
-            providers, never anything that identifies you.
+            To fetch live prices and historical price ranges from Twelvedata, only the instrument
+            symbol or a date range is sent to this provider, never anything that identifies you.
           </li>
         </ul>
       </LegalSection>
@@ -85,14 +83,6 @@ export default function PrivacyPage() {
           your account, your email, or any other identifying information, and it&apos;s separate
           from the essential login cookie above.
         </p>
-        <p className="mt-3">
-          One deliberate exception: during our beta reward program, which tools the first{" "}
-          {FIRST_N_COUNT} signups open is recorded against their account, not anonymously, solely
-          to verify
-          that reward&apos;s &quot;used a tool&quot; requirement. This only applies to
-          participants in that program. If you submit a review through the beta reward page,
-          its text and rating are stored tied to your account as well.
-        </p>
       </LegalSection>
 
       <LegalSection title="Website analytics">
@@ -111,8 +101,8 @@ export default function PrivacyPage() {
           We keep your account information for as long as your account is active. You can delete
           your account and everything tied to it yourself at any time from Account settings, or
           request deletion by emailing{" "}
-          <a href="mailto:hello@fxinsites.com" className="text-sky-400 hover:text-sky-300">
-            hello@fxinsites.com
+          <a href="mailto:support.fxinsites@gmail.com" className="text-sky-400 hover:text-sky-300">
+            support.fxinsites@gmail.com
           </a>
           .
         </p>
@@ -123,8 +113,8 @@ export default function PrivacyPage() {
           Depending on where you live, you may have rights to access, correct, or delete your
           personal information, for example under South Africa&apos;s Protection of Personal
           Information Act (POPIA), or the EU/UK GDPR if it applies to you. Contact us at{" "}
-          <a href="mailto:hello@fxinsites.com" className="text-sky-400 hover:text-sky-300">
-            hello@fxinsites.com
+          <a href="mailto:support.fxinsites@gmail.com" className="text-sky-400 hover:text-sky-300">
+            support.fxinsites@gmail.com
           </a>{" "}
           to exercise these rights.
         </p>
@@ -147,8 +137,8 @@ export default function PrivacyPage() {
       <LegalSection title="Contact">
         <p>
           Questions about this policy? Email{" "}
-          <a href="mailto:hello@fxinsites.com" className="text-sky-400 hover:text-sky-300">
-            hello@fxinsites.com
+          <a href="mailto:support.fxinsites@gmail.com" className="text-sky-400 hover:text-sky-300">
+            support.fxinsites@gmail.com
           </a>
           .
         </p>
