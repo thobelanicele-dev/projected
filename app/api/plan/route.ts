@@ -2,6 +2,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getSession } from "@/app/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 
 const RATE_LIMIT = 10;
@@ -138,6 +139,20 @@ When you do provide chartCheck, also fill in levels: for each price level the tr
 This is not financial advice. You are structuring the trader's own idea and coaching them on risk discipline and process, not predicting market direction.`;
 
 export async function POST(req: NextRequest) {
+  let session;
+  try {
+    session = await getSession();
+  } catch (error) {
+    console.error("Session lookup failed", error);
+    return NextResponse.json(
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
+    );
+  }
+  if (!session) {
+    return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+  }
+
   let idea: unknown;
   let image: unknown;
   try {

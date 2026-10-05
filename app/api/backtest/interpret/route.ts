@@ -2,6 +2,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getSession } from "@/app/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 
 const RATE_LIMIT = 20;
@@ -62,6 +63,20 @@ Also infer a stop-loss percentage and take-profit percentage from the descriptio
 If the description doesn't map cleanly onto one of these five templates, pick whichever is the closest conceptual match and clearly say so in the explanation; do not silently guess without flagging the mismatch. Be explicit in the explanation about every parameter you had to assume rather than read directly from the description, so the trader can correct anything that's wrong before running the backtest.`;
 
 export async function POST(req: NextRequest) {
+  let session;
+  try {
+    session = await getSession();
+  } catch (error) {
+    console.error("Session lookup failed", error);
+    return NextResponse.json(
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
+    );
+  }
+  if (!session) {
+    return NextResponse.json({ error: "You must be logged in." }, { status: 401 });
+  }
+
   let description: unknown;
   try {
     ({ description } = await req.json());
