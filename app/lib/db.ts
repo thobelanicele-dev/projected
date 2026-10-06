@@ -89,8 +89,26 @@ async function migrate(): Promise<void> {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_customer_code TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_subscription_code TEXT;
 
+    -- OAuth-only accounts (Google, and later Apple) have no password.
+    ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+
     ALTER TABLE sessions ADD COLUMN IF NOT EXISTS token_hash TEXT;
     CREATE UNIQUE INDEX IF NOT EXISTS sessions_token_hash_idx ON sessions(token_hash);
+
+    -- One row per linked external-provider identity. A junction table (not
+    -- columns on users) so a second provider (e.g. Apple) can be added later
+    -- with no further migration, and so one account could eventually link
+    -- more than one provider. provider_account_id is the provider's stable
+    -- subject id (never the email, which can change on the provider's side).
+    CREATE TABLE IF NOT EXISTS oauth_accounts (
+      provider TEXT NOT NULL,
+      provider_account_id TEXT NOT NULL,
+      user_id UUID NOT NULL REFERENCES users(id),
+      email TEXT NOT NULL,
+      created_at BIGINT NOT NULL,
+      PRIMARY KEY (provider, provider_account_id)
+    );
+    CREATE INDEX IF NOT EXISTS oauth_accounts_user_id_idx ON oauth_accounts(user_id);
   `);
 
   // One-time backfill: sessions used to store the raw session token directly

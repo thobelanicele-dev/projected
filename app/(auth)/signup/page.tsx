@@ -1,15 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Field, inputClass } from "@/app/components/TradeIdeaForm";
+import { GoogleIcon } from "@/app/components/GoogleIcon";
+import { googleErrorMessage } from "@/app/components/googleOAuthErrors";
 
 export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() =>
+    googleErrorMessage(searchParams.get("error"))
+  );
   const [done, setDone] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -52,6 +66,20 @@ export default function SignupPage() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <h1 className="text-xl font-medium text-zinc-50">Create your account</h1>
+
+      <a
+        href="/api/auth/google"
+        className="flex items-center justify-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-5 py-2.5 text-sm font-medium text-zinc-50 transition-colors hover:bg-zinc-800"
+      >
+        <GoogleIcon className="h-4 w-4" />
+        Continue with Google
+      </a>
+
+      <div className="flex items-center gap-3 text-xs text-zinc-600">
+        <div className="h-px flex-1 bg-zinc-800" />
+        <span>OR</span>
+        <div className="h-px flex-1 bg-zinc-800" />
+      </div>
 
       <Field label="Email">
         <input
