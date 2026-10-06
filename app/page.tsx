@@ -398,9 +398,9 @@ export default async function LandingPage() {
           <div className="flex items-center gap-5">
             <span className="text-sm font-medium text-zinc-300">FxInsites</span>
             <nav className="flex items-center gap-4 text-xs text-zinc-500">
-              <a href="mailto:support.fxinsites@gmail.com" className="hover:text-zinc-300">
+              <Link href="/contact" className="hover:text-zinc-300">
                 Contact
-              </a>
+              </Link>
               <Link href="/blog" className="hover:text-zinc-300">
                 Blog
               </Link>
