@@ -48,7 +48,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       </header>
 
       <main className="mx-auto w-full max-w-3xl px-6 py-14">
-        <BlogHeaderImage title={post.title} />
+        <BlogHeaderImage title={post.title} variant={post.headerVariant} />
         <h1 className="mt-8 text-3xl font-medium tracking-tight text-zinc-50">{post.title}</h1>
         <p className="mt-2 text-sm text-zinc-500">{formatPostDate(post.date)}</p>
 

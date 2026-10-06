@@ -6,9 +6,17 @@ export type BlogPostSummary = {
   title: string;
   description: string;
   date: string;
+  headerVariant?: "chart" | "steps";
 };
 
 export const posts: BlogPostSummary[] = [
+  {
+    slug: "how-to-use-fxinsites",
+    title: "How to Use FxInsites: A Simple Guide",
+    description: "FxInsites does one job: it helps you plan a trade before you take it. Here's how to use it in 5 minutes.",
+    date: "2026-09-29",
+    headerVariant: "steps",
+  },
   {
     slug: "logical-trading",
     title: "Logical Trading: How to Actually Make Smarter Trades",
