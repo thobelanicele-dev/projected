@@ -6,7 +6,7 @@ export function BlogHeaderImage({
   variant = "chart",
 }: {
   title: string;
-  variant?: "chart" | "steps";
+  variant?: "chart" | "guide";
 }) {
   return (
     <div
@@ -35,38 +35,24 @@ export function BlogHeaderImage({
           <span className="absolute h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_1px_rgba(52,211,153,0.7)]" />
         </>
       ) : (
+        // A winding, dashed route from a start point to a flagged finish,
+        // fitting a walkthrough/guide better than the results-style line.
         <svg viewBox="0 0 800 280" className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
-          <line x1="130" y1="140" x2="670" y2="140" stroke="rgb(52 211 153)" strokeOpacity="0.35" strokeWidth="2" />
-          {[130, 310, 490, 670].map((cx, i) => (
-            <g key={cx}>
-              <circle
-                cx={cx}
-                cy="140"
-                r="26"
-                fill="#09090b"
-                stroke="rgb(52 211 153)"
-                strokeOpacity={i === 3 ? 1 : 0.5}
-                strokeWidth="2"
-              />
-              {i < 3 ? (
-                <path
-                  d={`M ${cx - 9} 140 l 6 7 l 12 -14`}
-                  fill="none"
-                  stroke="rgb(52 211 153)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              ) : (
-                <text x={cx} y="147" textAnchor="middle" fontSize="20" fill="rgb(52 211 153)">
-                  →
-                </text>
-              )}
-              <text x={cx} y="110" textAnchor="middle" fontSize="13" fill="rgb(161 161 170)">
-                Step {i + 1}
-              </text>
-            </g>
-          ))}
+          <path
+            d="M 70 210 C 170 210, 170 120, 270 120 S 380 50, 470 60 S 560 170, 650 160 S 720 90, 730 75"
+            fill="none"
+            stroke="rgb(52 211 153)"
+            strokeOpacity="0.55"
+            strokeWidth="2.5"
+            strokeDasharray="10 9"
+            strokeLinecap="round"
+          />
+          <circle cx="70" cy="210" r="7" fill="rgb(52 211 153)" />
+          <circle cx="70" cy="210" r="13" fill="none" stroke="rgb(52 211 153)" strokeOpacity="0.4" strokeWidth="1.5" />
+          <g transform="translate(730, 75)">
+            <line x1="0" y1="0" x2="0" y2="-36" stroke="rgb(52 211 153)" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 0 -36 L 26 -29 L 0 -22 Z" fill="rgb(52 211 153)" />
+          </g>
         </svg>
       )}
     </div>

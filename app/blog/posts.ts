@@ -6,23 +6,25 @@ export type BlogPostSummary = {
   title: string;
   description: string;
   date: string;
-  headerVariant?: "chart" | "steps";
+  headerVariant?: "chart" | "guide";
 };
 
+// Newest first, so the most recent post leads the index and older ones
+// sink toward the bottom as new ones are added above them.
 export const posts: BlogPostSummary[] = [
-  {
-    slug: "how-to-use-fxinsites",
-    title: "How to Use FxInsites: A Simple Guide",
-    description: "FxInsites does one job: it helps you plan a trade before you take it. Here's how to use it in 5 minutes.",
-    date: "2026-09-29",
-    headerVariant: "steps",
-  },
   {
     slug: "logical-trading",
     title: "Logical Trading: How to Actually Make Smarter Trades",
     description:
       "Most traders don't lose money because they're wrong. They lose money because they're inconsistent. Here's the repeatable process that fixes that.",
     date: "2026-10-06",
+  },
+  {
+    slug: "how-to-use-fxinsites",
+    title: "How to Use FxInsites: A Simple Guide",
+    description: "FxInsites does one job: it helps you plan a trade before you take it. Here's how to use it in 5 minutes.",
+    date: "2026-09-29",
+    headerVariant: "guide",
   },
 ];
 
