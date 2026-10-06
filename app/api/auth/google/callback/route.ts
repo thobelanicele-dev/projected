@@ -36,7 +36,10 @@ export async function GET(req: NextRequest) {
 
   let params: URLSearchParams;
   try {
-    params = oauth.validateAuthResponse(as, client, req.nextUrl, stored.state);
+    // Pass a plain URLSearchParams rather than req.nextUrl: NextURL is a
+    // URL subclass, but oauth4webapi's own `instanceof URL` check doesn't
+    // reliably recognize it across the Next.js runtime's module realm.
+    params = oauth.validateAuthResponse(as, client, req.nextUrl.searchParams, stored.state);
   } catch (error) {
     if (error instanceof oauth.AuthorizationResponseError && error.error === "access_denied") {
       return errorRedirect(req, "google-denied");
