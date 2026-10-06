@@ -196,6 +196,7 @@ export default async function LandingPage() {
             <a href="#features" className="hover:text-zinc-200">Product</a>
             <a href="#beta" className="hover:text-zinc-200">Beta</a>
             <a href="#faq" className="hover:text-zinc-200">FAQ</a>
+            <Link href="/blog" className="hover:text-zinc-200">Blog</Link>
           </nav>
           <div className="flex items-center gap-5">
             <NavAuthLink isLoggedIn={isLoggedIn} />
@@ -400,6 +401,9 @@ export default async function LandingPage() {
               <a href="mailto:support.fxinsites@gmail.com" className="hover:text-zinc-300">
                 Contact
               </a>
+              <Link href="/blog" className="hover:text-zinc-300">
+                Blog
+              </Link>
               <Link href="/privacy" className="hover:text-zinc-300">
                 Privacy
               </Link>
