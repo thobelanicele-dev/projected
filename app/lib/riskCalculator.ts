@@ -1,6 +1,6 @@
 import { migrateUnscopedKey, userScopedKey } from "@/app/lib/userScopedStorage";
 
-export type AccountCurrency = "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "NZD";
+export type AccountCurrency = "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "NZD" | "ZAR";
 
 export const ACCOUNT_CURRENCIES: AccountCurrency[] = [
   "USD",
@@ -11,6 +11,7 @@ export const ACCOUNT_CURRENCIES: AccountCurrency[] = [
   "CAD",
   "CHF",
   "NZD",
+  "ZAR",
 ];
 
 export type RiskMode = "percent" | "fixed";
