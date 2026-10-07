@@ -35,12 +35,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const rows = await query<{ password_hash: string; paystack_subscription_code: string | null }>(
+    const rows = await query<{ password_hash: string | null; paystack_subscription_code: string | null }>(
       "SELECT password_hash, paystack_subscription_code FROM users WHERE id = $1",
       [session.id]
     );
     const user = rows[0];
-    if (!user || !verifyPassword(currentPassword, user.password_hash)) {
+    if (!user) {
+      return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
+    }
+    // Google-only accounts have no password to check; the active session is
+    // already sufficient proof of identity for them.
+    if (user.password_hash && !verifyPassword(currentPassword, user.password_hash)) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
     }
 

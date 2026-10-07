@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { query } from "@/app/lib/db";
 import { createSession } from "@/app/lib/auth/session";
 import { generateUsernameFromEmail } from "@/app/lib/auth/username";
+import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 import {
   oauth,
   getGoogleAuthServer,
@@ -13,11 +14,19 @@ import {
   GOOGLE_OAUTH_COOKIE,
 } from "@/app/lib/auth/google";
 
+const RATE_LIMIT = 15;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+
 function errorRedirect(req: NextRequest, code: string) {
   return NextResponse.redirect(new URL(`/login?error=${code}`, req.url));
 }
 
 export async function GET(req: NextRequest) {
+  const rateLimit = checkRateLimit(`google-callback:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
+  if (!rateLimit.allowed) {
+    return errorRedirect(req, "google-rate-limited");
+  }
+
   const cookieStore = await cookies();
   const raw = cookieStore.get(GOOGLE_OAUTH_COOKIE)?.value;
   cookieStore.delete(GOOGLE_OAUTH_COOKIE); // one-time use, clear regardless of outcome

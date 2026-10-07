@@ -13,6 +13,8 @@ export interface SessionUser {
   emailVerified: boolean;
   plan: string | null;
   subscriptionStatus: string | null;
+  /** False for Google-only accounts, which have no password_hash. */
+  hasPassword: boolean;
 }
 
 /** Creates a session row and sets the cookie. Route Handlers only. */
@@ -53,10 +55,12 @@ export async function getSession(): Promise<SessionUser | null> {
     email_verified: boolean;
     plan: string | null;
     subscription_status: string | null;
+    has_password: boolean;
     expires_at: string;
   }>(
     `SELECT users.id, users.email, users.username, users.email_verified, users.plan,
-            users.subscription_status, sessions.expires_at
+            users.subscription_status, (users.password_hash IS NOT NULL) AS has_password,
+            sessions.expires_at
      FROM sessions JOIN users ON users.id = sessions.user_id
      WHERE sessions.token_hash = $1`,
     [tokenHash]
@@ -76,6 +80,7 @@ export async function getSession(): Promise<SessionUser | null> {
     emailVerified: row.email_verified,
     plan: row.plan,
     subscriptionStatus: row.subscription_status,
+    hasPassword: row.has_password,
   };
 }
 

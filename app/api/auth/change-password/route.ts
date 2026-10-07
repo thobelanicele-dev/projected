@@ -43,11 +43,21 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const rows = await query<{ password_hash: string }>("SELECT password_hash FROM users WHERE id = $1", [
-      session.id,
-    ]);
+    const rows = await query<{ password_hash: string | null }>(
+      "SELECT password_hash FROM users WHERE id = $1",
+      [session.id]
+    );
     const user = rows[0];
-    if (!user || !verifyPassword(currentPassword, user.password_hash)) {
+    if (!user) {
+      return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
+    }
+    if (!user.password_hash) {
+      return NextResponse.json(
+        { error: "Your account signed in with Google and doesn't have a password to change." },
+        { status: 400 }
+      );
+    }
+    if (!verifyPassword(currentPassword, user.password_hash)) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
     }
 

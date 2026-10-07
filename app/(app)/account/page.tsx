@@ -19,18 +19,20 @@ export default async function AccountPage() {
         </p>
       </div>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-medium text-zinc-200">Change password</h2>
-        <ChangePasswordForm />
-      </section>
+      {session.hasPassword && (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-sm font-medium text-zinc-200">Change password</h2>
+          <ChangePasswordForm />
+        </section>
+      )}
 
       <section className="flex flex-col gap-4 border-t border-zinc-800 pt-8">
         <h2 className="text-sm font-medium text-zinc-200">Change email</h2>
-        <ChangeEmailForm currentEmail={session.email} />
+        <ChangeEmailForm currentEmail={session.email} hasPassword={session.hasPassword} />
       </section>
 
       <section className="border-t border-zinc-800 pt-8">
-        <DeleteAccountSection />
+        <DeleteAccountSection hasPassword={session.hasPassword} />
       </section>
     </div>
   );

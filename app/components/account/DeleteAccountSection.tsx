@@ -4,14 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { Field, inputClass } from "@/app/components/TradeIdeaForm";
 
-export function DeleteAccountSection() {
+export function DeleteAccountSection({ hasPassword }: { hasPassword: boolean }) {
   const [confirmText, setConfirmText] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
 
-  const canSubmit = confirmText === "DELETE" && password.length > 0 && !loading;
+  const canSubmit = confirmText === "DELETE" && (!hasPassword || password.length > 0) && !loading;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,14 +74,16 @@ export function DeleteAccountSection() {
         />
       </Field>
 
-      <Field label="Current password">
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={inputClass}
-        />
-      </Field>
+      {hasPassword && (
+        <Field label="Current password">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">

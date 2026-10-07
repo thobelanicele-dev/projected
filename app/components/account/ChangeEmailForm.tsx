@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Field, inputClass } from "@/app/components/TradeIdeaForm";
 
-export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
+export function ChangeEmailForm({
+  currentEmail,
+  hasPassword,
+}: {
+  currentEmail: string;
+  hasPassword: boolean;
+}) {
   const [newEmail, setNewEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,15 +59,17 @@ export function ChangeEmailForm({ currentEmail }: { currentEmail: string }) {
         />
       </Field>
 
-      <Field label="Current password">
-        <input
-          type="password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          required
-          className={inputClass}
-        />
-      </Field>
+      {hasPassword && (
+        <Field label="Current password">
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            className={inputClass}
+          />
+        </Field>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
