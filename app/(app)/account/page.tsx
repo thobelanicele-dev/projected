@@ -4,7 +4,8 @@ import { ChangePasswordForm } from "@/app/components/account/ChangePasswordForm"
 import { ChangeEmailForm } from "@/app/components/account/ChangeEmailForm";
 import { DeleteAccountSection } from "@/app/components/account/DeleteAccountSection";
 import { PlanBillingSection } from "@/app/components/account/PlanBillingSection";
-import { PLAN_NAMES, subscriptionState } from "@/app/lib/planLimits";
+import { isBillingEnabled } from "@/app/lib/paystack";
+import { effectiveTier, PLAN_NAMES, subscriptionState } from "@/app/lib/planLimits";
 
 export default async function AccountPage() {
   const session = await getSession();
@@ -34,7 +35,13 @@ export default async function AccountPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="text-sm font-medium text-zinc-200">Plan and billing</h2>
-        <PlanBillingSection state={state} planName={planName} endsAtLabel={endsAtLabel} />
+        <PlanBillingSection
+          state={state}
+          planName={planName}
+          endsAtLabel={endsAtLabel}
+          currentTier={effectiveTier(session)}
+          billingEnabled={isBillingEnabled()}
+        />
       </section>
 
       {session.hasPassword && (

@@ -8,6 +8,7 @@ import {
   nextResetDate,
   PLAN_LIMITS,
   usagePeriod,
+  isUpgrade,
 } from "./planLimits";
 
 describe("effectiveTier", () => {
@@ -92,5 +93,16 @@ describe("cancelled plans keep access until the paid period ends", () => {
   it("reports active, and none for someone who never subscribed", () => {
     expect(subscriptionState({ plan: "basic", subscriptionStatus: "active" }, now)).toBe("active");
     expect(subscriptionState({ plan: null, subscriptionStatus: null }, now)).toBe("none");
+  });
+});
+
+describe("isUpgrade", () => {
+  it("is true only for moving to a bigger plan", () => {
+    expect(isUpgrade("free", "basic")).toBe(true);
+    expect(isUpgrade("free", "premium")).toBe(true);
+    expect(isUpgrade("basic", "premium")).toBe(true);
+    expect(isUpgrade("basic", "basic")).toBe(false);
+    expect(isUpgrade("premium", "basic")).toBe(false);
+    expect(isUpgrade("premium", "premium")).toBe(false);
   });
 });

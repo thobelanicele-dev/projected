@@ -64,6 +64,13 @@ export function effectiveTier(user: SubscriptionFields, now: number = Date.now()
   return "free";
 }
 
+const TIER_RANK: Record<PlanTier, number> = { free: 0, basic: 1, premium: 2 };
+
+/** True when `target` is a bigger plan than `current`. Used to allow upgrades and nothing else. */
+export function isUpgrade(current: PlanTier, target: PlanTier): boolean {
+  return TIER_RANK[target] > TIER_RANK[current];
+}
+
 /** Calendar-month bucket, in UTC, e.g. "2026-10". Usage resets when it rolls over. */
 export function usagePeriod(now: Date = new Date()): string {
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;

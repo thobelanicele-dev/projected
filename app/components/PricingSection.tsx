@@ -20,7 +20,7 @@ type TierKey = "free" | "basic" | "premium";
 // Converted from live USD/ZAR, GBP/ZAR, USD/NGN rates and rounded to normal
 // SaaS "charm" pricing per currency. Proposed starting points, not final —
 // confirm/adjust before this goes live.
-const TIER_PRICING: Record<TierKey, Record<CurrencyCode, number>> = {
+export const TIER_PRICING: Record<TierKey, Record<CurrencyCode, number>> = {
   free: { ZAR: 0, USD: 0, GBP: 0, NGN: 0 },
   basic: { ZAR: 199, USD: 11.99, GBP: 9.99, NGN: 15999 },
   premium: { ZAR: 499, USD: 29.99, GBP: 22.99, NGN: 39999 },

@@ -3,17 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { SubscriptionState } from "@/app/lib/planLimits";
+import { UpgradeOptions } from "@/app/components/account/UpgradeOptions";
+import type { PlanTier, SubscriptionState } from "@/app/lib/planLimits";
 
 export function PlanBillingSection({
   state,
   planName,
   endsAtLabel,
+  currentTier,
+  billingEnabled,
 }: {
   state: SubscriptionState;
   planName: string;
   /** Pre-formatted on the server so the server and browser render the same text. */
   endsAtLabel: string | null;
+  /** The plan they have right now, which can still be paid while a cancelled plan runs out. */
+  currentTier: PlanTier;
+  billingEnabled: boolean;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -47,9 +53,13 @@ export function PlanBillingSection({
         {state === "ended" && endsAtLabel && (
           <p className="mt-1 text-xs text-zinc-500">Your {planName} plan ended on {endsAtLabel}.</p>
         )}
-        <Link href="/#pricing" className="mt-3 inline-block text-sky-400 hover:text-sky-300">
-          See plans
-        </Link>
+        {billingEnabled ? (
+          <UpgradeOptions currentTier={currentTier} className="mt-4" />
+        ) : (
+          <Link href="/#pricing" className="mt-3 inline-block text-sky-400 hover:text-sky-300">
+            See plans
+          </Link>
+        )}
       </div>
     );
   }
@@ -62,6 +72,7 @@ export function PlanBillingSection({
           You keep it until {endsAtLabel}, and you won&apos;t be charged again. After that you&apos;ll be on the
           Free plan.
         </p>
+        {billingEnabled && <UpgradeOptions currentTier={currentTier} className="mt-5 border-t border-zinc-800 pt-4" />}
       </div>
     );
   }
@@ -70,6 +81,10 @@ export function PlanBillingSection({
     <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm">
       <p className="text-zinc-200">You&apos;re on the {planName} plan.</p>
       <p className="mt-1 text-xs text-zinc-500">It renews every month until you cancel.</p>
+
+      {billingEnabled && !confirming && (
+        <UpgradeOptions currentTier={currentTier} className="mt-5 border-t border-zinc-800 pt-4" />
+      )}
 
       {!confirming ? (
         <button

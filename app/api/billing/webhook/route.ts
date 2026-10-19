@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
+import { activateSubscription } from "@/app/lib/subscriptionActivation";
 import { parseDate, tierForPlanCode, verifyWebhookSignature } from "@/app/lib/paystack";
 
 export async function POST(req: NextRequest) {
@@ -28,13 +29,12 @@ export async function POST(req: NextRequest) {
       const tier = planCode ? tierForPlanCode(planCode) : null;
 
       if (tier && email) {
-        await query(
-          `UPDATE users
-           SET plan = $1, subscription_status = 'active', plan_ends_at = NULL,
-               paystack_customer_code = $2, paystack_subscription_code = $3
-           WHERE email = $4`,
-          [tier, customerCode ?? null, subscriptionCode ?? null, email]
-        );
+        await activateSubscription({
+          where: { email },
+          tier,
+          customerCode: customerCode ?? null,
+          subscriptionCode: subscriptionCode ?? null,
+        });
       }
     } else if (eventType === "subscription.disable" && data) {
       const subscriptionCode = data.subscription_code as string | undefined;

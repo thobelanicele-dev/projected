@@ -15,6 +15,7 @@ const state = vi.hoisted(() => ({
   disableFails: false,
   disableCalls: [] as string[][],
   ip: 0,
+  checkoutCalls: [] as string[],
 }));
 
 vi.mock("@/app/lib/db", () => ({
@@ -23,8 +24,13 @@ vi.mock("@/app/lib/db", () => ({
 vi.mock("@/app/lib/auth/session", () => ({ getSession: async () => state.session }));
 vi.mock("@/app/lib/paystack", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/app/lib/paystack")>()),
-  fetchSubscription: async () => ({
-    subscriptionCode: SUB_CODE,
+  isBillingEnabled: () => true,
+  initializeTransaction: async (_email: string, planCode: string) => {
+    state.checkoutCalls.push(planCode);
+    return { authorizationUrl: "https://checkout.paystack.test/abc", reference: "ref" };
+  },
+  fetchSubscription: async (code: string) => ({
+    subscriptionCode: code,
     emailToken: "tok_abc",
     paidThrough: state.paidThrough,
   }),
@@ -34,6 +40,7 @@ vi.mock("@/app/lib/paystack", async (importOriginal) => ({
   },
 }));
 
+import { POST as checkoutPost } from "@/app/api/billing/checkout/route";
 import { POST as cancelPost } from "@/app/api/billing/cancel/route";
 import { POST as webhookPost } from "@/app/api/billing/webhook/route";
 import { PLAN_CODES } from "@/app/lib/paystack";
@@ -100,6 +107,7 @@ beforeEach(() => {
   state.disableFails = false;
   state.disableCalls = [];
   state.session = null;
+  state.checkoutCalls = [];
 });
 
 describe("POST /api/billing/cancel", () => {
@@ -194,5 +202,82 @@ describe("Paystack webhook", () => {
     const res = await webhook("subscription.disable", { subscription_code: SUB_CODE }, { badSignature: true });
     expect(res.status).toBe(400);
     expect((await row()).status).toBe("active");
+  });
+});
+
+function checkout(tier: string) {
+  state.ip += 1;
+  return checkoutPost(
+    new NextRequest("http://localhost/api/billing/checkout", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": `10.2.0.${state.ip}` },
+      body: JSON.stringify({ tier }),
+    })
+  );
+}
+
+describe("POST /api/billing/checkout: upgrades", () => {
+  it("lets a Free user buy either paid plan", async () => {
+    await setUser({ plan: null, status: null });
+    expect((await checkout("basic")).status).toBe(200);
+    expect((await checkout("premium")).status).toBe(200);
+    expect(state.checkoutCalls).toEqual([PLAN_CODES.basic, PLAN_CODES.premium]);
+  });
+
+  it("lets a Basic subscriber upgrade to Premium", async () => {
+    await setUser({ plan: "basic", status: "active" });
+    const res = await checkout("premium");
+    expect(res.status).toBe(200);
+    expect((await res.json()).url).toContain("checkout.paystack.test");
+  });
+
+  it("lets someone whose Basic is cancelled but still running upgrade to Premium", async () => {
+    await setUser({ plan: "basic", status: "cancelling", endsAt: Date.now() + 5 * DAY });
+    expect((await checkout("premium")).status).toBe(200);
+  });
+
+  it("refuses to sell the same plan or a smaller one, so nobody is billed twice", async () => {
+    await setUser({ plan: "basic", status: "active" });
+    expect((await checkout("basic")).status).toBe(409);
+    await setUser({ plan: "premium", status: "active" });
+    expect((await checkout("basic")).status).toBe(409);
+    expect((await checkout("premium")).status).toBe(409);
+    expect(state.checkoutCalls).toHaveLength(0);
+  });
+});
+
+describe("upgrading ends the old subscription exactly once", () => {
+  const NEW_SUB = "SUB_premium";
+  const paid = () => webhook("subscription.create", {
+    plan: { plan_code: PLAN_CODES.premium },
+    customer: { email: EMAIL, customer_code: "CUS_1" },
+    subscription_code: NEW_SUB,
+  });
+
+  it("stops the Basic subscription when the Premium one starts", async () => {
+    await setUser({ plan: "basic", status: "active" });
+    await paid();
+    const res = await state.db!.query<{ plan: string; paystack_subscription_code: string }>(
+      "SELECT plan, paystack_subscription_code FROM users WHERE id = $1",
+      [USER]
+    );
+    expect(res.rows[0]).toEqual({ plan: "premium", paystack_subscription_code: NEW_SUB });
+    expect(state.disableCalls).toEqual([[SUB_CODE, "tok_abc"]]);
+  });
+
+  it("does not stop anything when the same payment is reported a second time", async () => {
+    await setUser({ plan: "basic", status: "active" });
+    await paid();
+    await paid();
+    expect(state.disableCalls).toHaveLength(1);
+  });
+
+  it("still upgrades the account if Paystack can't stop the old plan", async () => {
+    await setUser({ plan: "basic", status: "active" });
+    state.disableFails = true;
+    await paid();
+    expect((await row()).status).toBe("active");
+    const res = await state.db!.query<{ plan: string }>("SELECT plan FROM users WHERE id = $1", [USER]);
+    expect(res.rows[0].plan).toBe("premium");
   });
 });

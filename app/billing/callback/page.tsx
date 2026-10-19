@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/app/lib/auth/session";
-import { query } from "@/app/lib/db";
+import { activateSubscription } from "@/app/lib/subscriptionActivation";
 import { verifyTransaction, tierForPlanCode } from "@/app/lib/paystack";
 
 export default async function BillingCallbackPage({
@@ -28,13 +28,12 @@ export default async function BillingCallbackPage({
     const paidByThisAccount = result.email?.toLowerCase() === session.email.toLowerCase();
 
     if (result.success && tier && paidByThisAccount) {
-      await query(
-        `UPDATE users
-         SET plan = $1, subscription_status = 'active', plan_ends_at = NULL,
-             paystack_customer_code = $2, paystack_subscription_code = $3
-         WHERE id = $4`,
-        [tier, result.customerCode, result.subscriptionCode, session.id]
-      );
+      await activateSubscription({
+        where: { id: session.id },
+        tier,
+        customerCode: result.customerCode,
+        subscriptionCode: result.subscriptionCode,
+      });
       success = true;
     }
   }
