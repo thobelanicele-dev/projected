@@ -27,14 +27,6 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Beta period">
-        <p>
-          FxInsites is currently in an open beta, free to use for everyone. We&apos;ll give
-          advance notice on this page and in the app before introducing any paid plans; you
-          won&apos;t be charged without that notice.
-        </p>
-      </LegalSection>
-
       <LegalSection title="Not financial advice, no guaranteed results">
         <p>
           Trading involves substantial risk of loss and is not suitable for everyone. Backtest

@@ -39,7 +39,7 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
   }
 
   const initial = user.username.charAt(0).toUpperCase();
-  const planLabel = user.plan ? (PLAN_LABELS[user.plan] ?? user.plan) : "Beta";
+  const planLabel = user.plan ? (PLAN_LABELS[user.plan] ?? user.plan) : "Free";
 
   return (
     <div ref={menuRef} className="fixed right-6 top-6 z-40">

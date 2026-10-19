@@ -2,7 +2,7 @@
 // inputs) used to live under one flat localStorage key, shared by anyone
 // signed into that browser. That meant switching accounts on the same
 // device let one account see another's saved trades: a real cross-account
-// data leak, found by actually signing into a second account mid-beta.
+// data leak, found by actually signing into a second account.
 //
 // Fix: every key is now suffixed with the current user's id. The one-time
 // migration below lets whichever account happens to load first after this
