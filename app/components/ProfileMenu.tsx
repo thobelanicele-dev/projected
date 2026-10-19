@@ -7,7 +7,6 @@ import type { SessionUser } from "@/app/lib/auth/session";
 
 const PLAN_LABELS: Record<string, string> = {
   basic: "Basic",
-  plus: "Plus",
   premium: "Premium",
 };
 

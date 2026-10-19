@@ -1,11 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export type Tier = "basic" | "plus" | "premium";
+// Free has no Paystack plan; only the two paid tiers are billable.
+export type Tier = "basic" | "premium";
 
 export const PLAN_CODES: Record<Tier, string> = {
-  basic: "PLN_1vx17of5krdrwfs",
-  plus: "PLN_ublvsjo80pbvruj",
-  premium: "PLN_i8srkkv48npz3bu",
+  basic: "PLN_6ql5coxa3c9s3g8",
+  premium: "PLN_n51d5bvu52uuiiy",
 };
 
 const TIER_BY_PLAN_CODE: Record<string, Tier> = Object.fromEntries(
