@@ -5,6 +5,7 @@ import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { CountUp } from "@/app/components/CountUp";
 import { PricingSection, type CurrencyCode } from "@/app/components/PricingSection";
+import { isBillingEnabled } from "@/app/lib/paystack";
 
 const CAPABILITIES = [
   { value: 5, suffix: "", label: "safety checks run on every trade plan" },
@@ -67,8 +68,8 @@ const GRID_FEATURES = [
 
 const FAQS = [
   {
-    q: "Is everything included during the beta?",
-    a: "Yes. All four tools are fully available, free, while we're in beta.",
+    q: "Do all plans include all four tools?",
+    a: "Yes. The planner, risk calculator, backtester, and journal are on every plan. Paid plans raise the monthly limits.",
   },
   {
     q: "Is this suitable if I have no trading experience?",
@@ -196,6 +197,7 @@ export default async function LandingPage() {
   const headersList = await headers();
   const countryCode = headersList.get("x-vercel-ip-country") ?? "";
   const defaultCurrency: CurrencyCode = COUNTRY_TO_CURRENCY[countryCode] ?? "USD";
+  const billingEnabled = isBillingEnabled();
 
   return (
     <div className="min-h-screen bg-black text-zinc-50 [font-family:'Helvetica_Neue',Helvetica,Arial,sans-serif]">
@@ -209,7 +211,6 @@ export default async function LandingPage() {
           <nav className="hidden items-center gap-8 text-sm text-zinc-500 md:flex">
             <a href="#how" className="hover:text-zinc-200">How it works</a>
             <a href="#features" className="hover:text-zinc-200">Product</a>
-            <a href="#beta" className="hover:text-zinc-200">Beta</a>
             <a href="#pricing" className="hover:text-zinc-200">Pricing</a>
             <a href="#faq" className="hover:text-zinc-200">FAQ</a>
             <Link href="/blog" className="hover:text-zinc-200">Blog</Link>
@@ -220,7 +221,7 @@ export default async function LandingPage() {
               href={isLoggedIn ? "/planner" : "/signup"}
               className="border border-zinc-700 px-4 py-1.5 text-sm text-zinc-100 transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/50 hover:shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]"
             >
-              {isLoggedIn ? "Open the planner" : "Get Early Access"}
+              {isLoggedIn ? "Open the planner" : "Get started"}
             </Link>
           </div>
         </div>
@@ -256,13 +257,13 @@ export default async function LandingPage() {
                 href={isLoggedIn ? "/planner" : "/signup"}
                 className="border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
               >
-                {isLoggedIn ? "Open the planner" : "Get Early Access"}
+                {isLoggedIn ? "Open the planner" : "Get started"}
               </Link>
               <a
-                href="#beta"
+                href="#pricing"
                 className="border border-zinc-700 px-6 py-3 text-sm text-zinc-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-500"
               >
-                About the beta
+                See pricing
               </a>
             </div>
           </Reveal>
@@ -332,36 +333,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Beta */}
-      <section
-        id="beta"
-        className="border-t border-zinc-900 bg-gradient-to-b from-emerald-500/[0.08] to-transparent py-24"
-      >
-        <Reveal className="mx-auto w-full max-w-2xl px-6 text-center">
-          <div className="flex justify-center">
-            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-400 shadow-[0_0_12px_-4px_rgba(52,211,153,0.6)]">
-              Open beta
-            </span>
-          </div>
-          <h2 className="mt-4 text-2xl font-medium tracking-tight text-zinc-50">
-            FxInsites is in open beta
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-zinc-400">
-            We&apos;re still refining things and want real traders putting it to work. Every
-            tool, the planner, journal, backtester, and risk calculator, is fully available,
-            free, during the beta.
-          </p>
-          <div className="mt-8">
-            <Link
-              href={isLoggedIn ? "/planner" : "/signup"}
-              className="inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
-            >
-              {isLoggedIn ? "Open the planner" : "Get early access"}
-            </Link>
-          </div>
-        </Reveal>
-      </section>
-
       {/* Pricing */}
       <section id="pricing" className="border-t border-zinc-900 py-24">
         <div className="mx-auto w-full max-w-6xl px-6">
@@ -371,16 +342,15 @@ export default async function LandingPage() {
               All four tools on every tier
             </h2>
             <p className="mt-2 max-w-lg text-sm text-zinc-500">
-              Free during the open beta. Prices below take effect after the beta ends, and
-              you&apos;ll get advance notice before anything changes, as promised in our{" "}
-              <Link href="/terms" className="text-sky-400 hover:text-sky-300">
-                Terms
-              </Link>
-              .
+              Start free and upgrade when you need more. Paid plans renew monthly.
             </p>
           </Reveal>
 
-          <PricingSection isLoggedIn={isLoggedIn} defaultCurrency={defaultCurrency} />
+          <PricingSection
+            isLoggedIn={isLoggedIn}
+            defaultCurrency={defaultCurrency}
+            billingEnabled={billingEnabled}
+          />
         </div>
       </section>
 
@@ -417,14 +387,14 @@ export default async function LandingPage() {
             Start with a single trade plan.
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">
-            Free to use during the beta.
+            Free to start. No card required.
           </p>
           <div className="mt-8">
             <Link
               href={isLoggedIn ? "/planner" : "/signup"}
               className="inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
             >
-              {isLoggedIn ? "Open the planner" : "Get Early Access"}
+              {isLoggedIn ? "Open the planner" : "Get started"}
             </Link>
           </div>
         </Reveal>

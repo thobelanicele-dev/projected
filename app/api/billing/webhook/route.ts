@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
-import { tierForPlanCode, verifyWebhookSignature } from "@/app/lib/paystack";
+import { parseDate, tierForPlanCode, verifyWebhookSignature } from "@/app/lib/paystack";
 
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
       if (tier && email) {
         await query(
           `UPDATE users
-           SET plan = $1, subscription_status = 'active', paystack_customer_code = $2, paystack_subscription_code = $3
+           SET plan = $1, subscription_status = 'active', plan_ends_at = NULL,
+               paystack_customer_code = $2, paystack_subscription_code = $3
            WHERE email = $4`,
           [tier, customerCode ?? null, subscriptionCode ?? null, email]
         );
@@ -38,9 +39,18 @@ export async function POST(req: NextRequest) {
     } else if (eventType === "subscription.disable" && data) {
       const subscriptionCode = data.subscription_code as string | undefined;
       if (subscriptionCode) {
+        // Cancelling stops renewal, but they've paid through the end of the
+        // current period. Keep access until then; only drop to 'cancelled'
+        // when there's no future end date to honor. The cancel button records
+        // the end date itself; a cancel done from Paystack's own dashboard
+        // falls back to the date in this event.
+        const eventEnd = parseDate(data.next_payment_date);
         await query(
-          "UPDATE users SET subscription_status = 'cancelled' WHERE paystack_subscription_code = $1",
-          [subscriptionCode]
+          `UPDATE users
+           SET plan_ends_at = COALESCE(plan_ends_at, $3),
+               subscription_status = CASE WHEN COALESCE(plan_ends_at, $3) > $2 THEN 'cancelling' ELSE 'cancelled' END
+           WHERE paystack_subscription_code = $1`,
+          [subscriptionCode, Date.now(), eventEnd]
         );
       }
     } else if (eventType === "charge.success" && data) {
@@ -52,9 +62,13 @@ export async function POST(req: NextRequest) {
       const resolvedPlanCode = typeof planCode === "string" ? planCode : planCode?.plan_code;
 
       if (email && resolvedPlanCode) {
+        // Never let a late-arriving payment event undo a cancellation that
+        // still has paid time left on it.
         await query(
-          "UPDATE users SET subscription_status = 'active' WHERE email = $1",
-          [email]
+          `UPDATE users SET subscription_status = 'active'
+           WHERE email = $1
+             AND NOT (subscription_status = 'cancelling' AND COALESCE(plan_ends_at, 0) > $2)`,
+          [email, Date.now()]
         );
       }
     }

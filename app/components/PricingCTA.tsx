@@ -17,6 +17,7 @@ const normalClass = "border-zinc-700 text-zinc-200 hover:border-zinc-500";
 
 export function PricingCTA({ tier, label, isLoggedIn, highlighted }: PricingCTAProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const className = `${baseClass} ${highlighted ? highlightedClass : normalClass}`;
 
   if (!isLoggedIn) {
@@ -30,6 +31,7 @@ export function PricingCTA({ tier, label, isLoggedIn, highlighted }: PricingCTAP
   async function handleClick() {
     if (loading) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
@@ -38,23 +40,28 @@ export function PricingCTA({ tier, label, isLoggedIn, highlighted }: PricingCTAP
       });
       const data = await res.json();
       if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
         setLoading(false);
         return;
       }
       window.location.href = data.url;
     } catch {
+      setError("Could not reach the server. Please try again.");
       setLoading(false);
     }
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={loading}
-      className={`${className} disabled:cursor-not-allowed disabled:opacity-40`}
-    >
-      {loading ? "Redirecting…" : label}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={loading}
+        className={`${className} disabled:cursor-not-allowed disabled:opacity-40`}
+      >
+        {loading ? "Redirecting…" : label}
+      </button>
+      {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
+    </>
   );
 }

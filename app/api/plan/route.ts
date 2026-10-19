@@ -3,6 +3,8 @@ import { generateObject } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/app/lib/auth/session";
+import { consumeUsage, refundUsage } from "@/app/lib/planUsage";
+import { effectiveTier, limitReachedMessage, PLAN_LIMITS } from "@/app/lib/planLimits";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 
 const RATE_LIMIT = 10;
@@ -207,6 +209,24 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const tier = effectiveTier(session);
+  const limit = PLAN_LIMITS[tier].aiPlans;
+  try {
+    const { allowed } = await consumeUsage(session.id, "aiPlans", limit);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: limitReachedMessage("aiPlans", tier, limit ?? 0), code: "limit_reached" },
+        { status: 403 }
+      );
+    }
+  } catch (error) {
+    console.error("Usage check failed", error);
+    return NextResponse.json(
+      { error: "Something went wrong on our end. Please try again in a moment." },
+      { status: 503 }
+    );
+  }
+
   try {
     const { object } = await generateObject({
       model: anthropic("claude-sonnet-5"),
@@ -228,6 +248,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ plan: object });
   } catch (error) {
     console.error("Trade plan generation failed", error);
+    // The person got nothing for it, so don't charge them an AI plan.
+    await refundUsage(session.id, "aiPlans");
     return NextResponse.json(
       { error: "Failed to generate trade plan. Please try again." },
       { status: 500 }

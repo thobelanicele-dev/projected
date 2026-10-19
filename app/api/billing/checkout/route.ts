@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/app/lib/auth/session";
-import { initializeTransaction, isTier, PLAN_CODES } from "@/app/lib/paystack";
+import { initializeTransaction, isBillingEnabled, isTier, PLAN_CODES } from "@/app/lib/paystack";
+import { subscriptionState } from "@/app/lib/planLimits";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 
 const RATE_LIMIT = 10;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
+  if (!isBillingEnabled()) {
+    return NextResponse.json({ error: "Paid plans aren't open yet." }, { status: 503 });
+  }
+
   let session;
   try {
     session = await getSession();
@@ -16,6 +21,20 @@ export async function POST(req: NextRequest) {
   }
   if (!session) {
     return NextResponse.json({ error: "You must be logged in to subscribe." }, { status: 401 });
+  }
+
+  const state = subscriptionState(session);
+  if (state === "active") {
+    return NextResponse.json(
+      { error: "You already have an active plan. Email support@fxinsites.com to change it." },
+      { status: 409 }
+    );
+  }
+  if (state === "cancelling") {
+    return NextResponse.json(
+      { error: "Your current plan is still paid for. You can subscribe again once it ends." },
+      { status: 409 }
+    );
   }
 
   const rateLimit = checkRateLimit(`billing-checkout:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);

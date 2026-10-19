@@ -8,6 +8,7 @@ import type { ResultStat } from "@/app/components/RiskCalcSummary";
 import type { TradePlan } from "@/app/api/plan/route";
 import {
   addPlanToJournal,
+  journalHasRoom,
   loadJournal,
   reconstructFieldsFromEntry,
   deleteJournalEntry,
@@ -15,7 +16,9 @@ import {
 } from "@/app/lib/journal";
 import { buildSeedFromPlan, writeBacktestSeed } from "@/app/lib/backtestSeed";
 import { UsagePing } from "@/app/components/UsagePing";
-import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
+import { useCurrentUserId, useCurrentTier } from "@/app/components/CurrentUserProvider";
+import { PlanUsageNote, USAGE_CHANGED_EVENT } from "@/app/components/PlanUsageNote";
+import { journalFullMessage, PLAN_LIMITS } from "@/app/lib/planLimits";
 
 function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString(undefined, {
@@ -28,7 +31,10 @@ function formatTimestamp(ts: number): string {
 
 export default function Home() {
   const userId = useCurrentUserId();
+  const tier = useCurrentTier();
   const [loading, setLoading] = useState(false);
+  const [limitHit, setLimitHit] = useState(false);
+  const [notSavedNotice, setNotSavedNotice] = useState<string | null>(null);
   const [plan, setPlan] = useState<TradePlan | null>(null);
   const [positionSize, setPositionSize] = useState<ResultStat[] | undefined>(undefined);
   const [chartImageUrl, setChartImageUrl] = useState<string | null>(null);
@@ -55,6 +61,8 @@ export default function Home() {
 
     setLoading(true);
     setError(null);
+    setLimitHit(false);
+    setNotSavedNotice(null);
     setPlan(null);
     setJustSaved(false);
 
@@ -68,16 +76,23 @@ export default function Home() {
 
       if (!res.ok) {
         setError(data.error ?? "Something went wrong.");
+        setLimitHit(data.code === "limit_reached");
         return;
       }
 
+      window.dispatchEvent(new Event(USAGE_CHANGED_EVENT));
       setPlan(data.plan);
       setPositionSize(newPositionSize);
       setChartImageUrl(chartImage ? `data:${chartImage.mediaType};base64,${chartImage.data}` : null);
-      setJustSaved(true);
-      const updated = addPlanToJournal(ideaText, data.plan, fields, userId);
-      setCurrentEntryId(updated[0]?.id ?? null);
-      setRecent(updated.filter((e) => e.source === "planner").slice(0, 5));
+      if (journalHasRoom(userId, PLAN_LIMITS[tier].journalEntries)) {
+        setJustSaved(true);
+        const updated = addPlanToJournal(ideaText, data.plan, fields, userId);
+        setCurrentEntryId(updated[0]?.id ?? null);
+        setRecent(updated.filter((e) => e.source === "planner").slice(0, 5));
+      } else {
+        setCurrentEntryId(null);
+        setNotSavedNotice(`This plan wasn't saved. ${journalFullMessage(tier)}`);
+      }
     } catch {
       setError("Could not reach the server. Please try again.");
     } finally {
@@ -137,11 +152,27 @@ export default function Home() {
         flag anything that looks risky.
       </p>
 
+      <PlanUsageNote metric="aiPlans" noun="AI trade plans" />
+
       <TradeIdeaForm onSubmit={handleSubmit} loading={loading} />
 
       {error && (
         <div className="mt-6 rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300">
           {error}
+          {limitHit && (
+            <Link href="/#pricing" className="mt-2 block text-sky-400 hover:text-sky-300">
+              See plans
+            </Link>
+          )}
+        </div>
+      )}
+
+      {notSavedNotice && (
+        <div className="mt-6 rounded-lg border border-orange-500/40 bg-orange-500/10 p-4 text-sm text-orange-300">
+          {notSavedNotice}
+          <Link href="/journal" className="mt-2 block text-sky-400 hover:text-sky-300">
+            Open your journal
+          </Link>
         </div>
       )}
 

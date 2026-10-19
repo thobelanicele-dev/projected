@@ -8,6 +8,12 @@ export const PLAN_CODES: Record<Tier, string> = {
   premium: "PLN_n51d5bvu52uuiiy",
 };
 
+// Checkout stays closed until BILLING_ENABLED=true is set, so shipping the
+// code can't start charging anyone before billing is ready to go live.
+export function isBillingEnabled(): boolean {
+  return process.env.BILLING_ENABLED === "true";
+}
+
 const TIER_BY_PLAN_CODE: Record<string, Tier> = Object.fromEntries(
   Object.entries(PLAN_CODES).map(([tier, code]) => [code, tier as Tier])
 );
@@ -102,11 +108,20 @@ export async function verifyTransaction(reference: string): Promise<VerifyResult
 export interface SubscriptionDetails {
   subscriptionCode: string;
   emailToken: string;
+  /** The end of the period already paid for, as ms since the epoch; null if Paystack didn't give one. */
+  paidThrough: number | null;
 }
 
 // Fetched fresh rather than relying on anything captured at subscription-create
 // time: disabling a subscription requires an email_token our webhook never
 // stored, and this endpoint reliably returns it regardless.
+/** Turns a Paystack date string into ms since the epoch, or null if it's missing or unreadable. */
+export function parseDate(value: unknown): number | null {
+  if (typeof value !== "string") return null;
+  const ms = Date.parse(value);
+  return Number.isNaN(ms) ? null : ms;
+}
+
 export async function fetchSubscription(subscriptionCode: string): Promise<SubscriptionDetails> {
   const res = await fetch(`https://api.paystack.co/subscription/${encodeURIComponent(subscriptionCode)}`, {
     headers: { Authorization: `Bearer ${secretKey()}` },
@@ -115,7 +130,11 @@ export async function fetchSubscription(subscriptionCode: string): Promise<Subsc
   if (!res.ok || !data.status) {
     throw new Error(data.message ?? "Failed to fetch Paystack subscription.");
   }
-  return { subscriptionCode: data.data.subscription_code, emailToken: data.data.email_token };
+  return {
+    subscriptionCode: data.data.subscription_code,
+    emailToken: data.data.email_token,
+    paidThrough: parseDate(data.data.next_payment_date),
+  };
 }
 
 export async function disableSubscription(subscriptionCode: string, emailToken: string): Promise<void> {

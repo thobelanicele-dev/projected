@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     await query("DELETE FROM email_verification_tokens WHERE user_id = $1", [session.id]);
     await query("DELETE FROM password_reset_tokens WHERE user_id = $1", [session.id]);
     await query("DELETE FROM email_change_tokens WHERE user_id = $1", [session.id]);
+    await query("DELETE FROM oauth_accounts WHERE user_id = $1", [session.id]);
     await query("DELETE FROM users WHERE id = $1", [session.id]);
 
     await destroySession();

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Reveal } from "@/app/components/Reveal";
+import { PricingCTA } from "@/app/components/PricingCTA";
+import { limitLines, limitTableRows } from "@/app/lib/planLimits";
 
 export type CurrencyCode = "ZAR" | "USD" | "GBP" | "NGN";
 
@@ -29,57 +31,32 @@ const TIERS: {
   name: string;
   tagline: string;
   highlighted: boolean;
-  limits: string[];
 }[] = [
   {
     key: "free",
     name: "Free",
     tagline: "Try it out, no card required",
     highlighted: false,
-    limits: [
-      "5 AI trade plans / month",
-      "3 backtest runs / month",
-      "Journal up to 20 trades",
-      "3 months of backtest data",
-      "Any broker, CSV import",
-    ],
   },
   {
     key: "basic",
     name: "Basic",
     tagline: "For a regular trading routine",
     highlighted: true,
-    limits: [
-      "50 AI trade plans / month",
-      "25 backtest runs / month",
-      "Journal up to 250 trades",
-      "1 year of backtest data",
-      "Any broker, CSV import",
-    ],
   },
   {
     key: "premium",
     name: "Premium",
     tagline: "For unrestricted use",
     highlighted: false,
-    limits: [
-      "Unlimited AI trade plans",
-      "Unlimited backtest runs",
-      "Unlimited journal history",
-      "2 years of backtest data",
-      "Any broker, CSV import",
-    ],
   },
 ];
 
-const LIMIT_ROWS: { label: string; values: [string, string, string] }[] = [
-  { label: "AI trade plans", values: ["5 / mo", "50 / mo", "Unlimited"] },
-  { label: "Backtest runs", values: ["3 / mo", "25 / mo", "Unlimited"] },
-  { label: "Journal trades", values: ["20", "250", "Unlimited"] },
-  { label: "Backtest history depth", values: ["3 months", "1 year", "2 years"] },
-  { label: "Risk-rule & bias checks", values: ["Included", "Included", "Included"] },
-  { label: "Risk calculator (all 5 tools)", values: ["Included", "Included", "Included"] },
-  { label: "CSV import, any broker", values: ["Included", "Included", "Included"] },
+const COMPARISON_ROWS = [
+  ...limitTableRows(),
+  ["Risk-rule & bias checks", "Included", "Included", "Included"],
+  ["Risk calculator (all 5 tools)", "Included", "Included", "Included"],
+  ["CSV import, any broker", "Included", "Included", "Included"],
 ];
 
 function Dot() {
@@ -100,9 +77,11 @@ function formatPrice(amount: number, currency: CurrencyCode): string {
 export function PricingSection({
   isLoggedIn,
   defaultCurrency,
+  billingEnabled,
 }: {
   isLoggedIn: boolean;
   defaultCurrency: CurrencyCode;
+  billingEnabled: boolean;
 }) {
   const [currency, setCurrency] = useState<CurrencyCode>(defaultCurrency);
 
@@ -152,24 +131,39 @@ export function PricingSection({
                 <span className="text-sm text-zinc-500"> / month</span>
               )}
             </p>
+            {tier.key !== "free" && currency !== "ZAR" && (
+              <p className="mt-1 text-xs text-zinc-500">
+                Approximate. Billed in South African Rand:{" "}
+                {formatPrice(TIER_PRICING[tier.key].ZAR, "ZAR")} / month.
+              </p>
+            )}
             <ul className="mt-6 flex-1 space-y-2">
-              {tier.limits.map((item) => (
+              {limitLines(tier.key).map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
                   <Dot />
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
-            <Link
-              href={isLoggedIn ? "/planner" : "/signup"}
-              className={`mt-8 border px-5 py-2.5 text-center text-sm transition-colors ${
-                tier.highlighted
-                  ? "border-zinc-100 bg-zinc-100 text-black hover:bg-zinc-300"
-                  : "border-zinc-700 text-zinc-200 hover:border-zinc-500"
-              }`}
-            >
-              {isLoggedIn ? "Open the planner" : "Get started free"}
-            </Link>
+            {tier.key !== "free" && billingEnabled ? (
+              <PricingCTA
+                tier={tier.key}
+                label={`Choose ${tier.name}`}
+                isLoggedIn={isLoggedIn}
+                highlighted={tier.highlighted}
+              />
+            ) : (
+              <Link
+                href={isLoggedIn ? "/planner" : "/signup"}
+                className={`mt-8 border px-5 py-2.5 text-center text-sm transition-colors ${
+                  tier.highlighted
+                    ? "border-zinc-100 bg-zinc-100 text-black hover:bg-zinc-300"
+                    : "border-zinc-700 text-zinc-200 hover:border-zinc-500"
+                }`}
+              >
+                {isLoggedIn ? "Open the planner" : "Get started free"}
+              </Link>
+            )}
           </Reveal>
         ))}
       </div>
@@ -186,10 +180,10 @@ export function PricingSection({
             </tr>
           </thead>
           <tbody>
-            {LIMIT_ROWS.map((row) => (
-              <tr key={row.label} className="border-b border-zinc-900 last:border-0">
-                <td className="px-5 py-3 text-zinc-400">{row.label}</td>
-                {row.values.map((v, i) => (
+            {COMPARISON_ROWS.map((row) => (
+              <tr key={row[0]} className="border-b border-zinc-900 last:border-0">
+                <td className="px-5 py-3 text-zinc-400">{row[0]}</td>
+                {row.slice(1).map((v, i) => (
                   <td key={i} className="px-5 py-3 text-center text-zinc-300">
                     {v}
                   </td>

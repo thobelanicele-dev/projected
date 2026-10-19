@@ -12,14 +12,18 @@ import {
   clearJournal,
   computeStats,
   addImportedEntries,
+  capToRoom,
   type JournalEntry,
 } from "@/app/lib/journal";
 import { parseTradeCsv, rowsToJournalEntries, type ImportResult } from "@/app/lib/importTrades";
 import { UsagePing } from "@/app/components/UsagePing";
-import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
+import { useCurrentUserId, useCurrentTier } from "@/app/components/CurrentUserProvider";
+import { journalFullMessage, PLAN_LIMITS, PLAN_NAMES } from "@/app/lib/planLimits";
 
 export default function JournalPage() {
   const userId = useCurrentUserId();
+  const tier = useCurrentTier();
+  const maxEntries = PLAN_LIMITS[tier].journalEntries;
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [importPreview, setImportPreview] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -67,9 +71,14 @@ export default function JournalPage() {
 
   function handleConfirmImport() {
     if (!importPreview) return;
-    const newEntries = rowsToJournalEntries(importPreview.rows);
-    setEntries(addImportedEntries(newEntries, userId));
+    const { accepted, skipped } = capToRoom(rowsToJournalEntries(importPreview.rows), userId, maxEntries);
+    if (accepted.length > 0) setEntries(addImportedEntries(accepted, userId));
     setImportPreview(null);
+    setImportError(
+      skipped > 0
+        ? `${accepted.length > 0 ? `Imported ${accepted.length}, but ${skipped} didn't fit.` : "Nothing was imported."} ${journalFullMessage(tier)}`
+        : null
+    );
   }
 
   return (
@@ -79,6 +88,17 @@ export default function JournalPage() {
       <p className="mt-2 text-zinc-400">
         Every plan you build gets saved here. Mark trades as taken, log the outcome, and see
         your discipline and results add up over time.
+      </p>
+      <p className="mt-2 text-xs text-zinc-500">
+        {entries.length} of {maxEntries} journal entries used on the {PLAN_NAMES[tier]} plan
+        {tier !== "premium" && (
+          <>
+            {" · "}
+            <Link href="/#pricing" className="text-sky-400 hover:text-sky-300">
+              See plans
+            </Link>
+          </>
+        )}
       </p>
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">

@@ -7,7 +7,8 @@ import type { Candle, CustomStrategy, ExitRules, StrategyParams } from "@/app/li
 import { buildSeedFromPlan, type BacktestSeed } from "@/app/lib/backtestSeed";
 import { CustomStrategyBuilder, emptyCustomStrategy } from "@/app/components/CustomStrategyBuilder";
 import { loadJournal, type JournalEntry } from "@/app/lib/journal";
-import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
+import { useCurrentUserId, useCurrentTier } from "@/app/components/CurrentUserProvider";
+import { PLAN_LIMITS } from "@/app/lib/planLimits";
 
 type StrategyType = StrategyParams["type"];
 
@@ -82,6 +83,7 @@ export function BacktestForm({
   initialSeed?: BacktestSeed | null;
 }) {
   const userId = useCurrentUserId();
+  const maxHistoryDays = PLAN_LIMITS[useCurrentTier()].backtestDays;
   const [savedPlans, setSavedPlans] = useState<JournalEntry[]>([]);
 
   useEffect(() => {
@@ -93,7 +95,7 @@ export function BacktestForm({
 
   const [pair, setPair] = useState("EUR/USD");
   const [dataSource, setDataSource] = useState<"market" | "csv">("market");
-  const [lookbackDays, setLookbackDays] = useState("365");
+  const [lookbackDays, setLookbackDays] = useState(String(Math.min(365, maxHistoryDays)));
   const [marketCandles, setMarketCandles] = useState<Candle[] | null>(null);
   const [marketStatus, setMarketStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [marketError, setMarketError] = useState<string | null>(null);
@@ -322,10 +324,17 @@ export function BacktestForm({
               onChange={(e) => setLookbackDays(e.target.value)}
               className={`${inputClass} max-w-[160px]`}
             >
-              <option value="90">Last 90 days</option>
-              <option value="180">Last 180 days</option>
-              <option value="365">Last 1 year</option>
-              <option value="730">Last 2 years</option>
+              {[
+                ["90", "Last 90 days"],
+                ["180", "Last 180 days"],
+                ["365", "Last 1 year"],
+                ["730", "Last 2 years"],
+              ].map(([days, label]) => (
+                <option key={days} value={days} disabled={parseInt(days, 10) > maxHistoryDays}>
+                  {label}
+                  {parseInt(days, 10) > maxHistoryDays ? " (upgrade)" : ""}
+                </option>
+              ))}
             </select>
             <button
               type="button"

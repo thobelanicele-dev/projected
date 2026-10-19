@@ -133,6 +133,25 @@ export function addImportedEntries(newEntries: JournalEntry[], userId: string): 
   return persist([...newEntries, ...loadJournal(userId)].slice(0, MAX_ENTRIES), userId);
 }
 
+/** Whether there's space for one more entry under the plan's journal limit. */
+export function journalHasRoom(userId: string, max: number): boolean {
+  return loadJournal(userId).length < max;
+}
+
+/**
+ * Trims a batch of new entries to what fits under the plan's journal limit.
+ * Existing entries are never dropped; once the journal is full, new ones are
+ * refused instead of silently pushing out the oldest.
+ */
+export function capToRoom(
+  newEntries: JournalEntry[],
+  userId: string,
+  max: number
+): { accepted: JournalEntry[]; skipped: number } {
+  const room = Math.max(0, max - loadJournal(userId).length);
+  return { accepted: newEntries.slice(0, room), skipped: Math.max(0, newEntries.length - room) };
+}
+
 export function updateJournalEntry(
   id: string,
   updates: Partial<Omit<JournalEntry, "id" | "createdAt" | "ideaText" | "plan">>,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Candle } from "@/app/lib/backtestEngine";
 import { getSession } from "@/app/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
+import { effectiveTier, historyLimitMessage, PLAN_LIMITS } from "@/app/lib/planLimits";
 
 const RATE_LIMIT = 60;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -30,10 +31,16 @@ export async function GET(req: NextRequest) {
 
   const symbol = req.nextUrl.searchParams.get("symbol")?.trim();
   const daysParam = req.nextUrl.searchParams.get("days");
-  const days = daysParam ? parseInt(daysParam, 10) : 365;
+  const tier = effectiveTier(session);
+  const maxDays = PLAN_LIMITS[tier].backtestDays;
+  const days = daysParam ? parseInt(daysParam, 10) : Math.min(365, maxDays);
 
   if (!symbol) {
     return NextResponse.json({ error: "Symbol is required." }, { status: 400 });
+  }
+
+  if (!isNaN(days) && days > maxDays) {
+    return NextResponse.json({ error: historyLimitMessage(tier), code: "limit_reached" }, { status: 403 });
   }
 
   const apiKey = process.env.TWELVE_DATA_API_KEY;

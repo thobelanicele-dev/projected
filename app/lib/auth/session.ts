@@ -13,6 +13,8 @@ export interface SessionUser {
   emailVerified: boolean;
   plan: string | null;
   subscriptionStatus: string | null;
+  /** When a cancelled plan's paid period ends (ms since epoch), else null. */
+  planEndsAt: number | null;
   /** False for Google-only accounts, which have no password_hash. */
   hasPassword: boolean;
 }
@@ -56,11 +58,12 @@ export async function getSession(): Promise<SessionUser | null> {
     plan: string | null;
     subscription_status: string | null;
     has_password: boolean;
+    plan_ends_at: string | null;
     expires_at: string;
   }>(
     `SELECT users.id, users.email, users.username, users.email_verified, users.plan,
             users.subscription_status, (users.password_hash IS NOT NULL) AS has_password,
-            sessions.expires_at
+            users.plan_ends_at, sessions.expires_at
      FROM sessions JOIN users ON users.id = sessions.user_id
      WHERE sessions.token_hash = $1`,
     [tokenHash]
@@ -80,6 +83,7 @@ export async function getSession(): Promise<SessionUser | null> {
     emailVerified: row.email_verified,
     plan: row.plan,
     subscriptionStatus: row.subscription_status,
+    planEndsAt: row.plan_ends_at ? Number(row.plan_ends_at) : null,
     hasPassword: row.has_password,
   };
 }

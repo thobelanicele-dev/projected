@@ -22,10 +22,16 @@ export default async function BillingCallbackPage({
     const result = await verifyTransaction(reference);
     const tier = result.planCode ? tierForPlanCode(result.planCode) : null;
 
-    if (result.success && tier) {
+    // The reference comes from the URL, so only honor a payment that was made
+    // with this account's own email; otherwise one person's successful payment
+    // reference could activate a plan on someone else's account.
+    const paidByThisAccount = result.email?.toLowerCase() === session.email.toLowerCase();
+
+    if (result.success && tier && paidByThisAccount) {
       await query(
         `UPDATE users
-         SET plan = $1, subscription_status = 'active', paystack_customer_code = $2, paystack_subscription_code = $3
+         SET plan = $1, subscription_status = 'active', plan_ends_at = NULL,
+             paystack_customer_code = $2, paystack_subscription_code = $3
          WHERE id = $4`,
         [tier, result.customerCode, result.subscriptionCode, session.id]
       );

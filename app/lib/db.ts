@@ -1,5 +1,6 @@
 import { Pool, type QueryResultRow } from "pg";
 import { hashToken } from "@/app/lib/auth/tokens";
+import { USAGE_TABLE_SQL } from "@/app/lib/usageSchema";
 
 const globalForDb = globalThis as unknown as {
   __pgPool?: Pool;
@@ -90,6 +91,8 @@ async function migrate(): Promise<void> {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS paystack_subscription_code TEXT;
 
     -- OAuth-only accounts (Google, and later Apple) have no password.
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_ends_at BIGINT;
+
     ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 
     ALTER TABLE sessions ADD COLUMN IF NOT EXISTS token_hash TEXT;
@@ -109,6 +112,8 @@ async function migrate(): Promise<void> {
       PRIMARY KEY (provider, provider_account_id)
     );
     CREATE INDEX IF NOT EXISTS oauth_accounts_user_id_idx ON oauth_accounts(user_id);
+
+    ${USAGE_TABLE_SQL}
   `);
 
   // One-time backfill: sessions used to store the raw session token directly
