@@ -4,8 +4,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export type Tier = "basic" | "premium";
 
 export const PLAN_CODES: Record<Tier, string> = {
-  basic: "PLN_6ql5coxa3c9s3g8",
-  premium: "PLN_n51d5bvu52uuiiy",
+  basic: "PLN_5n3vklij899kak9",
+  premium: "PLN_n7bv0nzcpcriw3c",
 };
 
 // Checkout stays closed until BILLING_ENABLED=true is set, so shipping the
