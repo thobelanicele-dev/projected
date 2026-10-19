@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { getSession } from "@/app/lib/auth/session";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { CountUp } from "@/app/components/CountUp";
+import { PricingSection, type CurrencyCode } from "@/app/components/PricingSection";
 
 const CAPABILITIES = [
   { value: 5, suffix: "", label: "safety checks run on every trade plan" },
@@ -172,6 +174,13 @@ function PlannerMock() {
   );
 }
 
+const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
+  ZA: "ZAR",
+  GB: "GBP",
+  NG: "NGN",
+  US: "USD",
+};
+
 export default async function LandingPage() {
   // A DB hiccup here must not take down the entire marketing page for every
   // visitor; fall back to the logged-out view rather than erroring.
@@ -181,6 +190,12 @@ export default async function LandingPage() {
   } catch (error) {
     console.error("Landing page session check failed", error);
   }
+
+  // Vercel's edge network sets this on every request; absent in local dev,
+  // where it falls back to USD like any undetected visitor would.
+  const headersList = await headers();
+  const countryCode = headersList.get("x-vercel-ip-country") ?? "";
+  const defaultCurrency: CurrencyCode = COUNTRY_TO_CURRENCY[countryCode] ?? "USD";
 
   return (
     <div className="min-h-screen bg-black text-zinc-50 [font-family:'Helvetica_Neue',Helvetica,Arial,sans-serif]">
@@ -195,6 +210,7 @@ export default async function LandingPage() {
             <a href="#how" className="hover:text-zinc-200">How it works</a>
             <a href="#features" className="hover:text-zinc-200">Product</a>
             <a href="#beta" className="hover:text-zinc-200">Beta</a>
+            <a href="#pricing" className="hover:text-zinc-200">Pricing</a>
             <a href="#faq" className="hover:text-zinc-200">FAQ</a>
             <Link href="/blog" className="hover:text-zinc-200">Blog</Link>
           </nav>
@@ -344,6 +360,28 @@ export default async function LandingPage() {
             </Link>
           </div>
         </Reveal>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="border-t border-zinc-900 py-24">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <Reveal>
+            <Eyebrow>Pricing</Eyebrow>
+            <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
+              All four tools on every tier
+            </h2>
+            <p className="mt-2 max-w-lg text-sm text-zinc-500">
+              Free during the open beta. Prices below take effect after the beta ends, and
+              you&apos;ll get advance notice before anything changes, as promised in our{" "}
+              <Link href="/terms" className="text-sky-400 hover:text-sky-300">
+                Terms
+              </Link>
+              .
+            </p>
+          </Reveal>
+
+          <PricingSection isLoggedIn={isLoggedIn} defaultCurrency={defaultCurrency} />
+        </div>
       </section>
 
       {/* FAQ */}
