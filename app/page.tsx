@@ -4,6 +4,9 @@ import { getSession } from "@/app/lib/auth/session";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { CountUp } from "@/app/components/CountUp";
+import { Magnetic } from "@/app/components/beui/magnetic";
+import { TextReveal } from "@/app/components/beui/text-reveal";
+import { TiltCard } from "@/app/components/beui/tilt-card";
 import { PricingSection, type CurrencyCode } from "@/app/components/PricingSection";
 import { isBillingEnabled } from "@/app/lib/paystack";
 
@@ -238,27 +241,28 @@ export default async function LandingPage() {
         </div>
 
         <div className="mx-auto w-full max-w-4xl">
-          <Reveal>
-            <h1 className="text-4xl font-medium leading-[1.15] tracking-tight text-zinc-50 sm:text-5xl">
-              Trade with a plan,
-              <br />
-              not a guess.
-            </h1>
-          </Reveal>
-          <Reveal delay={100}>
+          <TextReveal
+            as="h1"
+            text={["Trade with a plan,", "not a guess."]}
+            stagger={0.12}
+            className="text-4xl font-medium leading-[1.15] tracking-tight text-zinc-50 sm:text-5xl"
+          />
+          <Reveal delay={600}>
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-zinc-400">
               Describe your trade in plain English. We&apos;ll structure it, check it for
               mistakes, and track how it actually plays out.
             </p>
           </Reveal>
-          <Reveal delay={200}>
+          <Reveal delay={800}>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href={isLoggedIn ? "/planner" : "/signup"}
-                className="border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
-              >
-                {isLoggedIn ? "Open the planner" : "Get started"}
-              </Link>
+              <Magnetic>
+                <Link
+                  href={isLoggedIn ? "/planner" : "/signup"}
+                  className="block border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-all duration-300 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
+                >
+                  {isLoggedIn ? "Open the planner" : "Get started"}
+                </Link>
+              </Magnetic>
               <a
                 href="#pricing"
                 className="border border-zinc-700 px-6 py-3 text-sm text-zinc-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-zinc-500"
@@ -321,13 +325,17 @@ export default async function LandingPage() {
               <li className="flex gap-2"><Dot />Every question explains itself: no jargon</li>
             </ul>
           </div>
-          <PlannerMock />
+          <TiltCard max={6} glare={false}>
+            <PlannerMock />
+          </TiltCard>
         </Reveal>
 
         <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
           {GRID_FEATURES.map((feature, i) => (
             <Reveal key={feature.eyebrow} delay={i * 100}>
-              <FeatureCard {...feature} />
+              <TiltCard max={8} className="h-full">
+                <FeatureCard {...feature} />
+              </TiltCard>
             </Reveal>
           ))}
         </div>
