@@ -3,9 +3,9 @@ import { headers } from "next/headers";
 import { getSession } from "@/app/lib/auth/session";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
-import { CountUp } from "@/app/components/CountUp";
 import { FaqAccordion } from "@/app/components/FaqAccordion";
 import { ProductTabs } from "@/app/components/ProductTabs";
+import { NumberTicker } from "@/app/components/beui/number-ticker";
 import { Magnetic } from "@/app/components/beui/magnetic";
 import { TextReveal } from "@/app/components/beui/text-reveal";
 import { TiltCard } from "@/app/components/beui/tilt-card";
@@ -16,7 +16,7 @@ const CAPABILITIES = [
   { value: 5, suffix: "", label: "safety checks run on every trade plan" },
   { value: 5, suffix: "", label: "simple calculators for safer position sizing" },
   { value: 5, suffix: "", label: "ready-made strategies you can test instantly" },
-  { value: 2, suffix: " yrs", label: "of real price history to practice with" },
+  { value: 2, suffix: "\u00A0yrs", label: "of real price history to practice with" },
   { value: 2, suffix: "", label: "ways trades land in your journal: planned or imported" },
 ];
 
@@ -345,7 +345,7 @@ export default async function LandingPage() {
           {CAPABILITIES.map((cap, i) => (
             <Reveal key={cap.label} delay={i * 80} className="px-6 py-8 text-center">
               <p className="text-2xl font-medium text-zinc-100">
-                <CountUp target={cap.value} suffix={cap.suffix} />
+                <NumberTicker value={cap.value} suffix={cap.suffix} duration={1.4} stagger={0.1} blur />
               </p>
               <p className="mt-1 text-xs leading-snug text-zinc-500">{cap.label}</p>
             </Reveal>
