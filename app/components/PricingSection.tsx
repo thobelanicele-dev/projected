@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
+import { NumberTicker } from "@/app/components/beui/number-ticker";
+import { SPRING_LAYOUT } from "@/app/lib/beui/ease";
 import { Reveal } from "@/app/components/Reveal";
 import { PricingCTA } from "@/app/components/PricingCTA";
 import { limitLines, limitTableRows } from "@/app/lib/planLimits";
@@ -63,15 +66,19 @@ function Dot() {
   return <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-zinc-600" />;
 }
 
+// A fixed locale, so the server and the visitor's browser always print the same text.
+function formatNumber(amount: number, decimals: number): string {
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
 function formatPrice(amount: number, currency: CurrencyCode): string {
   if (amount === 0) return "Free";
   const symbol = CURRENCIES.find((c) => c.code === currency)!.symbol;
   const decimals = currency === "NGN" ? 0 : 2;
-  const formatted = amount.toLocaleString(undefined, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-  return `${symbol}${formatted}`;
+  return `${symbol}${formatNumber(amount, decimals)}`;
 }
 
 export function PricingSection({
@@ -84,6 +91,9 @@ export function PricingSection({
   billingEnabled: boolean;
 }) {
   const [currency, setCurrency] = useState<CurrencyCode>(defaultCurrency);
+  const reduce = useReducedMotion();
+  const decimals = currency === "NGN" ? 0 : 2;
+  const symbol = CURRENCIES.find((c) => c.code === currency)!.symbol;
 
   return (
     <>
@@ -94,11 +104,22 @@ export function PricingSection({
             type="button"
             onClick={() => setCurrency(c.code)}
             aria-pressed={currency === c.code}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-              currency === c.code ? "bg-zinc-100 text-black" : "text-zinc-400 hover:text-zinc-200"
-            }`}
+            className="relative rounded-full px-3 py-1.5 text-xs font-medium"
           >
-            {c.code} · {c.country}
+            {currency === c.code && (
+              <motion.span
+                layoutId="currency-pill"
+                transition={reduce ? { duration: 0 } : SPRING_LAYOUT}
+                className="absolute inset-0 rounded-full bg-zinc-100"
+              />
+            )}
+            <span
+              className={`relative transition-colors ${
+                currency === c.code ? "text-black" : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              {c.code} · {c.country}
+            </span>
           </button>
         ))}
       </div>
@@ -125,7 +146,17 @@ export function PricingSection({
             <p className="mt-1 text-sm text-zinc-500">{tier.tagline}</p>
             <p className="mt-4">
               <span className="text-3xl font-medium text-zinc-100">
-                {formatPrice(TIER_PRICING[tier.key][currency], currency)}
+                {TIER_PRICING[tier.key][currency] === 0 ? (
+                  "Free"
+                ) : (
+                  <NumberTicker
+                    value={TIER_PRICING[tier.key][currency]}
+                    decimals={decimals}
+                    prefix={symbol}
+                    format={(n) => formatNumber(n, decimals)}
+                    duration={0.7}
+                  />
+                )}
               </span>
               {TIER_PRICING[tier.key][currency] > 0 && (
                 <span className="text-sm text-zinc-500"> / month</span>

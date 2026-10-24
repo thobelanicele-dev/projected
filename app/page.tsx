@@ -4,6 +4,8 @@ import { getSession } from "@/app/lib/auth/session";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { CountUp } from "@/app/components/CountUp";
+import { FaqAccordion } from "@/app/components/FaqAccordion";
+import { ProductTabs } from "@/app/components/ProductTabs";
 import { Magnetic } from "@/app/components/beui/magnetic";
 import { TextReveal } from "@/app/components/beui/text-reveal";
 import { TiltCard } from "@/app/components/beui/tilt-card";
@@ -105,38 +107,63 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function FeatureCard({
+function ToolPanel({
   eyebrow,
   title,
   body,
-  stats,
+  bullets,
+  visual,
 }: {
   eyebrow: string;
   title: string;
   body: string;
-  stats: [string, string][];
+  bullets?: React.ReactNode[];
+  visual: React.ReactNode;
 }) {
   return (
-    <div className="flex h-full flex-col border border-zinc-800 bg-zinc-950 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
-      <Eyebrow>{eyebrow}</Eyebrow>
-      <h3 className="mt-2 text-lg font-medium tracking-tight text-zinc-50">{title}</h3>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">{body}</p>
-      <div className="mt-5 grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800 font-mono text-[13px]">
-        {stats.map(([label, value]) => (
-          <div key={label} className="bg-zinc-950 p-2.5">
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
-            <p className="mt-0.5 text-zinc-100">{value}</p>
+    <div className="grid items-start gap-10 lg:grid-cols-2">
+      <div>
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">{title}</h3>
+        <p className="mt-4 text-sm leading-relaxed text-zinc-400">{body}</p>
+        {bullets && (
+          <ul className="mt-6 space-y-2 text-sm text-zinc-400">
+            {bullets.map((bullet, i) => (
+              <li key={i} className="flex gap-2">
+                <Dot />
+                {bullet}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <TiltCard max={6} glare={false}>
+        {visual}
+      </TiltCard>
+    </div>
+  );
+}
+
+function StatsMock({ label, stats }: { label: string; stats: [string, string][] }) {
+  return (
+    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
+      <p className="border-b border-zinc-800 pb-3 text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
+      <div className="mt-4 grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800">
+        {stats.map(([name, value]) => (
+          <div key={name} className="bg-zinc-950 p-3">
+            <p className="text-[10px] uppercase tracking-widest text-zinc-500">{name}</p>
+            <p className="mt-1 text-lg text-zinc-100">{value}</p>
           </div>
         ))}
       </div>
-      <p className="mt-1.5 text-[10px] text-zinc-600">Illustrative example, not real account data.</p>
+      <p className="mt-2 text-[10px] text-zinc-600">Illustrative example, not real account data.</p>
     </div>
   );
 }
 
 function PlannerMock() {
   return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px] transition-all duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_40px_-15px_rgba(52,211,153,0.4)]">
+    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
       <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-zinc-500">Trade plan</p>
@@ -177,6 +204,44 @@ function PlannerMock() {
     </div>
   );
 }
+
+const [JOURNAL, BACKTEST, RISK] = GRID_FEATURES;
+
+const PRODUCT_TABS = [
+  {
+    id: "planner",
+    label: "Trade planner",
+    content: (
+      <ToolPanel
+        eyebrow="Trade planner"
+        title="Your idea, turned into a safe plan"
+        body="Describe your trade in plain English. We turn it into a clear plan and check it for the mistakes beginners make most."
+        bullets={[
+          "Flags bad habits: chasing price, revenge trading, oversized bets",
+          "Checked against the real, live price when you're entering at market",
+          "Every question explains itself: no jargon",
+        ]}
+        visual={<PlannerMock />}
+      />
+    ),
+  },
+  ...[
+    { id: "journal", feature: JOURNAL, mock: "Journal summary" },
+    { id: "backtest", feature: BACKTEST, mock: "Backtest result" },
+    { id: "risk", feature: RISK, mock: "Risk calculation" },
+  ].map(({ id, feature, mock }) => ({
+    id,
+    label: feature.eyebrow,
+    content: (
+      <ToolPanel
+        eyebrow={feature.eyebrow}
+        title={feature.title}
+        body={feature.body}
+        visual={<StatsMock label={mock} stats={feature.stats} />}
+      />
+    ),
+  })),
+];
 
 const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
   ZA: "ZAR",
@@ -309,36 +374,9 @@ export default async function LandingPage() {
 
       {/* Feature spotlight + grid */}
       <section id="features" className="mx-auto w-full max-w-6xl border-t border-zinc-900 px-6 py-24">
-        <Reveal className="grid items-start gap-10 lg:grid-cols-2">
-          <div>
-            <Eyebrow>Trade planner</Eyebrow>
-            <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">
-              Your idea, turned into a safe plan
-            </h3>
-            <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-              Describe your trade in plain English. We turn it into a clear plan and check it for
-              the mistakes beginners make most.
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-zinc-400">
-              <li className="flex gap-2"><Dot />Flags bad habits: chasing price, revenge trading, oversized bets</li>
-              <li className="flex gap-2"><Dot />Checked against the real, live price when you&apos;re entering at market</li>
-              <li className="flex gap-2"><Dot />Every question explains itself: no jargon</li>
-            </ul>
-          </div>
-          <TiltCard max={6} glare={false}>
-            <PlannerMock />
-          </TiltCard>
+        <Reveal>
+          <ProductTabs tabs={PRODUCT_TABS} />
         </Reveal>
-
-        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {GRID_FEATURES.map((feature, i) => (
-            <Reveal key={feature.eyebrow} delay={i * 100}>
-              <TiltCard max={8} className="h-full">
-                <FeatureCard {...feature} />
-              </TiltCard>
-            </Reveal>
-          ))}
-        </div>
       </section>
 
       {/* Pricing */}
@@ -370,18 +408,8 @@ export default async function LandingPage() {
             Questions traders ask
           </h2>
         </Reveal>
-        <Reveal delay={100} className="mt-8 divide-y divide-zinc-900 border-t border-zinc-900">
-          {FAQS.map((faq) => (
-            <details key={faq.q} className="group py-4">
-              <summary className="cursor-pointer select-none list-none text-sm font-medium text-zinc-200 marker:content-none transition-colors hover:text-emerald-300 [&::-webkit-details-marker]:hidden">
-                <span className="mr-2 inline-block text-emerald-500/70 transition-transform group-open:rotate-45">
-                  +
-                </span>
-                {faq.q}
-              </summary>
-              <p className="mt-3 pl-5 text-sm leading-relaxed text-zinc-500">{faq.a}</p>
-            </details>
-          ))}
+        <Reveal delay={100} className="mt-8">
+          <FaqAccordion items={FAQS} />
         </Reveal>
       </section>
 
