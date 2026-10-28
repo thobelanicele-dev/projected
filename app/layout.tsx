@@ -33,11 +33,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        {/* Applies a saved light-mode choice before the first paint, so the page never flashes dark. */}
+        {/* Picks the theme before the first paint so the page never flashes the wrong one:
+            a saved choice wins, otherwise the visitor's device setting decides. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(localStorage.getItem('theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}",
+              "try{var t=localStorage.getItem('theme');if(t==='light'||(t!=='dark'&&matchMedia('(prefers-color-scheme: light)').matches))document.documentElement.dataset.theme='light'}catch(e){}",
           }}
         />
       </head>
