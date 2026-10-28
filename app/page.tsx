@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { getSession } from "@/app/lib/auth/session";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { FaqAccordion } from "@/app/components/FaqAccordion";
@@ -283,7 +284,8 @@ export default async function LandingPage() {
             <a href="#faq" className="hover:text-zinc-200">FAQ</a>
             <Link href="/blog" className="hover:text-zinc-200">Blog</Link>
           </nav>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4 sm:gap-5">
+            <ThemeToggle />
             <NavAuthLink isLoggedIn={isLoggedIn} />
             <Link
               href={isLoggedIn ? "/planner" : "/signup"}

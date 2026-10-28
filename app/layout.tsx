@@ -26,10 +26,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // suppressHydrationWarning: the script below may set data-theme before React loads.
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Applies a saved light-mode choice before the first paint, so the page never flashes dark. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}",
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
         <CookieConsentBanner />

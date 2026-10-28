@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 // Mobile and desktop each remember their own open/closed preference, rather
 // than sharing one flag: closing the sidebar on your phone shouldn't also
@@ -247,6 +248,11 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-4">
+          <span className="px-2.5 text-xs text-zinc-500">Appearance</span>
+          <ThemeToggle />
+        </div>
       </aside>
     </>
   );

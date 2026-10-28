@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 export function LegalPageLayout({
   title,
@@ -17,9 +18,12 @@ export function LegalPageLayout({
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_1px_rgba(52,211,153,0.7)]" />
             FxInsites
           </Link>
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
-            ← Back to home
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
+              ← Back to home
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

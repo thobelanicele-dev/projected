@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { BlogHeaderImage } from "@/app/components/BlogHeaderImage";
 import { posts, formatPostDate } from "@/app/blog/posts";
 
@@ -41,9 +42,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_1px_rgba(52,211,153,0.7)]" />
             FxInsites
           </Link>
-          <Link href="/blog" className="text-sm text-zinc-500 hover:text-zinc-300">
-            ← Back to blog
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/blog" className="text-sm text-zinc-500 hover:text-zinc-300">
+              ← Back to blog
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

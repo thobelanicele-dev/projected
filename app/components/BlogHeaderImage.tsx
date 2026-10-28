@@ -27,7 +27,7 @@ export function BlogHeaderImage({
             <path
               d="M 0 220 L 80 190 L 140 210 L 220 140 L 300 165 L 380 100 L 460 125 L 540 70 L 620 95 L 700 40 L 800 60"
               fill="none"
-              stroke="rgb(52 211 153)"
+              stroke="var(--color-emerald-400)"
               strokeOpacity="0.6"
               strokeWidth="2"
             />
@@ -41,17 +41,17 @@ export function BlogHeaderImage({
           <path
             d="M 70 210 C 170 210, 170 120, 270 120 S 380 50, 470 60 S 560 170, 650 160 S 720 90, 730 75"
             fill="none"
-            stroke="rgb(52 211 153)"
+            stroke="var(--color-emerald-400)"
             strokeOpacity="0.55"
             strokeWidth="2.5"
             strokeDasharray="10 9"
             strokeLinecap="round"
           />
-          <circle cx="70" cy="210" r="7" fill="rgb(52 211 153)" />
-          <circle cx="70" cy="210" r="13" fill="none" stroke="rgb(52 211 153)" strokeOpacity="0.4" strokeWidth="1.5" />
+          <circle cx="70" cy="210" r="7" fill="var(--color-emerald-400)" />
+          <circle cx="70" cy="210" r="13" fill="none" stroke="var(--color-emerald-400)" strokeOpacity="0.4" strokeWidth="1.5" />
           <g transform="translate(730, 75)">
-            <line x1="0" y1="0" x2="0" y2="-36" stroke="rgb(52 211 153)" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M 0 -36 L 26 -29 L 0 -22 Z" fill="rgb(52 211 153)" />
+            <line x1="0" y1="0" x2="0" y2="-36" stroke="var(--color-emerald-400)" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 0 -36 L 26 -29 L 0 -22 Z" fill="var(--color-emerald-400)" />
           </g>
         </svg>
       )}
