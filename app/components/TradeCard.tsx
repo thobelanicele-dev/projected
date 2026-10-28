@@ -6,6 +6,7 @@ import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSumma
 import { TradeLadder } from "@/app/components/TradeLadder";
 import { ChartOverlay } from "@/app/components/ChartOverlay";
 import { TradeChecklist } from "@/app/components/TradeChecklist";
+import { RuleCheckList } from "@/app/components/RuleCheckList";
 import { buildReportText } from "@/app/lib/reportExport";
 
 function formatPrice(price: number | null) {
@@ -206,19 +207,7 @@ export function TradeCard({
                 {passedCount}/{totalChecks} passed
               </span>
             </summary>
-            <ul className="mt-3 space-y-1.5">
-              {plan.ruleChecks.map((check, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <span className={check.passed ? "text-emerald-400" : "text-red-400"}>
-                    {check.passed ? "✓" : "✗"}
-                  </span>
-                  <span>
-                    <span className="font-medium">{check.rule}</span>
-                    {check.note && <span className="text-zinc-400">: {check.note}</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <RuleCheckList checks={plan.ruleChecks} />
           </details>
         </div>
 

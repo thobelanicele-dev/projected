@@ -104,7 +104,8 @@ export function NumberTicker({
           if (!isDigit) {
             return (
               <span key={id} className="inline-block">
-                {char}
+                {/* A plain space collapses to nothing inside an inline-block. */}
+                {char === " " ? "\u00A0" : char}
               </span>
             );
           }

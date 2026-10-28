@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AnimatedItem, AnimatedList } from "@/app/components/AnimatedList";
 import { JournalEntryCard } from "@/app/components/JournalEntryCard";
 import { EquityCurve } from "@/app/components/EquityCurve";
 import { StatTile } from "@/app/components/StatTile";
@@ -16,6 +17,7 @@ import {
   type JournalEntry,
 } from "@/app/lib/journal";
 import { parseTradeCsv, rowsToJournalEntries, type ImportResult } from "@/app/lib/importTrades";
+import { showToast } from "@/app/lib/toast";
 import { UsagePing } from "@/app/components/UsagePing";
 import { useCurrentUserId, useCurrentTier } from "@/app/components/CurrentUserProvider";
 import { journalFullMessage, PLAN_LIMITS, PLAN_NAMES } from "@/app/lib/planLimits";
@@ -72,7 +74,10 @@ export default function JournalPage() {
   function handleConfirmImport() {
     if (!importPreview) return;
     const { accepted, skipped } = capToRoom(rowsToJournalEntries(importPreview.rows), userId, maxEntries);
-    if (accepted.length > 0) setEntries(addImportedEntries(accepted, userId));
+    if (accepted.length > 0) {
+      setEntries(addImportedEntries(accepted, userId));
+      showToast({ message: `Imported ${accepted.length} trade${accepted.length === 1 ? "" : "s"}`, tone: "success" });
+    }
     setImportPreview(null);
     setImportError(
       skipped > 0
@@ -192,14 +197,13 @@ export default function JournalPage() {
             </button>
           </div>
           <div className="mt-2 space-y-2">
-            {entries.map((entry) => (
-              <JournalEntryCard
-                key={entry.id}
-                entry={entry}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-              />
-            ))}
+            <AnimatedList>
+              {entries.map((entry) => (
+                <AnimatedItem key={entry.id}>
+                  <JournalEntryCard entry={entry} onUpdate={handleUpdate} onDelete={handleDelete} />
+                </AnimatedItem>
+              ))}
+            </AnimatedList>
           </div>
         </div>
       ) : (

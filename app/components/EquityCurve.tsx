@@ -1,4 +1,9 @@
+"use client";
+
+import { motion, useReducedMotion } from "motion/react";
+
 export function EquityCurve({ points }: { points: { id: string; cumulativeR: number }[] }) {
+  const reduce = useReducedMotion();
   if (points.length < 2) {
     return (
       <p className="text-xs text-zinc-500">
@@ -36,11 +41,17 @@ export function EquityCurve({ points }: { points: { id: string; cumulativeR: num
         className="text-zinc-800"
         strokeDasharray="4 4"
       />
-      <polyline
+      {/* Keyed by the data, so a new result draws itself again from the start. */}
+      <motion.polyline
+        key={coords.join(" ")}
         points={coords.join(" ")}
         fill="none"
         strokeWidth={2}
         className={isUp ? "stroke-emerald-400" : "stroke-red-400"}
+        initial={reduce ? false : { pathLength: 0 }}
+        whileInView={{ pathLength: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
       />
     </svg>
   );

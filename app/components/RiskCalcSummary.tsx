@@ -1,3 +1,4 @@
+import { RollingText } from "@/app/components/RollingText";
 import type { FieldErrors } from "@/app/lib/riskCalculator";
 
 export interface ResultStat {
@@ -36,7 +37,7 @@ export function RiskCalcSummary({
           <div key={s.label}>
             <p className="text-xs uppercase tracking-wide text-zinc-500">{s.label}</p>
             <p className={`mt-1 text-lg font-medium ${s.tone === "danger" ? "text-red-400" : "text-zinc-50"}`}>
-              {s.value}
+              <RollingText text={s.value} duration={0.45} />
             </p>
           </div>
         ))}

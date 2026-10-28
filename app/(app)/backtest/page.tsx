@@ -7,6 +7,7 @@ import { BacktestResults } from "@/app/components/BacktestResults";
 import { runBacktest, runCustomBacktest } from "@/app/lib/backtestEngine";
 import type { BacktestResult, Candle, CustomStrategy, ExitRules, StrategyParams } from "@/app/lib/backtestEngine";
 import { readAndClearBacktestSeed, type BacktestSeed } from "@/app/lib/backtestSeed";
+import { showToast } from "@/app/lib/toast";
 import { UsagePing } from "@/app/components/UsagePing";
 import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 import { PlanUsageNote, USAGE_CHANGED_EVENT } from "@/app/components/PlanUsageNote";
@@ -39,6 +40,9 @@ export default function BacktestPage() {
           message: data.error ?? "Something went wrong. Please try again.",
           limitHit: data.code === "limit_reached",
         });
+        if (data.code === "limit_reached") {
+          showToast({ message: data.error, tone: "warning", href: "/#pricing", hrefLabel: "See plans" });
+        }
         setLoading(false);
         return;
       }

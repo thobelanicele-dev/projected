@@ -8,6 +8,8 @@ export interface ProductTab {
   id: string;
   label: string;
   content: ReactNode;
+  /** How long this tab stays up before the next one shows, if it needs longer than the default. */
+  dwellMs?: number;
 }
 
 // How long each tool stays on screen before the next one shows.
@@ -27,10 +29,10 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
 
   useEffect(() => {
     if (!autoplay) return;
+    const i = tabs.findIndex((t) => t.id === activeId);
     const timer = window.setTimeout(() => {
-      const i = tabs.findIndex((t) => t.id === activeId);
       setActiveId(tabs[(i + 1) % tabs.length].id);
-    }, AUTO_ADVANCE_MS);
+    }, tabs[i]?.dwellMs ?? AUTO_ADVANCE_MS);
     return () => window.clearTimeout(timer);
   }, [autoplay, activeId, tabs]);
 
@@ -94,7 +96,7 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
                   aria-hidden
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
-                  transition={{ duration: AUTO_ADVANCE_MS / 1000, ease: "linear" }}
+                  transition={{ duration: (tab.dwellMs ?? AUTO_ADVANCE_MS) / 1000, ease: "linear" }}
                   style={{ originX: 0 }}
                   className="absolute inset-x-0 -bottom-px h-[2px] bg-emerald-300"
                 />

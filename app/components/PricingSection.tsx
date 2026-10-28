@@ -129,6 +129,7 @@ export function PricingSection({
           <Reveal
             key={tier.key}
             delay={i * 100}
+            spotlight
             className={`relative flex flex-col p-6 transition-all duration-300 ${
               tier.highlighted
                 ? "bg-gradient-to-b from-emerald-500/[0.08] to-transparent"

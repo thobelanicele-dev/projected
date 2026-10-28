@@ -1,14 +1,6 @@
 import { EquityCurve } from "@/app/components/EquityCurve";
+import { StatTile } from "@/app/components/StatTile";
 import type { BacktestResult } from "@/app/lib/backtestEngine";
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-      <p className="text-xs uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-zinc-50">{value}</p>
-    </div>
-  );
-}
 
 export function BacktestResults({ result }: { result: BacktestResult }) {
   const { stats, trades } = result;

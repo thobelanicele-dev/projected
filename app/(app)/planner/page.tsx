@@ -15,6 +15,7 @@ import {
   type JournalEntry,
 } from "@/app/lib/journal";
 import { buildSeedFromPlan, writeBacktestSeed } from "@/app/lib/backtestSeed";
+import { showToast } from "@/app/lib/toast";
 import { UsagePing } from "@/app/components/UsagePing";
 import { useCurrentUserId, useCurrentTier } from "@/app/components/CurrentUserProvider";
 import { PlanUsageNote, USAGE_CHANGED_EVENT } from "@/app/components/PlanUsageNote";
@@ -77,6 +78,9 @@ export default function Home() {
       if (!res.ok) {
         setError(data.error ?? "Something went wrong.");
         setLimitHit(data.code === "limit_reached");
+        if (data.code === "limit_reached") {
+          showToast({ message: data.error, tone: "warning", href: "/#pricing", hrefLabel: "See plans" });
+        }
         return;
       }
 
@@ -86,6 +90,7 @@ export default function Home() {
       setChartImageUrl(chartImage ? `data:${chartImage.mediaType};base64,${chartImage.data}` : null);
       if (journalHasRoom(userId, PLAN_LIMITS[tier].journalEntries)) {
         setJustSaved(true);
+        showToast({ message: "Plan saved to your journal", tone: "success", href: "/journal", hrefLabel: "Open journal" });
         const updated = addPlanToJournal(ideaText, data.plan, fields, userId);
         setCurrentEntryId(updated[0]?.id ?? null);
         setRecent(updated.filter((e) => e.source === "planner").slice(0, 5));

@@ -109,6 +109,47 @@ html[data-theme-vt]::view-transition-new(root) {
   to { stroke-dashoffset: 0; }
 }
 
+/* Soft glow that follows the cursor across a card (hover devices only). */
+@media (hover: hover) and (pointer: fine) {
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    background: radial-gradient(
+      320px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in oklab, var(--color-emerald-500) 14%, transparent),
+      transparent 70%
+    );
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Slow-scrolling strip of markets. The list is repeated twice, so sliding it
+   by half its width loops with no visible jump. */
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 45s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* The travelling light in the "building your plan" note. */
+@keyframes loader-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+.loader-bar {
+  animation: loader-slide 1.2s ease-in-out infinite;
+}
+
 /* Product tab panels fade and lift in each time one is shown. */
 @keyframes tab-panel-in {
   from { opacity: 0; transform: translateY(12px); }
@@ -120,6 +161,10 @@ html[data-theme-vt]::view-transition-new(root) {
 
 @media (prefers-reduced-motion: reduce) {
   .tab-panel-in {
+    animation: none;
+  }
+  .marquee-track,
+  .loader-bar {
     animation: none;
   }
   .reveal {

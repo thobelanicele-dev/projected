@@ -4,6 +4,9 @@ import { getSession } from "@/app/lib/auth/session";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
+import { HowItWorksSteps } from "@/app/components/HowItWorksSteps";
+import { PairsTicker } from "@/app/components/PairsTicker";
+import { PlannerDemo } from "@/app/components/PlannerDemo";
 import { FaqAccordion } from "@/app/components/FaqAccordion";
 import { ProductTabs } from "@/app/components/ProductTabs";
 import { NumberTicker } from "@/app/components/beui/number-ticker";
@@ -162,56 +165,13 @@ function StatsMock({ label, stats }: { label: string; stats: [string, string][] 
   );
 }
 
-function PlannerMock() {
-  return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
-      <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Trade plan</p>
-          <p className="mt-0.5 text-base text-zinc-100">XAU/USD</p>
-        </div>
-        <span className="border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] text-emerald-400">LONG</span>
-      </div>
-      <div className="grid grid-cols-3 gap-3 py-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Entry</p>
-          <p className="text-zinc-200">2,410.00</p>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Stop</p>
-          <p className="text-red-400">2,395.00</p>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-zinc-500">Target</p>
-          <p className="text-emerald-400">2,450.00</p>
-        </div>
-      </div>
-      <div className="space-y-1.5 border-t border-zinc-800 pt-3 text-[12px]">
-        <p className="flex gap-2 text-zinc-400">
-          <span className="text-emerald-400">[✓]</span> Defined stop loss, tied to prior swing low
-        </p>
-        <p className="flex gap-2 text-zinc-400">
-          <span className="text-emerald-400">[✓]</span> Position size: 1.0% of account equity
-        </p>
-        <p className="flex gap-2 text-zinc-400">
-          <span className="text-red-400">[✗]</span> Risk:reward: 1.35:1, below the 1.5:1 threshold
-        </p>
-      </div>
-      <div className="mt-3 border border-zinc-800 px-3 py-2 text-[11px] text-zinc-400">
-        FLAG: entry proposed at market, immediately following a large directional move, with no
-        stated confirmation condition.
-      </div>
-      <p className="mt-2 text-[10px] text-zinc-600">Illustrative example, not a real trade plan.</p>
-    </div>
-  );
-}
-
 const [JOURNAL, BACKTEST, RISK] = GRID_FEATURES;
 
 const PRODUCT_TABS = [
   {
     id: "planner",
     label: "Trade planner",
+    dwellMs: 9000,
     content: (
       <ToolPanel
         eyebrow="Trade planner"
@@ -222,7 +182,7 @@ const PRODUCT_TABS = [
           "Checked against the real, live price when you're entering at market",
           "Every question explains itself: no jargon",
         ]}
-        visual={<PlannerMock />}
+        visual={<PlannerDemo />}
       />
     ),
   },
@@ -325,9 +285,10 @@ export default async function LandingPage() {
               <Magnetic>
                 <Link
                   href={isLoggedIn ? "/planner" : "/signup"}
-                  className="block border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-all duration-300 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
+                  className="group block border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-all duration-300 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
                 >
                   {isLoggedIn ? "Open the planner" : "Get started"}
+                  <span aria-hidden className="ml-2 inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                 </Link>
               </Magnetic>
               <a
@@ -355,6 +316,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      <PairsTicker />
+
       {/* How it works */}
       <section id="how" className="mx-auto w-full max-w-6xl px-6 py-24">
         <Reveal>
@@ -363,15 +326,7 @@ export default async function LandingPage() {
             Three simple steps, every time
           </h2>
         </Reveal>
-        <div className="mt-10 grid grid-cols-1 divide-y divide-zinc-900 border-t border-zinc-900 md:grid-cols-3 md:divide-x md:divide-y-0">
-          {STEPS.map((step, i) => (
-            <Reveal key={step.n} delay={i * 120} className="py-8 md:px-8 md:py-0 md:pt-8">
-              <span className="font-mono text-xs text-emerald-500/70">{step.n}</span>
-              <h3 className="mt-2 text-base font-medium text-zinc-100">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.body}</p>
-            </Reveal>
-          ))}
-        </div>
+        <HowItWorksSteps steps={STEPS} />
       </section>
 
       {/* Feature spotlight + grid */}
@@ -430,9 +385,10 @@ export default async function LandingPage() {
           <div className="mt-8">
             <Link
               href={isLoggedIn ? "/planner" : "/signup"}
-              className="inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
+              className="group inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
             >
               {isLoggedIn ? "Open the planner" : "Get started"}
+              <span aria-hidden className="ml-2 inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
             </Link>
           </div>
         </Reveal>

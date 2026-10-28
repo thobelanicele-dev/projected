@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
 import { ProfileMenu } from "@/app/components/ProfileMenu";
 import { ProductTour, TOUR_STEPS } from "@/app/components/ProductTour";
+import { Toaster } from "@/app/components/Toaster";
 import { CurrentUserProvider } from "@/app/components/CurrentUserProvider";
 import { getSession } from "@/app/lib/auth/session";
 import { effectiveTier } from "@/app/lib/planLimits";
@@ -22,6 +23,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </main>
         <ProfileMenu user={session} />
         <ProductTour steps={TOUR_STEPS} />
+        <Toaster />
       </div>
     </CurrentUserProvider>
   );

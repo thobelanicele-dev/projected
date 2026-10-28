@@ -16,20 +16,10 @@ import {
 import { loadPlannerDraft, savePlannerDraft, clearPlannerDraft } from "@/app/lib/plannerDraft";
 import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
-export const POPULAR_PAIRS = [
-  { value: "EUR/USD", label: "EUR/USD" },
-  { value: "GBP/USD", label: "GBP/USD" },
-  { value: "USD/JPY", label: "USD/JPY" },
-  { value: "USD/CHF", label: "USD/CHF" },
-  { value: "AUD/USD", label: "AUD/USD" },
-  { value: "NZD/USD", label: "NZD/USD" },
-  { value: "USD/CAD", label: "USD/CAD" },
-  { value: "USD/ZAR", label: "USD/ZAR" },
-  { value: "XAU/USD", label: "XAU/USD (Gold)" },
-  { value: "XAG/USD", label: "XAG/USD (Silver)" },
-  { value: "BTC/USD", label: "BTC/USD" },
-  { value: "ETH/USD", label: "ETH/USD" },
-];
+import { POPULAR_PAIRS } from "@/app/lib/pairs";
+import { LoadingNote } from "@/app/components/LoadingNote";
+
+export { POPULAR_PAIRS };
 
 export interface TradeIdeaFields {
   notes: string;
@@ -1221,11 +1211,7 @@ export function TradeIdeaForm({
         >
           {isLastStep ? (loading ? "Building your plan…" : "Build trade plan") : "Next"}
         </button>
-        {isLastStep && loading && (
-          <p className="text-sm text-zinc-500" aria-live="polite">
-            {LOADING_MESSAGES[loadingMessageIndex]}
-          </p>
-        )}
+        {isLastStep && loading && <LoadingNote message={LOADING_MESSAGES[loadingMessageIndex]} />}
       </div>
     </form>
   );
