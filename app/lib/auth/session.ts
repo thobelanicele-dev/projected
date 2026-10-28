@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { query } from "@/app/lib/db";
 import { generateToken, hashToken } from "@/app/lib/auth/tokens";
+import { withCompedAccess } from "@/app/lib/compedAccess";
 
 export const SESSION_COOKIE = "session";
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -17,6 +18,8 @@ export interface SessionUser {
   planEndsAt: number | null;
   /** False for Google-only accounts, which have no password_hash. */
   hasPassword: boolean;
+  /** True when Premium comes from the complimentary-access list rather than a paid subscription. */
+  complimentary: boolean;
 }
 
 /** Creates a session row and sets the cookie. Route Handlers only. */
@@ -76,7 +79,7 @@ export async function getSession(): Promise<SessionUser | null> {
     return null;
   }
 
-  return {
+  return withCompedAccess({
     id: row.id,
     email: row.email,
     username: row.username,
@@ -85,7 +88,7 @@ export async function getSession(): Promise<SessionUser | null> {
     subscriptionStatus: row.subscription_status,
     planEndsAt: row.plan_ends_at ? Number(row.plan_ends_at) : null,
     hasPassword: row.has_password,
-  };
+  });
 }
 
 /** Destroys the current session and clears the cookie. Route Handlers only. */

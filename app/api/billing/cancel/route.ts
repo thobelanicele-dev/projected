@@ -35,6 +35,13 @@ export async function POST() {
     );
   }
 
+  if (session.complimentary) {
+    return NextResponse.json(
+      { error: "Your Premium access is complimentary, so there's nothing to cancel." },
+      { status: 400 }
+    );
+  }
+
   const state = subscriptionState(session);
   if (state === "cancelling") {
     return NextResponse.json({ error: "Your plan is already cancelled." }, { status: 409 });

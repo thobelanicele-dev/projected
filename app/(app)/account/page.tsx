@@ -35,13 +35,22 @@ export default async function AccountPage() {
 
       <section className="flex flex-col gap-4">
         <h2 className="text-sm font-medium text-zinc-200">Plan and billing</h2>
-        <PlanBillingSection
-          state={state}
-          planName={planName}
-          endsAtLabel={endsAtLabel}
-          currentTier={effectiveTier(session)}
-          billingEnabled={isBillingEnabled()}
-        />
+        {session.complimentary ? (
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm">
+            <p className="text-zinc-200">You&apos;re on the Premium plan.</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              This is complimentary access, so there&apos;s nothing to pay or cancel.
+            </p>
+          </div>
+        ) : (
+          <PlanBillingSection
+            state={state}
+            planName={planName}
+            endsAtLabel={endsAtLabel}
+            currentTier={effectiveTier(session)}
+            billingEnabled={isBillingEnabled()}
+          />
+        )}
       </section>
 
       {session.hasPassword && (
