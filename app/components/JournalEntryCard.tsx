@@ -14,6 +14,20 @@ function formatTimestamp(ts: number): string {
   });
 }
 
+/** A date input's value (YYYY-MM-DD) for a timestamp, in the trader's own time zone. */
+function toDateInput(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Midday on that date, so the trade lands on the right day even when the clocks change. */
+function fromDateInput(value: string): number | null {
+  const [y, m, d] = value.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d, 12).getTime();
+}
+
 const statusStyles: Record<TradeStatus, string> = {
   planned: "bg-zinc-800 text-zinc-300",
   open: "bg-sky-500/15 text-sky-300",
@@ -43,6 +57,10 @@ export function JournalEntryCard({
   );
   const [actualExitPrice, setActualExitPrice] = useState(entry.actualExitPrice?.toString() ?? "");
   const [rMultiple, setRMultiple] = useState(entry.rMultiple?.toString() ?? "");
+  const [profitAmount, setProfitAmount] = useState(entry.profitAmount?.toString() ?? "");
+  // Defaults to today for a trade being closed now; kept as saved for one already closed.
+  const [closedOn, setClosedOn] = useState(() => toDateInput(entry.closedAt ?? Date.now()));
+  const [today] = useState(() => toDateInput(Date.now()));
   const [notes, setNotes] = useState(entry.notes ?? "");
   const [verification, setVerification] = useState<DayPrice | null>(null);
   const [verifyStatus, setVerifyStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -94,14 +112,19 @@ export function JournalEntryCard({
   }
 
   function handleSave() {
+    const parsedProfit = parseFloat(profitAmount);
+    // Keep the exact saved time unless the date itself was changed.
+    const dateUnchanged = entry.closedAt !== undefined && closedOn === toDateInput(entry.closedAt);
+    const closedAt = dateUnchanged ? entry.closedAt : fromDateInput(closedOn);
     onUpdate(entry.id, {
       status,
       outcome: status === "closed" ? outcome : undefined,
       actualEntryPrice: actualEntryPrice ? parseFloat(actualEntryPrice) : undefined,
       actualExitPrice: actualExitPrice ? parseFloat(actualExitPrice) : undefined,
       rMultiple: rMultiple ? parseFloat(rMultiple) : undefined,
+      profitAmount: status === "closed" && Number.isFinite(parsedProfit) ? parsedProfit : undefined,
       notes: notes || undefined,
-      closedAt: status === "closed" ? entry.closedAt ?? Date.now() : undefined,
+      closedAt: status === "closed" ? closedAt ?? entry.closedAt ?? Date.now() : undefined,
     });
     setExpanded(false);
   }
@@ -244,6 +267,32 @@ export function JournalEntryCard({
                   value={rMultiple}
                   onChange={(e) => setRMultiple(e.target.value)}
                   placeholder="e.g. 1.5 or -1"
+                  className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-50 focus:border-zinc-600 focus:outline-none"
+                />
+              </label>
+            </div>
+          )}
+
+          {status === "closed" && (
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-400">Profit or loss in money (optional)</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={profitAmount}
+                  onChange={(e) => setProfitAmount(e.target.value)}
+                  placeholder="e.g. 250 or -100"
+                  className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-50 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs text-zinc-400">Date closed</span>
+                <input
+                  type="date"
+                  value={closedOn}
+                  max={today}
+                  onChange={(e) => setClosedOn(e.target.value)}
                   className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-50 focus:border-zinc-600 focus:outline-none"
                 />
               </label>

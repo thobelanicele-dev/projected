@@ -119,6 +119,17 @@ function DashboardIcon() {
   );
 }
 
+function WeeklyIcon() {
+  return (
+    <svg {...iconProps}>
+      <rect x="3" y="4.5" width="18" height="16" rx="2" />
+      <path d="M3 9.5h18" />
+      <path d="M8 2.5v4M16 2.5v4" />
+      <path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" />
+    </svg>
+  );
+}
+
 const NAV_ITEMS = [
   { href: "/planner", label: "Planner", description: "Build a structured trade plan", tourId: "nav-planner", Icon: PlannerIcon },
   {
@@ -148,6 +159,13 @@ const NAV_ITEMS = [
     description: "See how your plans matched reality",
     tourId: "nav-dashboard",
     Icon: DashboardIcon,
+  },
+  {
+    href: "/weekly",
+    label: "Weekly summary",
+    description: "Your week in trades, and where to improve",
+    tourId: "nav-weekly",
+    Icon: WeeklyIcon,
   },
 ];
 
