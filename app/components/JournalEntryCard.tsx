@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { suggestRMultiple } from "@/app/lib/journal";
 import type { JournalEntry, TradeOutcome, TradeStatus } from "@/app/lib/journal";
 import type { DayPrice } from "@/app/api/verify/route";
+import { parseDecimal, parseMoney } from "@/app/lib/numberInput";
 
 function formatTimestamp(ts: number): string {
   return new Date(ts).toLocaleString(undefined, {
@@ -27,6 +28,11 @@ function fromDateInput(value: string): number | null {
   if (!y || !m || !d) return null;
   return new Date(y, m - 1, d, 12).getTime();
 }
+
+// Price checks already fetched this visit, so reopening a card (or two trades on
+// the same pair and day) doesn't ask the market-data provider again. Failures
+// aren't remembered, so a hiccup can be retried.
+const verifyCache = new Map<string, DayPrice>();
 
 const statusStyles: Record<TradeStatus, string> = {
   planned: "bg-zinc-800 text-zinc-300",
@@ -66,7 +72,12 @@ export function JournalEntryCard({
   const [verifyStatus, setVerifyStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
 
   useEffect(() => {
-    const parsedExit = parseFloat(actualExitPrice);
+    // Only check prices for a card the trader has opened. Doing it for every
+    // card on page load fired one market-data request per trade, which used up
+    // the provider's small per-minute allowance and made many of them fail.
+    if (!expanded) return;
+
+    const parsedExit = parseDecimal(actualExitPrice);
     const dateStr = new Date(entry.closedAt ?? Date.now()).toISOString().slice(0, 10);
 
     const timeout = setTimeout(() => {
@@ -76,11 +87,20 @@ export function JournalEntryCard({
         return;
       }
 
+      const cacheKey = `${entry.instrument}|${dateStr}`;
+      const cached = verifyCache.get(cacheKey);
+      if (cached) {
+        setVerification(cached);
+        setVerifyStatus("ready");
+        return;
+      }
+
       setVerifyStatus("loading");
       fetch(`/api/verify?symbol=${encodeURIComponent(entry.instrument)}&date=${dateStr}`)
         .then((res) => res.json())
         .then((data) => {
           if (typeof data.high === "number" && typeof data.low === "number") {
+            verifyCache.set(cacheKey, data);
             setVerification(data);
             setVerifyStatus("ready");
           } else {
@@ -96,15 +116,15 @@ export function JournalEntryCard({
 
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actualExitPrice, status]);
+  }, [actualExitPrice, status, expanded]);
 
   function handleExitPriceChange(value: string) {
     setActualExitPrice(value);
-    const parsedExit = parseFloat(value);
+    const parsedExit = parseDecimal(value);
     if (!isNaN(parsedExit)) {
       const suggestion = suggestRMultiple({
         ...entry,
-        actualEntryPrice: parseFloat(actualEntryPrice) || undefined,
+        actualEntryPrice: parseDecimal(actualEntryPrice) || undefined,
         actualExitPrice: parsedExit,
       });
       if (suggestion !== null) setRMultiple(suggestion.toString());
@@ -112,16 +132,16 @@ export function JournalEntryCard({
   }
 
   function handleSave() {
-    const parsedProfit = parseFloat(profitAmount);
+    const parsedProfit = parseMoney(profitAmount);
     // Keep the exact saved time unless the date itself was changed.
     const dateUnchanged = entry.closedAt !== undefined && closedOn === toDateInput(entry.closedAt);
     const closedAt = dateUnchanged ? entry.closedAt : fromDateInput(closedOn);
     onUpdate(entry.id, {
       status,
       outcome: status === "closed" ? outcome : undefined,
-      actualEntryPrice: actualEntryPrice ? parseFloat(actualEntryPrice) : undefined,
-      actualExitPrice: actualExitPrice ? parseFloat(actualExitPrice) : undefined,
-      rMultiple: rMultiple ? parseFloat(rMultiple) : undefined,
+      actualEntryPrice: actualEntryPrice ? parseDecimal(actualEntryPrice) : undefined,
+      actualExitPrice: actualExitPrice ? parseDecimal(actualExitPrice) : undefined,
+      rMultiple: rMultiple ? parseDecimal(rMultiple) : undefined,
       profitAmount: status === "closed" && Number.isFinite(parsedProfit) ? parsedProfit : undefined,
       notes: notes || undefined,
       closedAt: status === "closed" ? closedAt ?? entry.closedAt ?? Date.now() : undefined,
@@ -226,7 +246,7 @@ export function JournalEntryCard({
                 {verifyStatus === "ready" &&
                   verification &&
                   (() => {
-                    const exit = parseFloat(actualExitPrice);
+                    const exit = parseDecimal(actualExitPrice);
                     const withinRange = exit >= verification.low && exit <= verification.high;
                     return (
                       <span className={`text-xs ${withinRange ? "text-emerald-400" : "text-orange-400"}`}>

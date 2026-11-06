@@ -9,6 +9,7 @@ import { CustomStrategyBuilder, emptyCustomStrategy } from "@/app/components/Cus
 import { loadJournal, type JournalEntry } from "@/app/lib/journal";
 import { useCurrentUserId, useCurrentTier } from "@/app/components/CurrentUserProvider";
 import { PLAN_LIMITS } from "@/app/lib/planLimits";
+import { parseDecimal } from "@/app/lib/numberInput";
 
 type StrategyType = StrategyParams["type"];
 
@@ -234,20 +235,20 @@ export function BacktestForm({
   }, []);
 
   function buildExitRules(): ExitRules | null {
-    const cost = parseFloat(costPct);
+    const cost = parseDecimal(costPct);
     const costValue = isNaN(cost) ? 0 : cost;
 
     if (exitMode === "percent") {
-      const sl = parseFloat(percentParams.stopLossPct);
-      const tp = parseFloat(percentParams.takeProfitPct);
+      const sl = parseDecimal(percentParams.stopLossPct);
+      const tp = parseDecimal(percentParams.takeProfitPct);
       if (isNaN(sl) || isNaN(tp) || sl <= 0 || tp <= 0) return null;
       return { mode: "percent", stopLossPct: sl, takeProfitPct: tp, costPct: costValue };
     }
 
     if (exitMode === "atr") {
       const period = parseInt(atrParams.atrPeriod, 10);
-      const stopMultiple = parseFloat(atrParams.stopAtrMultiple);
-      const rewardMultiple = parseFloat(atrParams.rewardMultiple);
+      const stopMultiple = parseDecimal(atrParams.stopAtrMultiple);
+      const rewardMultiple = parseDecimal(atrParams.rewardMultiple);
       if (isNaN(period) || isNaN(stopMultiple) || isNaN(rewardMultiple) || period <= 0 || stopMultiple <= 0 || rewardMultiple <= 0) {
         return null;
       }
@@ -255,7 +256,7 @@ export function BacktestForm({
     }
 
     const swingLookback = parseInt(structuralParams.swingLookback, 10);
-    const rewardMultiple = parseFloat(structuralParams.rewardMultiple);
+    const rewardMultiple = parseDecimal(structuralParams.rewardMultiple);
     if (isNaN(swingLookback) || isNaN(rewardMultiple) || swingLookback <= 0 || rewardMultiple <= 0) return null;
     return { mode: "structural", swingLookback, rewardMultiple, costPct: costValue };
   }
@@ -544,7 +545,7 @@ export function BacktestForm({
               min={1}
               max={49}
               value={(params.rsi as Extract<StrategyParams, { type: "rsi" }>).oversold}
-              onChange={(e) => updateParam("rsi", { oversold: parseFloat(e.target.value) || 30 })}
+              onChange={(e) => updateParam("rsi", { oversold: parseDecimal(e.target.value) || 30 })}
               className={inputClass}
             />
           </Field>
@@ -554,7 +555,7 @@ export function BacktestForm({
               min={51}
               max={99}
               value={(params.rsi as Extract<StrategyParams, { type: "rsi" }>).overbought}
-              onChange={(e) => updateParam("rsi", { overbought: parseFloat(e.target.value) || 70 })}
+              onChange={(e) => updateParam("rsi", { overbought: parseDecimal(e.target.value) || 70 })}
               className={inputClass}
             />
           </Field>
@@ -578,7 +579,7 @@ export function BacktestForm({
               min={0.1}
               step={0.1}
               value={(params.bollinger as Extract<StrategyParams, { type: "bollinger" }>).stdDevMultiplier}
-              onChange={(e) => updateParam("bollinger", { stdDevMultiplier: parseFloat(e.target.value) || 2 })}
+              onChange={(e) => updateParam("bollinger", { stdDevMultiplier: parseDecimal(e.target.value) || 2 })}
               className={inputClass}
             />
           </Field>

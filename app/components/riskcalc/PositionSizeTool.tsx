@@ -6,6 +6,7 @@ import { PairInput } from "@/app/components/riskcalc/PairInput";
 import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSummary";
 import { useRiskCalcShared } from "@/app/components/riskcalc/SharedInputsContext";
 import { calculatePositionSize } from "@/app/lib/riskCalculator";
+import { parseDecimal } from "@/app/lib/numberInput";
 
 export function PositionSizeTool() {
   const { shared, setLastPositionSizeUnits } = useRiskCalcShared();
@@ -15,9 +16,9 @@ export function PositionSizeTool() {
   const [conversionRate, setConversionRate] = useState("");
 
   const outcome = useMemo(() => {
-    const stop = parseFloat(stopLossPips);
-    const rate = parseFloat(exchangeRate);
-    const conv = conversionRate.trim() ? parseFloat(conversionRate) : undefined;
+    const stop = parseDecimal(stopLossPips);
+    const rate = parseDecimal(exchangeRate);
+    const conv = conversionRate.trim() ? parseDecimal(conversionRate) : undefined;
     if (isNaN(stop) || isNaN(rate)) return null;
     return calculatePositionSize({
       pair,

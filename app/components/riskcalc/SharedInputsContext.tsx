@@ -23,6 +23,9 @@ interface RiskCalcSharedContextValue {
   setLotConvention: (l: LotConvention) => void;
   lastPositionSizeUnits: number | null;
   setLastPositionSizeUnits: (n: number | null) => void;
+  /** False while the shared inputs (balance, risk) hold something unusable, so results aren't shown from stale numbers. */
+  inputsValid: boolean;
+  setInputsValid: (valid: boolean) => void;
 }
 
 const RiskCalcSharedContext = createContext<RiskCalcSharedContextValue | null>(null);
@@ -32,6 +35,7 @@ export function RiskCalcSharedProvider({ children }: { children: React.ReactNode
   const [shared, setShared] = useState<SharedInputs>(DEFAULT_SHARED_INPUTS);
   const [hydrated, setHydrated] = useState(false);
   const [lastPositionSizeUnits, setLastPositionSizeUnits] = useState<number | null>(null);
+  const [inputsValid, setInputsValid] = useState(true);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -60,6 +64,8 @@ export function RiskCalcSharedProvider({ children }: { children: React.ReactNode
     setLotConvention: (l) => update({ lotConvention: l }),
     lastPositionSizeUnits,
     setLastPositionSizeUnits,
+    inputsValid,
+    setInputsValid,
   };
 
   return <RiskCalcSharedContext.Provider value={value}>{children}</RiskCalcSharedContext.Provider>;
@@ -69,4 +75,10 @@ export function useRiskCalcShared(): RiskCalcSharedContextValue {
   const ctx = useContext(RiskCalcSharedContext);
   if (!ctx) throw new Error("useRiskCalcShared must be used within RiskCalcSharedProvider");
   return ctx;
+}
+
+/** Whether the shared inputs are usable. True outside the risk calculator, where there are none. */
+export function useSharedInputsValid(): boolean {
+  const ctx = useContext(RiskCalcSharedContext);
+  return ctx ? ctx.inputsValid : true;
 }

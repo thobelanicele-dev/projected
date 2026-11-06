@@ -37,9 +37,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Current and new password are required." }, { status: 400 });
   }
 
-  const passwordError = isValidPassword(newPassword);
+  const passwordError = isValidPassword(newPassword, { email: session.email, username: session.username });
   if (passwordError) {
     return NextResponse.json({ error: passwordError }, { status: 400 });
+  }
+  if (newPassword === currentPassword) {
+    return NextResponse.json({ error: "Choose a password that's different from your current one." }, { status: 400 });
   }
 
   try {

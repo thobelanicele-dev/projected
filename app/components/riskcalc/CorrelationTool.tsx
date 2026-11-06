@@ -5,6 +5,7 @@ import { Field, inputClass } from "@/app/components/TradeIdeaForm";
 import { PairInput } from "@/app/components/riskcalc/PairInput";
 import { useRiskCalcShared } from "@/app/components/riskcalc/SharedInputsContext";
 import { calculateCorrelationRisk, type CorrelationPosition } from "@/app/lib/riskCalculator";
+import { parseDecimal, parseMoney } from "@/app/lib/numberInput";
 
 interface Row {
   id: string;
@@ -48,9 +49,9 @@ export function CorrelationTool() {
         id: r.id,
         pair: r.pair,
         direction: r.direction,
-        lots: parseFloat(r.lots),
-        dollarRisk: parseFloat(r.dollarRisk),
-        stopLossPips: parseFloat(r.stopLossPips),
+        lots: parseDecimal(r.lots),
+        dollarRisk: parseMoney(r.dollarRisk),
+        stopLossPips: parseDecimal(r.stopLossPips),
       })),
     [rows]
   );
@@ -98,7 +99,7 @@ export function CorrelationTool() {
                   className={inputClass}
                 />
               </Field>
-              <Field label="Dollar risk">
+              <Field label={`Risk (${shared.accountCurrency})`}>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -165,7 +166,7 @@ export function CorrelationTool() {
                     className="rounded-lg border border-orange-500/40 bg-orange-500/10 p-3 text-sm text-orange-300"
                   >
                     {g.positionIds.length} positions combine to net {g.direction === "long" ? "+" : "−"}
-                    {Math.abs(g.combinedNetLots)} lots of {g.currency} exposure, combined risk contribution $
+                    {Math.abs(g.combinedNetLots)} lots of {g.currency} exposure, combined risk contribution {shared.accountCurrency}{" "}
                     {g.combinedRisk}
                   </div>
                 ))}

@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
 import { verifyPassword } from "@/app/lib/auth/password";
 import { createSession } from "@/app/lib/auth/session";
-import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
+import { getClientIp } from "@/app/lib/rateLimit";
+import { checkSharedRateLimit } from "@/app/lib/sharedRateLimit";
 
 const RATE_LIMIT = 10;
+const ACCOUNT_RATE_LIMIT = 20;
+const ACCOUNT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
 // A syntactically valid salt:hash placeholder, so a login attempt against an
@@ -13,7 +16,7 @@ const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const DUMMY_HASH = `${"0".repeat(32)}:${"0".repeat(128)}`;
 
 export async function POST(req: NextRequest) {
-  const rateLimit = checkRateLimit(`login:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
+  const rateLimit = await checkSharedRateLimit(`login:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many login attempts. Please try again later." },
@@ -34,6 +37,16 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+
+  // Per account as well as per address: guesses spread across many IP addresses
+  // still add up against the one account they're aimed at.
+  const accountLimit = await checkSharedRateLimit(`login-account:${normalizedEmail}`, ACCOUNT_RATE_LIMIT, ACCOUNT_RATE_LIMIT_WINDOW_MS);
+  if (!accountLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(accountLimit.retryAfterSeconds) } }
+    );
+  }
 
   try {
     const rows = await query<{ id: string; password_hash: string; email_verified: boolean }>(

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { parseDecimal, parseMoney } from "@/app/lib/numberInput";
 import { Field, inputClass } from "@/app/components/TradeIdeaForm";
 import { ACCOUNT_CURRENCIES, LOT_LABELS, type LotConvention } from "@/app/lib/riskCalculator";
 import { useRiskCalcShared } from "@/app/components/riskcalc/SharedInputsContext";
@@ -23,6 +24,7 @@ export function SharedInputsPanel() {
     setRiskMode,
     setRiskValue,
     setLotConvention,
+    setInputsValid,
   } = useRiskCalcShared();
 
   const [balanceText, setBalanceText] = useState(String(shared.accountBalance));
@@ -40,22 +42,31 @@ export function SharedInputsPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
-  const balanceValue = parseFloat(balanceText);
+  const balanceValue = parseMoney(balanceText);
   const balanceError = !balanceText.trim() || isNaN(balanceValue) || balanceValue <= 0;
 
-  const riskValue = parseFloat(riskText);
-  const riskError = !riskText.trim() || isNaN(riskValue) || riskValue <= 0;
+  // A fixed amount is money ("1,500"); a percentage is a plain decimal ("1,5").
+  const parseRisk = shared.riskMode === "fixed" ? parseMoney : parseDecimal;
+  const riskValue = parseRisk(riskText);
+  const riskTooHigh = shared.riskMode === "percent" && riskValue > 100;
+  const riskError = !riskText.trim() || isNaN(riskValue) || riskValue <= 0 || riskTooHigh;
+
+  // Tell the tools below, so they hide their results rather than show numbers from the last valid input.
+  useEffect(() => {
+    const timeout = setTimeout(() => setInputsValid(!(balanceError || riskError)), 0);
+    return () => clearTimeout(timeout);
+  }, [balanceError, riskError, setInputsValid]);
 
   function handleBalanceChange(value: string) {
     setBalanceText(value);
-    const parsed = parseFloat(value);
+    const parsed = parseMoney(value);
     if (!isNaN(parsed) && parsed > 0) setAccountBalance(parsed);
   }
 
   function handleRiskChange(value: string) {
     setRiskText(value);
-    const parsed = parseFloat(value);
-    if (!isNaN(parsed) && parsed > 0) setRiskValue(parsed);
+    const parsed = parseRisk(value);
+    if (!isNaN(parsed) && parsed > 0 && !(shared.riskMode === "percent" && parsed > 100)) setRiskValue(parsed);
   }
 
   return (
@@ -110,11 +121,11 @@ export function SharedInputsPanel() {
               onClick={() => setRiskMode("fixed")}
               className={toggleButtonClass(shared.riskMode === "fixed")}
             >
-              Fixed $
+              Fixed {shared.accountCurrency}
             </button>
           </div>
           <div className="mt-2 flex items-center gap-2">
-            {shared.riskMode === "fixed" && <span className="text-sm text-zinc-400">$</span>}
+            {shared.riskMode === "fixed" && <span className="text-sm text-zinc-400">{shared.accountCurrency}</span>}
             <input
               type="text"
               inputMode="decimal"
@@ -127,7 +138,7 @@ export function SharedInputsPanel() {
           {riskError && (
             <p className="mt-1 text-xs text-red-400">
               {shared.riskMode === "percent"
-                ? "Risk % must be greater than zero."
+                ? "Risk % must be above zero and no more than 100."
                 : "Risk amount must be greater than zero."}
             </p>
           )}

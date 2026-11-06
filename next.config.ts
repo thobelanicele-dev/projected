@@ -5,8 +5,8 @@ const isDev = process.env.NODE_ENV === "development";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  // React needs eval in development only, for readable error stacks.
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // In development only, Vercel Analytics loads a debug script from its CDN (and React needs eval).
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval' https://va.vercel-scripts.com" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self' data:",

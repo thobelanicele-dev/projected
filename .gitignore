@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local test database (npm run dev:db)
+.local-db/
+
+# launch video renders (large files)
+brag-output*/

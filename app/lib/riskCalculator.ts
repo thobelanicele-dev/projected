@@ -398,7 +398,7 @@ export function calculateCorrelationRisk(
     const parsed = parsePair(p.pair);
     if (!parsed) errors[`positions.${i}.pair`] = "Enter a pair as BASE/QUOTE, e.g. EUR/USD.";
     if (!(p.lots > 0)) errors[`positions.${i}.lots`] = "Lot size must be greater than zero.";
-    if (!(p.dollarRisk > 0)) errors[`positions.${i}.dollarRisk`] = "Dollar risk must be greater than zero.";
+    if (!(p.dollarRisk > 0)) errors[`positions.${i}.dollarRisk`] = "Risk amount must be greater than zero.";
     if (!(p.stopLossPips > 0)) errors[`positions.${i}.stopLossPips`] = "Stop loss (pips) must be greater than zero.";
   });
 

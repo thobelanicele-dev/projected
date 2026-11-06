@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getPipSize, parsePair } from "@/app/lib/riskCalculator";
+import { parseDecimal } from "@/app/lib/numberInput";
 
 // Mirrors TradeLadder.tsx's visual constants and toY math exactly, so the
 // input-side ladder here and the output-side one feel like the same object
@@ -29,7 +30,7 @@ interface PricePlanLadderProps {
 
 function parseNum(v: string): number | null {
   if (!v.trim()) return null;
-  const n = parseFloat(v);
+  const n = parseDecimal(v);
   return isNaN(n) ? null : n;
 }
 

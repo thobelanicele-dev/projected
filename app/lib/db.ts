@@ -1,6 +1,7 @@
 import { Pool, type QueryResultRow } from "pg";
 import { hashToken } from "@/app/lib/auth/tokens";
 import { USAGE_TABLE_SQL } from "@/app/lib/usageSchema";
+import { RATE_LIMITS_TABLE_SQL } from "@/app/lib/rateLimitSchema";
 
 const globalForDb = globalThis as unknown as {
   __pgPool?: Pool;
@@ -22,9 +23,13 @@ function createPool(): Pool {
   // DATABASE_SSL_STRICT=true once you've confirmed it connects cleanly.
   const strictSsl = process.env.DATABASE_SSL_STRICT === "true";
 
+  // A database on this same machine (the local test database, see `npm run dev:db`)
+  // doesn't speak SSL, and nothing leaves the computer, so skip it there.
+  const isLocal = /@(localhost|127\.0\.0\.1)(:|\/)/.test(process.env.DATABASE_URL);
+
   return new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: strictSsl ? true : { rejectUnauthorized: false },
+    ssl: isLocal ? false : strictSsl ? true : { rejectUnauthorized: false },
   });
 }
 
@@ -114,6 +119,8 @@ async function migrate(): Promise<void> {
     CREATE INDEX IF NOT EXISTS oauth_accounts_user_id_idx ON oauth_accounts(user_id);
 
     ${USAGE_TABLE_SQL}
+
+    ${RATE_LIMITS_TABLE_SQL}
   `);
 
   // One-time backfill: sessions used to store the raw session token directly

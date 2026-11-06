@@ -5,14 +5,15 @@ import { hashPassword } from "@/app/lib/auth/password";
 import { generateToken, hashToken } from "@/app/lib/auth/tokens";
 import { isValidEmail, isValidPassword, isValidUsername } from "@/app/lib/auth/validation";
 import { sendVerificationEmail } from "@/app/lib/email";
-import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
+import { getClientIp } from "@/app/lib/rateLimit";
+import { checkSharedRateLimit } from "@/app/lib/sharedRateLimit";
 
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 const RATE_LIMIT = 10;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
-  const rateLimit = checkRateLimit(`signup:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
+  const rateLimit = await checkSharedRateLimit(`signup:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many signup attempts. Please try again later." },
@@ -43,14 +44,15 @@ export async function POST(req: NextRequest) {
   const usernameError = isValidUsername(username);
   if (usernameError) return NextResponse.json({ error: usernameError }, { status: 400 });
 
-  const passwordError = isValidPassword(password);
+  const passwordError = isValidPassword(password, { email, username });
   if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
 
   const normalizedEmail = email.trim().toLowerCase();
 
   try {
     const existingRows = await query<{ id: string }>(
-      "SELECT id FROM users WHERE email = $1 OR username = $2",
+      // Usernames are compared ignoring capitals, so "LocalTester" can't sit beside "localtester".
+      "SELECT id FROM users WHERE email = $1 OR lower(username) = lower($2)",
       [normalizedEmail, username]
     );
 
@@ -77,6 +79,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
+    // Two signups for the same email or username at the same instant both pass the check
+    // above; the database's unique rule stops the second, and that should read as "in use".
+    if ((error as { code?: string }).code === "23505") {
+      return NextResponse.json({ error: "Email or username is already in use." }, { status: 409 });
+    }
     console.error("Signup failed", error);
     return NextResponse.json(
       { error: "Something went wrong on our end. Please try again in a moment." },

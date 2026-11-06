@@ -6,6 +6,7 @@ import { PairInput } from "@/app/components/riskcalc/PairInput";
 import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSummary";
 import { useRiskCalcShared } from "@/app/components/riskcalc/SharedInputsContext";
 import { calculatePipValue } from "@/app/lib/riskCalculator";
+import { parseDecimal } from "@/app/lib/numberInput";
 
 const CASE_LABEL: Record<string, string> = {
   "quote-match": "Exact: quote currency matches your account currency",
@@ -20,8 +21,8 @@ export function PipValueTool() {
   const [conversionRate, setConversionRate] = useState("");
 
   const outcome = useMemo(() => {
-    const rate = parseFloat(exchangeRate);
-    const conv = conversionRate.trim() ? parseFloat(conversionRate) : undefined;
+    const rate = parseDecimal(exchangeRate);
+    const conv = conversionRate.trim() ? parseDecimal(conversionRate) : undefined;
     if (isNaN(rate)) return null;
     return calculatePipValue({
       pair,

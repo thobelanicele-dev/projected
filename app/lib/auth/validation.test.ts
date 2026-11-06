@@ -22,9 +22,9 @@ describe("isValidEmail", () => {
 
 describe("isValidPassword", () => {
   it("accepts passwords within 8-72 characters", () => {
-    expect(isValidPassword("a".repeat(8))).toBeNull();
-    expect(isValidPassword("a".repeat(72))).toBeNull();
-    expect(isValidPassword("a".repeat(40))).toBeNull();
+    expect(isValidPassword("ab".repeat(4))).toBeNull();
+    expect(isValidPassword("ab".repeat(36))).toBeNull();
+    expect(isValidPassword("ab".repeat(20))).toBeNull();
   });
 
   it("rejects passwords shorter than 8 characters", () => {
@@ -33,6 +33,27 @@ describe("isValidPassword", () => {
 
   it("rejects passwords longer than 72 characters", () => {
     expect(isValidPassword("a".repeat(73))).not.toBeNull();
+  });
+
+  it("accepts a reasonable password", () => {
+    expect(isValidPassword("Local-Test-Pass-2026!")).toBeNull();
+    expect(isValidPassword("correct horse battery")).toBeNull();
+  });
+
+  it("rejects the passwords everyone tries first, whatever the capitals", () => {
+    for (const bad of ["password", "Password", "PASSWORD1", "12345678", "qwertyuiop", "iloveyou"]) {
+      expect(isValidPassword(bad)).toMatch(/too common/);
+    }
+  });
+
+  it("rejects one repeated character", () => {
+    expect(isValidPassword("aaaaaaaaaa")).toMatch(/too easy/);
+  });
+
+  it("rejects a password that is the username or the email", () => {
+    expect(isValidPassword("localtester", { username: "LocalTester" })).toMatch(/username/);
+    expect(isValidPassword("me@example.com", { email: "ME@example.com" })).toMatch(/email/);
+    expect(isValidPassword("localtester", { username: "someoneelse" })).toBeNull();
   });
 });
 

@@ -35,7 +35,7 @@ vi.mock("ai", () => ({
 }));
 
 import { POST as planPost } from "@/app/api/plan/route";
-import { GET as limitsGet, POST as limitsPost } from "@/app/api/limits/route";
+import { DELETE as limitsDelete, GET as limitsGet, POST as limitsPost } from "@/app/api/limits/route";
 import { GET as candlesGet } from "@/app/api/candles/route";
 
 // A fresh "IP" per request keeps the per-IP rate limiter out of the way.
@@ -154,6 +154,45 @@ describe("/api/limits", () => {
   it("requires login", async () => {
     expect((await limitsGet(req("/api/limits"))).status).toBe(401);
     expect((await limitsPost(req("/api/limits", { method: "POST", body: { metric: "backtestRuns" } }))).status).toBe(401);
+  });
+});
+
+describe("DELETE /api/limits (refunding a backtest run that found nothing)", () => {
+  const spend = () => limitsPost(req("/api/limits", { method: "POST", body: { metric: "backtestRuns" } }));
+  const refund = (metric = "backtestRuns") => limitsDelete(req("/api/limits", { method: "DELETE", body: { metric } }));
+
+  it("gives a run back", async () => {
+    asUser(null, null);
+    await spend();
+    await spend();
+    expect(await usedCount("backtestRuns")).toBe(2);
+    expect((await refund()).status).toBe(200);
+    expect(await usedCount("backtestRuns")).toBe(1);
+  });
+
+  it("never takes the count below zero", async () => {
+    asUser(null, null);
+    expect((await refund()).status).toBe(200);
+    expect(await usedCount("backtestRuns")).toBe(0);
+  });
+
+  it("only backtest runs can be given back, never AI plans", async () => {
+    asUser(null, null);
+    await state.db!.query("INSERT INTO usage_counts VALUES ($1, 'aiPlans', $2, 4)", [USER, currentPeriod()]);
+    expect((await refund("aiPlans")).status).toBe(400);
+    expect(await usedCount("aiPlans")).toBe(4);
+  });
+
+  it("requires login", async () => {
+    state.session = null;
+    expect((await refund()).status).toBe(401);
+  });
+
+  it("is capped, so it can't be used to dodge the monthly limit", async () => {
+    asUser(null, null);
+    // Three refunds were already used above; the cap is six per window.
+    for (let i = 0; i < 3; i++) expect((await refund()).status).toBe(200);
+    expect((await refund()).status).toBe(429);
   });
 });
 

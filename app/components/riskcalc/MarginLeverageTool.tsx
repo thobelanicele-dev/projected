@@ -6,6 +6,7 @@ import { PairInput } from "@/app/components/riskcalc/PairInput";
 import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSummary";
 import { useRiskCalcShared } from "@/app/components/riskcalc/SharedInputsContext";
 import { calculateMarginLeverage, LOT_SIZES } from "@/app/lib/riskCalculator";
+import { parseDecimal, parseMoney } from "@/app/lib/numberInput";
 
 const LEVERAGE_OPTIONS = [10, 30, 50, 100, 200, 500];
 
@@ -29,18 +30,18 @@ export function MarginLeverageTool() {
   const [usedMargin, setUsedMargin] = useState("0");
 
   const positionUnits = useMemo(() => {
-    const parsed = parseFloat(sizeValue);
+    const parsed = parseDecimal(sizeValue);
     if (isNaN(parsed)) return NaN;
     return sizeMode === "lots" ? parsed * LOT_SIZES[shared.lotConvention] : parsed;
   }, [sizeValue, sizeMode, shared.lotConvention]);
 
-  const leverage = leverageChoice === "custom" ? parseFloat(customLeverage) : leverageChoice;
+  const leverage = leverageChoice === "custom" ? parseDecimal(customLeverage) : leverageChoice;
 
   const outcome = useMemo(() => {
-    const rate = parseFloat(exchangeRate);
-    const conv = conversionRate.trim() ? parseFloat(conversionRate) : undefined;
-    const eq = parseFloat(equity);
-    const used = parseFloat(usedMargin);
+    const rate = parseDecimal(exchangeRate);
+    const conv = conversionRate.trim() ? parseDecimal(conversionRate) : undefined;
+    const eq = parseMoney(equity);
+    const used = parseMoney(usedMargin);
     if (isNaN(rate) || isNaN(positionUnits) || isNaN(leverage) || isNaN(eq) || isNaN(used)) return null;
     return calculateMarginLeverage({
       pair,

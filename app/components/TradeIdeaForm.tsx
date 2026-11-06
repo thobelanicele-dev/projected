@@ -18,6 +18,7 @@ import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
 
 import { POPULAR_PAIRS } from "@/app/lib/pairs";
 import { LoadingNote } from "@/app/components/LoadingNote";
+import { parseDecimal, parseMoney } from "@/app/lib/numberInput";
 
 export { POPULAR_PAIRS };
 
@@ -222,7 +223,8 @@ function ReviewRow({
     <div className="flex items-start justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2.5">
       <div>
         <p className="text-sm font-medium text-zinc-500">{label}</p>
-        <p className={`mt-0.5 text-base ${warning ? "text-orange-400" : "text-zinc-200"}`}>{children}</p>
+        {/* A div, not a p: some rows pass block content, and a div can't sit inside a paragraph. */}
+        <div className={`mt-0.5 text-base ${warning ? "text-orange-400" : "text-zinc-200"}`}>{children}</div>
       </div>
       <button
         type="button"
@@ -255,6 +257,8 @@ const LOADING_MESSAGES = [
   "Looking for red flags…",
   "Double-checking your stop loss…",
   "Almost done…",
+  // A detailed plan can take most of a minute; say so rather than looping back to the start.
+  "Still working. Detailed plans can take up to a minute…",
 ];
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -409,14 +413,14 @@ export function TradeIdeaForm({
       return () => clearTimeout(timeout);
     }
     const interval = setInterval(() => {
-      setLoadingMessageIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+      setLoadingMessageIndex((i) => Math.min(i + 1, LOADING_MESSAGES.length - 1));
     }, 3500);
     return () => clearInterval(interval);
   }, [loading]);
 
   function updateAccountBalance(value: string) {
     setAccountBalance(value);
-    const parsed = parseFloat(value);
+    const parsed = parseMoney(value);
     if (!isNaN(parsed) && parsed > 0) {
       setStoredSharedInputs(
         { ...(getStoredSharedInputs(userId) ?? DEFAULT_SHARED_INPUTS), accountBalance: parsed },
@@ -534,15 +538,15 @@ export function TradeIdeaForm({
 
   const canSubmit = fields.pair.trim().length > 0 && !loading;
 
-  const riskValue = parseFloat(fields.riskPercent);
+  const riskValue = parseDecimal(fields.riskPercent);
   const riskTooHigh = !isNaN(riskValue) && riskValue > 2;
   const noStopLossDefined = !fields.stopLossPrice.trim() && !fields.stopLossCondition.trim();
 
   const positionSizeOutcome = useMemo(() => {
-    const balance = parseFloat(accountBalance);
-    const risk = parseFloat(fields.riskPercent);
-    const entry = fields.entryPrice.trim() ? parseFloat(fields.entryPrice) : livePrice;
-    const stop = parseFloat(fields.stopLossPrice);
+    const balance = parseMoney(accountBalance);
+    const risk = parseDecimal(fields.riskPercent);
+    const entry = fields.entryPrice.trim() ? parseDecimal(fields.entryPrice) : livePrice;
+    const stop = parseDecimal(fields.stopLossPrice);
 
     if (
       !fields.pair.trim() ||
@@ -591,10 +595,10 @@ export function TradeIdeaForm({
   function findMissingForPositionSize(): "pair" | "entry" | "stopLoss" | "balance" | "other" | null {
     if (positionSizeOutcome) return null;
     if (!fields.pair.trim()) return "pair";
-    const entry = fields.entryPrice.trim() ? parseFloat(fields.entryPrice) : livePrice;
+    const entry = fields.entryPrice.trim() ? parseDecimal(fields.entryPrice) : livePrice;
     if (entry === null || entry === undefined || isNaN(entry)) return "entry";
     if (!fields.stopLossPrice.trim()) return "stopLoss";
-    if (isNaN(parseFloat(accountBalance))) return "balance";
+    if (isNaN(parseMoney(accountBalance))) return "balance";
     return "other";
   }
   const missingForPositionSize = findMissingForPositionSize();
@@ -746,7 +750,8 @@ export function TradeIdeaForm({
           <textarea
             value={fields.notes}
             onChange={(e) => update("notes", e.target.value)}
-            placeholder="e.g. I want to go long on GBP/USD, risking $50 if it breaks back below 1.2650"
+            aria-label="Describe your trade idea"
+            placeholder="e.g. I want to go long on GBP/USD, risking 1% if it breaks back below 1.2650"
             rows={4}
             className={`${inputClass} mt-3 resize-y`}
           />

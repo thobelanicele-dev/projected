@@ -9,6 +9,7 @@ import {
   saveCustomStrategy,
 } from "@/app/lib/customStrategies";
 import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
+import { parseDecimal } from "@/app/lib/numberInput";
 
 type IndicatorKind = Indicator["kind"];
 
@@ -121,7 +122,7 @@ function IndicatorEditor({
             min={0.1}
             step={0.1}
             value={value.stdDevMultiplier}
-            onChange={(e) => onChange({ ...value, stdDevMultiplier: parseFloat(e.target.value) || 0.1 })}
+            onChange={(e) => onChange({ ...value, stdDevMultiplier: parseDecimal(e.target.value) || 0.1 })}
             className={`${inputClass} max-w-[90px]`}
             aria-label="Std dev multiplier"
           />
@@ -173,7 +174,7 @@ function IndicatorEditor({
           type="number"
           step="any"
           value={value.value}
-          onChange={(e) => onChange({ ...value, value: parseFloat(e.target.value) || 0 })}
+          onChange={(e) => onChange({ ...value, value: parseDecimal(e.target.value) || 0 })}
           className={`${inputClass} max-w-[110px]`}
           aria-label="Value"
         />

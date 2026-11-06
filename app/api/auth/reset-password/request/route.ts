@@ -3,14 +3,15 @@ import { query } from "@/app/lib/db";
 import { generateToken, hashToken } from "@/app/lib/auth/tokens";
 import { isValidEmail } from "@/app/lib/auth/validation";
 import { sendPasswordResetEmail } from "@/app/lib/email";
-import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
+import { getClientIp } from "@/app/lib/rateLimit";
+import { checkSharedRateLimit } from "@/app/lib/sharedRateLimit";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 const RATE_LIMIT = 5;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
-  const rateLimit = checkRateLimit(`reset-request:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
+  const rateLimit = await checkSharedRateLimit(`reset-request:${getClientIp(req)}`, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },

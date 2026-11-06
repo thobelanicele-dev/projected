@@ -5,6 +5,7 @@ import { Field, inputClass } from "@/app/components/TradeIdeaForm";
 import { PairInput } from "@/app/components/riskcalc/PairInput";
 import { RiskCalcSummary, type ResultStat } from "@/app/components/RiskCalcSummary";
 import { calculateRiskReward } from "@/app/lib/riskCalculator";
+import { parseDecimal } from "@/app/lib/numberInput";
 
 const toggleButtonClass = (active: boolean) =>
   `flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
@@ -24,14 +25,14 @@ export function RiskRewardTool() {
 
   const outcome = useMemo(() => {
     if (inputMode === "prices") {
-      const e = parseFloat(entry);
-      const sl = parseFloat(stopLoss);
-      const tp = parseFloat(takeProfit);
+      const e = parseDecimal(entry);
+      const sl = parseDecimal(stopLoss);
+      const tp = parseDecimal(takeProfit);
       if (isNaN(e) || isNaN(sl) || isNaN(tp)) return null;
       return calculateRiskReward({ mode: "prices", pair, entry: e, stopLoss: sl, takeProfit: tp });
     }
-    const rp = parseFloat(riskPips);
-    const wp = parseFloat(rewardPips);
+    const rp = parseDecimal(riskPips);
+    const wp = parseDecimal(rewardPips);
     if (isNaN(rp) || isNaN(wp)) return null;
     return calculateRiskReward({ mode: "pips", riskPips: rp, rewardPips: wp });
   }, [inputMode, pair, entry, stopLoss, takeProfit, riskPips, rewardPips]);

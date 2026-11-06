@@ -1,4 +1,5 @@
 import { RollingText } from "@/app/components/RollingText";
+import { useSharedInputsValid } from "@/app/components/riskcalc/SharedInputsContext";
 import type { FieldErrors } from "@/app/lib/riskCalculator";
 
 export interface ResultStat {
@@ -16,6 +17,8 @@ export function RiskCalcSummary({
   warnings?: string[];
   errors?: FieldErrors | null;
 }) {
+  const inputsValid = useSharedInputsValid();
+
   if (errors && Object.keys(errors).length > 0) {
     return (
       <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300">
@@ -28,7 +31,8 @@ export function RiskCalcSummary({
     );
   }
 
-  if (!stats || stats.length === 0) return null;
+  // The shared inputs above show their own error; don't contradict it with results from an older value.
+  if (!inputsValid || !stats || stats.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">

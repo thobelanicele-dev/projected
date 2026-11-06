@@ -60,6 +60,21 @@ export default function BacktestPage() {
           : runBacktest(candles, strategy, exitRules);
       setResult(outcome);
       setLoading(false);
+
+      // A run that found nothing shouldn't cost a monthly run; hand it back.
+      if (outcome.trades.length === 0) {
+        fetch("/api/limits", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ metric: "backtestRuns" }),
+        })
+          .then((res) => {
+            if (!res.ok) return;
+            window.dispatchEvent(new Event(USAGE_CHANGED_EVENT));
+            showToast({ message: "No trades were found, so this run didn't count against your allowance.", tone: "success" });
+          })
+          .catch(() => {});
+      }
     }, 0);
   }
 

@@ -1,13 +1,30 @@
+"use client";
+
 import { EquityCurve } from "@/app/components/EquityCurve";
 import { StatTile } from "@/app/components/StatTile";
+import { useCurrentTier } from "@/app/components/CurrentUserProvider";
 import type { BacktestResult } from "@/app/lib/backtestEngine";
+
+/** Below this many trades, win rate and averages say very little. */
+const SMALL_SAMPLE = 10;
 
 export function BacktestResults({ result }: { result: BacktestResult }) {
   const { stats, trades } = result;
+  const tier = useCurrentTier();
 
   return (
     <div className="mt-10 w-full max-w-2xl">
       <p className="text-xs uppercase tracking-wide text-zinc-500">Results</p>
+
+      {trades.length > 0 && trades.length < SMALL_SAMPLE && (
+        <p className="mt-2 rounded-lg border border-orange-500/40 bg-orange-500/10 p-3 text-sm text-orange-300">
+          Only {trades.length} trade{trades.length === 1 ? "" : "s"} in this period, which is too few to trust.
+          A {trades.length === 1 ? "single trade" : "handful of trades"} can look brilliant or terrible by luck.
+          {tier === "free"
+            ? " A longer price history finds more trades, and paid plans include up to 2 years."
+            : " Try a longer history or a more active strategy."}
+        </p>
+      )}
 
       <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <StatTile label="Total trades" value={String(stats.totalTrades)} />
