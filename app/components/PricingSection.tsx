@@ -1,32 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
 import { NumberTicker } from "@/app/components/beui/number-ticker";
-import { SPRING_LAYOUT } from "@/app/lib/beui/ease";
 import { Reveal } from "@/app/components/Reveal";
 import { PricingCTA } from "@/app/components/PricingCTA";
 import { limitLines, limitTableRows } from "@/app/lib/planLimits";
+import type { CurrencyCode } from "@/app/lib/pricingRegion";
 
-export type CurrencyCode = "ZAR" | "USD" | "GBP" | "NGN";
+export type { CurrencyCode };
 
-const CURRENCIES: { code: CurrencyCode; country: string; symbol: string }[] = [
-  { code: "ZAR", country: "South Africa", symbol: "R" },
-  { code: "USD", country: "United States", symbol: "$" },
-  { code: "GBP", country: "United Kingdom", symbol: "£" },
-  { code: "NGN", country: "Nigeria", symbol: "₦" },
-];
+const SYMBOLS: Record<CurrencyCode, string> = { ZAR: "R", USD: "$", EUR: "€", GBP: "£" };
 
 type TierKey = "free" | "basic" | "premium";
 
-// Converted from live USD/ZAR, GBP/ZAR, USD/NGN rates and rounded to normal
+// Converted from live USD/ZAR, GBP/ZAR and EUR/ZAR rates and rounded to normal
 // SaaS "charm" pricing per currency. Proposed starting points, not final —
-// confirm/adjust before this goes live.
+// confirm/adjust before this goes live. Everyone is billed in ZAR; the other
+// currencies are display only.
 export const TIER_PRICING: Record<TierKey, Record<CurrencyCode, number>> = {
-  free: { ZAR: 0, USD: 0, GBP: 0, NGN: 0 },
-  basic: { ZAR: 199, USD: 11.99, GBP: 9.99, NGN: 15999 },
-  premium: { ZAR: 499, USD: 29.99, GBP: 22.99, NGN: 39999 },
+  free: { ZAR: 0, USD: 0, EUR: 0, GBP: 0 },
+  basic: { ZAR: 199, USD: 11.99, EUR: 10.99, GBP: 9.99 },
+  premium: { ZAR: 499, USD: 29.99, EUR: 26.99, GBP: 22.99 },
 };
 
 const TIERS: {
@@ -76,54 +70,23 @@ function formatNumber(amount: number, decimals: number): string {
 
 function formatPrice(amount: number, currency: CurrencyCode): string {
   if (amount === 0) return "Free";
-  const symbol = CURRENCIES.find((c) => c.code === currency)!.symbol;
-  const decimals = currency === "NGN" ? 0 : 2;
-  return `${symbol}${formatNumber(amount, decimals)}`;
+  return `${SYMBOLS[currency]}${formatNumber(amount, 2)}`;
 }
 
 export function PricingSection({
   isLoggedIn,
-  defaultCurrency,
+  currency,
   billingEnabled,
 }: {
   isLoggedIn: boolean;
-  defaultCurrency: CurrencyCode;
+  currency: CurrencyCode;
   billingEnabled: boolean;
 }) {
-  const [currency, setCurrency] = useState<CurrencyCode>(defaultCurrency);
-  const reduce = useReducedMotion();
-  const decimals = currency === "NGN" ? 0 : 2;
-  const symbol = CURRENCIES.find((c) => c.code === currency)!.symbol;
+  const decimals = 2;
+  const symbol = SYMBOLS[currency];
 
   return (
     <>
-      <div className="mt-6 inline-flex flex-wrap gap-1 rounded-full border border-zinc-800 bg-zinc-950 p-1">
-        {CURRENCIES.map((c) => (
-          <button
-            key={c.code}
-            type="button"
-            onClick={() => setCurrency(c.code)}
-            aria-pressed={currency === c.code}
-            className="relative rounded-full px-3 py-1.5 text-xs font-medium"
-          >
-            {currency === c.code && (
-              <motion.span
-                layoutId="currency-pill"
-                transition={reduce ? { duration: 0 } : SPRING_LAYOUT}
-                className="absolute inset-0 rounded-full bg-zinc-100"
-              />
-            )}
-            <span
-              className={`relative transition-colors ${
-                currency === c.code ? "text-black" : "text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              {c.code} · {c.country}
-            </span>
-          </button>
-        ))}
-      </div>
-
       <div className="mt-8 grid grid-cols-1 divide-y divide-zinc-900 border border-zinc-900 md:grid-cols-3 md:divide-x md:divide-y-0">
         {TIERS.map((tier, i) => (
           <Reveal

@@ -13,7 +13,8 @@ import { NumberTicker } from "@/app/components/beui/number-ticker";
 import { Magnetic } from "@/app/components/beui/magnetic";
 import { TextReveal } from "@/app/components/beui/text-reveal";
 import { TiltCard } from "@/app/components/beui/tilt-card";
-import { PricingSection, type CurrencyCode } from "@/app/components/PricingSection";
+import { PricingSection } from "@/app/components/PricingSection";
+import { currencyForCountry } from "@/app/lib/pricingRegion";
 import { isBillingEnabled } from "@/app/lib/paystack";
 
 const CAPABILITIES = [
@@ -204,13 +205,6 @@ const PRODUCT_TABS = [
   })),
 ];
 
-const COUNTRY_TO_CURRENCY: Record<string, CurrencyCode> = {
-  ZA: "ZAR",
-  GB: "GBP",
-  NG: "NGN",
-  US: "USD",
-};
-
 export default async function LandingPage() {
   // A DB hiccup here must not take down the entire marketing page for every
   // visitor; fall back to the logged-out view rather than erroring.
@@ -224,8 +218,7 @@ export default async function LandingPage() {
   // Vercel's edge network sets this on every request; absent in local dev,
   // where it falls back to USD like any undetected visitor would.
   const headersList = await headers();
-  const countryCode = headersList.get("x-vercel-ip-country") ?? "";
-  const defaultCurrency: CurrencyCode = COUNTRY_TO_CURRENCY[countryCode] ?? "USD";
+  const currency = currencyForCountry(headersList.get("x-vercel-ip-country"));
   const billingEnabled = isBillingEnabled();
 
   return (
@@ -351,7 +344,7 @@ export default async function LandingPage() {
 
           <PricingSection
             isLoggedIn={isLoggedIn}
-            defaultCurrency={defaultCurrency}
+            currency={currency}
             billingEnabled={billingEnabled}
           />
         </div>
