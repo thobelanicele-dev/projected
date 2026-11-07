@@ -44,6 +44,8 @@ import { POST as checkoutPost } from "@/app/api/billing/checkout/route";
 import { POST as cancelPost } from "@/app/api/billing/cancel/route";
 import { POST as webhookPost } from "@/app/api/billing/webhook/route";
 import { PLAN_CODES } from "@/app/lib/paystack";
+import { activateSubscription, claimPaymentReference, releasePaymentReference } from "@/app/lib/subscriptionActivation";
+import { PAYMENT_REFERENCES_TABLE_SQL } from "@/app/lib/billingSchema";
 
 async function setUser(fields: { plan: string | null; status: string | null; endsAt?: number | null }) {
   await state.db!.query(
@@ -99,6 +101,7 @@ beforeAll(async () => {
       paystack_subscription_code TEXT
     );
   `);
+  await state.db.exec(PAYMENT_REFERENCES_TABLE_SQL);
   await state.db.query("INSERT INTO users (id, email) VALUES ($1, $2)", [USER, EMAIL]);
 });
 
@@ -279,5 +282,29 @@ describe("upgrading ends the old subscription exactly once", () => {
     expect((await row()).status).toBe("active");
     const res = await state.db!.query<{ plan: string }>("SELECT plan FROM users WHERE id = $1", [USER]);
     expect(res.rows[0].plan).toBe("premium");
+  });
+});
+
+describe("the payment page and replays", () => {
+  it("keeps the stored subscription code, and stops nothing, when the page has no code to give", async () => {
+    await setUser({ plan: "premium", status: "active" });
+    await activateSubscription({ where: { id: USER }, tier: "premium", customerCode: null, subscriptionCode: null });
+    const res = await state.db!.query<{ paystack_subscription_code: string }>(
+      "SELECT paystack_subscription_code FROM users WHERE id = $1",
+      [USER]
+    );
+    expect(res.rows[0].paystack_subscription_code).toBe(SUB_CODE);
+    expect(state.disableCalls).toHaveLength(0);
+  });
+
+  it("lets a payment reference switch a plan on once only", async () => {
+    expect(await claimPaymentReference("ref_once", USER)).toBe(true);
+    expect(await claimPaymentReference("ref_once", USER)).toBe(false);
+  });
+
+  it("gives a reference back so a failed activation can be retried", async () => {
+    expect(await claimPaymentReference("ref_retry", USER)).toBe(true);
+    await releasePaymentReference("ref_retry");
+    expect(await claimPaymentReference("ref_retry", USER)).toBe(true);
   });
 });

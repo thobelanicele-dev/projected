@@ -4,7 +4,7 @@ import { verifyPassword } from "@/app/lib/auth/password";
 import { generateToken, hashToken } from "@/app/lib/auth/tokens";
 import { isValidEmail } from "@/app/lib/auth/validation";
 import { getSession } from "@/app/lib/auth/session";
-import { sendEmailChangeConfirmation, sendEmailChangeNotice } from "@/app/lib/email";
+import { sendEmailChangeApproval, sendEmailChangeConfirmation, sendEmailChangeNotice } from "@/app/lib/email";
 import { checkRateLimit } from "@/app/lib/rateLimit";
 
 const EMAIL_CHANGE_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
     }
-    // Google-only accounts have no password to check; the active session is
-    // already sufficient proof of identity for them.
+    // Google-only accounts have no password to check, so they get a different
+    // safeguard below: the current email address must approve the change too.
     if (user.password_hash && !verifyPassword(currentPassword, user.password_hash)) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
     }
@@ -70,16 +70,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "That email address is already in use." }, { status: 409 });
     }
 
+    const needsApproval = !user.password_hash;
     const token = generateToken();
+    const approvalToken = needsApproval ? generateToken() : null;
     await query(
-      "INSERT INTO email_change_tokens (token_hash, user_id, new_email, expires_at) VALUES ($1, $2, $3, $4)",
-      [hashToken(token), session.id, normalizedEmail, Date.now() + EMAIL_CHANGE_TOKEN_TTL_MS]
+      `INSERT INTO email_change_tokens (token_hash, user_id, new_email, expires_at, approval_token_hash)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        hashToken(token),
+        session.id,
+        normalizedEmail,
+        Date.now() + EMAIL_CHANGE_TOKEN_TTL_MS,
+        approvalToken ? hashToken(approvalToken) : null,
+      ]
     );
 
     await sendEmailChangeConfirmation(normalizedEmail, token);
-    await sendEmailChangeNotice(session.email, normalizedEmail);
+    if (approvalToken) {
+      await sendEmailChangeApproval(session.email, normalizedEmail, approvalToken);
+    } else {
+      await sendEmailChangeNotice(session.email, normalizedEmail);
+    }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, needsApproval });
   } catch (error) {
     console.error("Change email request failed", error);
     return NextResponse.json(

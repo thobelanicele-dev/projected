@@ -4,6 +4,10 @@ const REPLY_TO = "thobelani.cele@icloud.com";
 const FROM = process.env.EMAIL_FROM ?? "FxInsites <onboarding@resend.dev>";
 const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
 
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function getClient(): Resend | null {
   const key = process.env.RESEND_API_KEY;
   return key ? new Resend(key) : null;
@@ -87,8 +91,37 @@ export async function sendEmailChangeNotice(to: string, newEmail: string): Promi
   await sendEmail(
     to,
     "Your FxInsites email is changing",
-    `<p>A request was made to change the email on your FxInsites account to <strong>${newEmail}</strong>.</p>
+    `<p>A request was made to change the email on your FxInsites account to <strong>${escapeHtml(newEmail)}</strong>.</p>
      <p>The change won't take effect until that new address is confirmed. If this wasn't you, log in and change your password right away.</p>`,
     `${APP_URL}/account`
+  );
+}
+
+/**
+ * For accounts with no password: the change only goes through once the CURRENT
+ * address approves it, so a stolen login session alone can't move the account.
+ */
+export async function sendEmailChangeApproval(to: string, newEmail: string, token: string): Promise<void> {
+  const link = `${APP_URL}/api/auth/change-email/approve?token=${token}`;
+  await sendEmail(
+    to,
+    "Approve your FxInsites email change",
+    `<p>Someone asked to change the email on your FxInsites account to <strong>${escapeHtml(newEmail)}</strong>.</p>
+     <p>If that was you, click the button below to approve it. The change also needs to be confirmed from the new address.</p>
+     <p>
+       <a href="${link}"
+          style="display:inline-block;padding:12px 24px;background-color:#18181b;color:#fafafa;
+                 text-decoration:none;border-radius:9999px;font-family:sans-serif;font-size:14px;
+                 font-weight:500;">
+         Approve email change
+       </a>
+     </p>
+     <p style="font-family:sans-serif;font-size:13px;color:#71717a;">
+       Or paste this link into your browser: <a href="${link}">${link}</a>
+     </p>
+     <p style="font-family:sans-serif;font-size:13px;color:#71717a;">
+       This link expires in 1 hour. If this wasn't you, do nothing and the change will not happen.
+     </p>`,
+    link
   );
 }

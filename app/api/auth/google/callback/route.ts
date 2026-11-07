@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { query } from "@/app/lib/db";
 import { createSession } from "@/app/lib/auth/session";
 import { generateUsernameFromEmail } from "@/app/lib/auth/username";
+import { claimUnverifiedAccountForGoogle } from "@/app/lib/auth/accountLink";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 import {
   oauth,
@@ -104,12 +105,11 @@ export async function GET(req: NextRequest) {
 
       if (existing[0]) {
         // Auto-link: Google already proved ownership of this email, so no
-        // separate "merge your account" confirmation step is needed.
+        // separate "merge your account" confirmation step is needed. If the
+        // account was never verified, the password on it came from whoever
+        // signed up first, who may not own the email, so it is removed.
         userId = existing[0].id;
-        await query(
-          "UPDATE users SET email_verified = TRUE WHERE id = $1 AND email_verified = FALSE",
-          [userId]
-        );
+        await claimUnverifiedAccountForGoogle(userId);
       } else {
         userId = randomUUID();
         const username = await generateUsernameFromEmail(normalizedEmail, async (candidate) => {

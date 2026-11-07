@@ -15,6 +15,7 @@ export function ChangeEmailForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [needsApproval, setNeedsApproval] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +37,7 @@ export function ChangeEmailForm({
         return;
       }
       setSuccess(true);
+      setNeedsApproval(data.needsApproval === true);
       setNewEmail("");
       setCurrentPassword("");
     } catch {
@@ -78,7 +80,9 @@ export function ChangeEmailForm({
       )}
       {success && (
         <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">
-          Check your new inbox for a confirmation link; your email won&apos;t change until you click it.
+          {needsApproval
+            ? "Two emails are on their way. Approve the change from your current inbox, then confirm it from your new inbox. Your email won't change until both are done."
+            : "Check your new inbox for a confirmation link; your email won't change until you click it."}
         </div>
       )}
 

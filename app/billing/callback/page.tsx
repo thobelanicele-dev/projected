@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/app/lib/auth/session";
-import { activateSubscription } from "@/app/lib/subscriptionActivation";
+import { activateSubscription, claimPaymentReference, releasePaymentReference } from "@/app/lib/subscriptionActivation";
 import { verifyTransaction, tierForPlanCode } from "@/app/lib/paystack";
 
 export default async function BillingCallbackPage({
@@ -18,6 +18,7 @@ export default async function BillingCallbackPage({
   const reference = typeof params.reference === "string" ? params.reference : null;
 
   let success = false;
+  let alreadyUsed = false;
   if (reference) {
     const result = await verifyTransaction(reference);
     const tier = result.planCode ? tierForPlanCode(result.planCode) : null;
@@ -28,13 +29,24 @@ export default async function BillingCallbackPage({
     const paidByThisAccount = result.email?.toLowerCase() === session.email.toLowerCase();
 
     if (result.success && tier && paidByThisAccount) {
-      await activateSubscription({
-        where: { id: session.id },
-        tier,
-        customerCode: result.customerCode,
-        subscriptionCode: result.subscriptionCode,
-      });
-      success = true;
+      // A payment can switch a plan on once. Without this, an old reference
+      // could be reopened after cancelling to get the paid plan back for free.
+      if (await claimPaymentReference(reference, session.id)) {
+        try {
+          await activateSubscription({
+            where: { id: session.id },
+            tier,
+            customerCode: result.customerCode,
+            subscriptionCode: result.subscriptionCode,
+          });
+          success = true;
+        } catch (error) {
+          await releasePaymentReference(reference);
+          throw error;
+        }
+      } else {
+        alreadyUsed = true;
+      }
     }
   }
 
@@ -55,6 +67,16 @@ export default async function BillingCallbackPage({
                 className="mt-4 inline-block rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-300"
               >
                 Go to the planner
+              </Link>
+            </>
+          ) : alreadyUsed ? (
+            <>
+              <h1 className="text-lg font-medium text-zinc-50">This payment was already applied</h1>
+              <p className="mt-2 text-sm text-zinc-400">
+                This link has been used once and can&apos;t be used again. Your plan is shown in your account settings.
+              </p>
+              <Link href="/account" className="mt-4 inline-block text-sky-400 hover:text-sky-300">
+                Go to account settings
               </Link>
             </>
           ) : (

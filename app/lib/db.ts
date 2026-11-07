@@ -2,6 +2,7 @@ import { Pool, type QueryResultRow } from "pg";
 import { hashToken } from "@/app/lib/auth/tokens";
 import { USAGE_TABLE_SQL } from "@/app/lib/usageSchema";
 import { RATE_LIMITS_TABLE_SQL } from "@/app/lib/rateLimitSchema";
+import { PAYMENT_REFERENCES_TABLE_SQL } from "@/app/lib/billingSchema";
 
 const globalForDb = globalThis as unknown as {
   __pgPool?: Pool;
@@ -121,6 +122,12 @@ async function migrate(): Promise<void> {
     ${USAGE_TABLE_SQL}
 
     ${RATE_LIMITS_TABLE_SQL}
+
+    ${PAYMENT_REFERENCES_TABLE_SQL}
+
+    -- Set while an email change still needs approval from the current address
+    -- (accounts with no password). Cleared when the old address approves.
+    ALTER TABLE email_change_tokens ADD COLUMN IF NOT EXISTS approval_token_hash TEXT;
   `);
 
   // One-time backfill: sessions used to store the raw session token directly

@@ -7,6 +7,7 @@ export default async function ChangeEmailPage({
 }) {
   const params = await searchParams;
   const success = params.success === "true";
+  const approved = params.approved === "true";
   const error = typeof params.error === "string" ? params.error : null;
 
   if (success) {
@@ -26,8 +27,22 @@ export default async function ChangeEmailPage({
     );
   }
 
+  if (approved) {
+    return (
+      <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-6 text-center">
+        <h1 className="text-lg font-medium text-emerald-400">Change approved</h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          One more step: open the confirmation email sent to the new address and click its link. Your email won&apos;t
+          change until you do.
+        </p>
+      </div>
+    );
+  }
+
   const heading =
-    error === "missing-token"
+    error === "needs-approval"
+      ? "Approve this change first"
+      : error === "missing-token"
       ? "Confirmation link is missing a token"
       : error === "email-taken"
         ? "That email is now in use"
@@ -36,7 +51,9 @@ export default async function ChangeEmailPage({
           : "Confirmation link is invalid or expired";
 
   const body =
-    error === "missing-token"
+    error === "needs-approval"
+      ? "This account has no password, so the change also has to be approved from your current email address. Open that email, click Approve, then try this link again."
+      : error === "missing-token"
       ? "Use the full link from your confirmation email."
       : error === "email-taken"
         ? "Someone registered that email address before you confirmed the change. Try a different address from your account settings."

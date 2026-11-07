@@ -11,8 +11,13 @@ export async function GET(req: NextRequest) {
   const tokenHash = hashToken(token);
 
   try {
-    const rows = await query<{ user_id: string; new_email: string; expires_at: string }>(
-      "SELECT user_id, new_email, expires_at FROM email_change_tokens WHERE token_hash = $1",
+    const rows = await query<{
+      user_id: string;
+      new_email: string;
+      expires_at: string;
+      approval_token_hash: string | null;
+    }>(
+      "SELECT user_id, new_email, expires_at, approval_token_hash FROM email_change_tokens WHERE token_hash = $1",
       [tokenHash]
     );
     const row = rows[0];
@@ -20,6 +25,12 @@ export async function GET(req: NextRequest) {
     if (!row || Number(row.expires_at) <= Date.now()) {
       await query("DELETE FROM email_change_tokens WHERE token_hash = $1", [tokenHash]);
       return NextResponse.redirect(new URL("/change-email?error=invalid-or-expired", req.url));
+    }
+
+    // Still waiting for the current address to approve: leave the link alone so
+    // it works once that has happened.
+    if (row.approval_token_hash) {
+      return NextResponse.redirect(new URL("/change-email?error=needs-approval", req.url));
     }
 
     const taken = await query<{ id: string }>("SELECT id FROM users WHERE email = $1 AND id != $2", [
