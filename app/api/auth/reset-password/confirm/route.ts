@@ -4,6 +4,7 @@ import { hashToken } from "@/app/lib/auth/tokens";
 import { hashPassword } from "@/app/lib/auth/password";
 import { isValidPassword } from "@/app/lib/auth/validation";
 import { destroyAllSessionsForUser } from "@/app/lib/auth/session";
+import { revokePendingRecoveryTokens } from "@/app/lib/auth/tokenRevocation";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
 
 const RATE_LIMIT = 10;
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
       hashPassword(password),
       row.user_id,
     ]);
-    await query("DELETE FROM password_reset_tokens WHERE token_hash = $1", [tokenHash]);
+    await revokePendingRecoveryTokens(row.user_id);
     await destroyAllSessionsForUser(row.user_id);
 
     return NextResponse.json({ ok: true });

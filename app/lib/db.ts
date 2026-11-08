@@ -162,3 +162,25 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   const result = await getPool().query<T>(text, params);
   return result.rows;
 }
+
+/**
+ * Runs several statements as one all-or-nothing unit: if any step throws,
+ * none of them are kept. The function gets a runner to use instead of `query`.
+ */
+export async function withTransaction<T>(
+  work: (run: (text: string, params?: unknown[]) => Promise<unknown[]>) => Promise<T>
+): Promise<T> {
+  await ensureMigrated();
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const result = await work(async (text, params = []) => (await client.query(text, params)).rows);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}

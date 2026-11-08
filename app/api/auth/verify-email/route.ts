@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
 import { hashToken } from "@/app/lib/auth/tokens";
-import { createSession } from "@/app/lib/auth/session";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
@@ -26,8 +25,9 @@ export async function GET(req: NextRequest) {
     await query("UPDATE users SET email_verified = TRUE WHERE id = $1", [row.user_id]);
     await query("DELETE FROM email_verification_tokens WHERE token_hash = $1", [tokenHash]);
 
-    await createSession(row.user_id);
-
+    // No session is created here. The link only proves the mailbox, and signing
+    // in whoever opens it would let anyone hand a victim a link that puts them
+    // into the link owner's account.
     return NextResponse.redirect(new URL("/verify-email?success=true", req.url));
   } catch (error) {
     console.error("Email verification failed", error);

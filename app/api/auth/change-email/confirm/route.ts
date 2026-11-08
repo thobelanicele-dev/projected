@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
 import { hashToken } from "@/app/lib/auth/tokens";
+import { revokePendingRecoveryTokens } from "@/app/lib/auth/tokenRevocation";
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
@@ -46,7 +47,8 @@ export async function GET(req: NextRequest) {
       row.new_email,
       row.user_id,
     ]);
-    await query("DELETE FROM email_change_tokens WHERE token_hash = $1", [tokenHash]);
+    // Reset or change links sent before the switch belong to the old address.
+    await revokePendingRecoveryTokens(row.user_id);
 
     return NextResponse.redirect(new URL("/change-email?success=true", req.url));
   } catch (error) {

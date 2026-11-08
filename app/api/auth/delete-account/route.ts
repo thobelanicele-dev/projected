@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/app/lib/db";
+import { query, withTransaction } from "@/app/lib/db";
+import { deleteUserData } from "@/app/lib/accountDeletion";
 import { verifyPassword } from "@/app/lib/auth/password";
 import { getSession, destroySession } from "@/app/lib/auth/session";
 import { fetchSubscription, disableSubscription } from "@/app/lib/paystack";
@@ -63,13 +64,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await query("DELETE FROM sessions WHERE user_id = $1", [session.id]);
-    await query("DELETE FROM email_verification_tokens WHERE user_id = $1", [session.id]);
-    await query("DELETE FROM password_reset_tokens WHERE user_id = $1", [session.id]);
-    await query("DELETE FROM email_change_tokens WHERE user_id = $1", [session.id]);
-    await query("DELETE FROM oauth_accounts WHERE user_id = $1", [session.id]);
-    await query("DELETE FROM paystack_references WHERE user_id = $1", [session.id]);
-    await query("DELETE FROM users WHERE id = $1", [session.id]);
+    // All or nothing: if any step fails the account stays exactly as it was.
+    await withTransaction((run) => deleteUserData(run, session.id));
 
     await destroySession();
 

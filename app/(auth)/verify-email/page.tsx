@@ -13,12 +13,12 @@ export default async function VerifyEmailPage({
     return (
       <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-6 text-center">
         <h1 className="text-lg font-medium text-emerald-400">Email verified</h1>
-        <p className="mt-2 text-sm text-zinc-400">You&apos;re all set and signed in.</p>
+        <p className="mt-2 text-sm text-zinc-400">Your email is confirmed. Log in to get started.</p>
         <Link
-          href="/planner"
+          href="/login"
           className="mt-4 inline-block rounded-full bg-zinc-50 px-5 py-2.5 text-sm font-medium text-black transition-colors hover:bg-zinc-300"
         >
-          Go to the planner
+          Log in
         </Link>
       </div>
     );

@@ -3,6 +3,7 @@ import { query } from "@/app/lib/db";
 import { hashPassword, verifyPassword } from "@/app/lib/auth/password";
 import { isValidPassword } from "@/app/lib/auth/validation";
 import { getSession, getCurrentSessionTokenHash, destroyOtherSessionsForUser } from "@/app/lib/auth/session";
+import { revokePendingRecoveryTokens } from "@/app/lib/auth/tokenRevocation";
 import { checkRateLimit } from "@/app/lib/rateLimit";
 
 const RATE_LIMIT = 5;
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     await query("UPDATE users SET password_hash = $1 WHERE id = $2", [hashPassword(newPassword), session.id]);
+    await revokePendingRecoveryTokens(session.id);
 
     const currentTokenHash = await getCurrentSessionTokenHash();
     if (currentTokenHash) {

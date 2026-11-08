@@ -29,6 +29,7 @@ import { POST as requestPost } from "@/app/api/auth/change-email/request/route";
 import { GET as confirmGet } from "@/app/api/auth/change-email/confirm/route";
 import { GET as approveGet } from "@/app/api/auth/change-email/approve/route";
 import { claimUnverifiedAccountForGoogle } from "@/app/lib/auth/accountLink";
+import { revokePendingRecoveryTokens } from "@/app/lib/auth/tokenRevocation";
 import { hashPassword } from "@/app/lib/auth/password";
 
 const PASSWORD = "correct horse battery staple 42";
@@ -152,5 +153,39 @@ describe("Google proving ownership of an existing email", () => {
     const u = (await state.db!.query<{ password_hash: string | null }>(
       "SELECT password_hash FROM users WHERE id = $1", [VERIFIED])).rows[0];
     expect(u.password_hash).not.toBeNull();
+  });
+});
+
+describe("changing a credential cancels older recovery links", () => {
+  it("removes every pending reset and email-change link for that user only", async () => {
+    await state.db!.query("INSERT INTO password_reset_tokens (token_hash, user_id) VALUES ('r1', $1), ('r2', $2)", [VERIFIED, GOOGLE_ONLY]);
+    await state.db!.query(
+      "INSERT INTO email_change_tokens (token_hash, user_id, new_email, expires_at) VALUES ('c1', $1, 'a@x.test', 9999999999999), ('c2', $2, 'b@x.test', 9999999999999)",
+      [VERIFIED, GOOGLE_ONLY]
+    );
+
+    await revokePendingRecoveryTokens(VERIFIED);
+
+    const left = async (table: string, id: string) =>
+      (await state.db!.query(`SELECT 1 FROM ${table} WHERE user_id = $1`, [id])).rows.length;
+    expect(await left("password_reset_tokens", VERIFIED)).toBe(0);
+    expect(await left("email_change_tokens", VERIFIED)).toBe(0);
+    expect(await left("password_reset_tokens", GOOGLE_ONLY)).toBe(1);
+    expect(await left("email_change_tokens", GOOGLE_ONLY)).toBe(1);
+  });
+
+  it("cancels a reset link that was issued before an email change finished", async () => {
+    login(GOOGLE_ONLY, "google@example.com");
+    await state.db!.query("DELETE FROM email_change_tokens");
+    await state.db!.query("DELETE FROM password_reset_tokens");
+    await state.db!.query("INSERT INTO password_reset_tokens (token_hash, user_id) VALUES ('old-reset', $1)", [GOOGLE_ONLY]);
+    await state.db!.query("UPDATE users SET email = 'google@example.com' WHERE id = $1", [GOOGLE_ONLY]);
+
+    await change("moved@example.com");
+    await approveGet(link("approve", state.approvalTokens[0]));
+    await confirmGet(link("confirm", state.confirmTokens[0]));
+
+    expect(await emailOf(GOOGLE_ONLY)).toBe("moved@example.com");
+    expect((await state.db!.query("SELECT 1 FROM password_reset_tokens WHERE user_id = $1", [GOOGLE_ONLY])).rows).toHaveLength(0);
   });
 });
