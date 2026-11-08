@@ -25,7 +25,7 @@ export function NeedsAttentionCard({ insights, weekLabel }: { insights: WeeklyIn
         ))}
       </ul>
       <Link href="/weekly" className="mt-3 inline-block text-xs text-sky-400 hover:text-sky-300">
-        See the full weekly summary →
+        See the full weekly summary
       </Link>
     </div>
   );

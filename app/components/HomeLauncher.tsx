@@ -50,7 +50,7 @@ export function HomeLauncher({ username }: { username: string }) {
               <span className="text-emerald-400">{Icon && <Icon />}</span>
               <span className="text-base font-medium text-zinc-50">{card.title}</span>
               <span className="text-sm leading-relaxed text-zinc-400">{card.body}</span>
-              <span className="mt-auto pt-2 text-sm text-zinc-500 transition-colors group-hover:text-zinc-200">Open →</span>
+              <span className="mt-auto pt-2 text-sm text-zinc-500 transition-colors group-hover:text-zinc-200">Open</span>
             </Link>
           );
         })}

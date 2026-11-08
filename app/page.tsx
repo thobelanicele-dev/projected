@@ -281,7 +281,6 @@ export default async function LandingPage() {
                   className="group block border border-zinc-100 bg-zinc-100 px-6 py-3 text-sm font-medium text-black transition-all duration-300 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
                 >
                   {isLoggedIn ? "Open the planner" : "Get started"}
-                  <span aria-hidden className="ml-2 inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
                 </Link>
               </Magnetic>
               <a
@@ -381,7 +380,6 @@ export default async function LandingPage() {
               className="group inline-block border border-zinc-100 bg-zinc-100 px-7 py-3 text-sm font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-zinc-300 hover:shadow-[0_0_30px_-6px_rgba(52,211,153,0.6)]"
             >
               {isLoggedIn ? "Open the planner" : "Get started"}
-              <span aria-hidden className="ml-2 inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
             </Link>
           </div>
         </Reveal>

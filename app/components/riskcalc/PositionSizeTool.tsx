@@ -71,7 +71,7 @@ export function PositionSizeTool() {
 
       {needsConversionRate && (
         <Field
-          label={`Conversion rate (quote → ${shared.accountCurrency})`}
+          label={`Conversion rate (quote currency to ${shared.accountCurrency})`}
           hint="This pair doesn't share a leg with your account currency, so an extra conversion rate is needed."
         >
           <input

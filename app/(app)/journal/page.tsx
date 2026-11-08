@@ -156,7 +156,7 @@ export default function JournalPage() {
               .slice(0, 8)
               .map((r, i) => (
                 <div key={i}>
-                  {r.symbol} · {r.direction} · entry {r.entryPrice ?? "N/A"} → exit{" "}
+                  {r.symbol} · {r.direction} · entry {r.entryPrice ?? "N/A"}, exit{" "}
                   {r.exitPrice ?? "N/A"}
                   {r.profit !== null ? ` · P/L ${r.profit}` : ""}
                 </div>

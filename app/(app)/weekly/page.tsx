@@ -134,9 +134,9 @@ export default function WeeklyPage() {
                 type="button"
                 onClick={() => setWeekStart(addWeeks(weekStart, -1))}
                 aria-label="Previous week"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-100"
+                className="flex h-8 items-center justify-center rounded-full border border-zinc-800 px-3 text-xs text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-100"
               >
-                ←
+                Previous
               </button>
               <div>
                 <p className="text-sm font-medium text-zinc-100">{formatWeekRange(weekStart)}</p>
@@ -147,9 +147,9 @@ export default function WeeklyPage() {
                 onClick={() => setWeekStart(addWeeks(weekStart, 1))}
                 disabled={weekStart >= thisWeek}
                 aria-label="Next week"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-800 text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-8 items-center justify-center rounded-full border border-zinc-800 px-3 text-xs text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-30"
               >
-                →
+                Next
               </button>
               {weekStart !== thisWeek && (
                 <button

@@ -44,7 +44,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/blog" className="text-sm text-zinc-500 hover:text-zinc-300">
-              ← Back to blog
+              Back to blog
             </Link>
             <ThemeToggle />
           </div>

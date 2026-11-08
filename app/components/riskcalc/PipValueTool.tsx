@@ -61,7 +61,7 @@ export function PipValueTool() {
 
       {needsConversionRate && (
         <Field
-          label={`Conversion rate (quote → ${shared.accountCurrency})`}
+          label={`Conversion rate (quote currency to ${shared.accountCurrency})`}
           hint="Required because neither leg of this pair is your account currency."
         >
           <input

@@ -135,7 +135,7 @@ export default function DashboardPage() {
           <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
             <PeriodPicker value={period} onChange={setPeriod} />
             <Link href="/weekly" className="text-xs text-sky-400 hover:text-sky-300">
-              Weekly summary →
+              Weekly summary
             </Link>
           </div>
 

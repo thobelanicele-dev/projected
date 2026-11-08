@@ -19,7 +19,7 @@ export default function BlogIndexPage() {
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
-              ← Back to home
+              Back to home
             </Link>
             <ThemeToggle />
           </div>

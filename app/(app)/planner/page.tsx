@@ -252,7 +252,7 @@ export default function Home() {
                       onClick={() => loadEntryIntoPlanner(entry)}
                       className="text-xs font-medium text-sky-400 hover:text-sky-300"
                     >
-                      Use as a starting point →
+                      Use as a starting point
                     </button>
                   ) : (
                     <span />

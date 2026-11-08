@@ -899,7 +899,7 @@ export function TradeIdeaForm({
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
             }`}
           >
-            <span aria-hidden="true">↑</span> Long
+            Long
           </button>
           <button
             type="button"
@@ -910,7 +910,7 @@ export function TradeIdeaForm({
                 : "border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700"
             }`}
           >
-            <span aria-hidden="true">↓</span> Short
+            Short
           </button>
         </div>
       </Field>
