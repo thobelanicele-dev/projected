@@ -98,7 +98,7 @@ export function Sidebar() {
         type="button"
         onClick={open}
         aria-label="Open sidebar"
-        className={`fixed left-4 top-4 z-40 h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/90 text-zinc-300 backdrop-blur transition-colors hover:text-zinc-50 ${
+        className={`fixed left-4 top-3 z-40 h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/90 text-zinc-300 backdrop-blur transition-colors hover:text-zinc-50 ${
           visibleOnMobile ? "hidden" : "flex"
         } ${visibleOnDesktop ? "md:hidden" : "md:flex"}`}
       >
@@ -114,7 +114,7 @@ export function Sidebar() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-800 bg-zinc-950 px-4 py-8 transition-transform duration-200 md:sticky md:top-0 md:z-auto md:h-screen md:transition-[width] md:duration-200 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-800 bg-zinc-950 px-4 pb-8 pt-4 transition-transform duration-200 md:sticky md:top-0 md:z-auto md:h-screen md:transition-[width] md:duration-200 ${
           visibleOnMobile ? "translate-x-0" : "-translate-x-full"
         } ${visibleOnDesktop ? "md:w-60 md:translate-x-0 md:px-4" : "md:w-0 md:translate-x-0 md:overflow-hidden md:border-r-0 md:px-0"}`}
       >

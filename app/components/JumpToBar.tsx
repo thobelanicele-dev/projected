@@ -10,7 +10,7 @@ import { OPEN_PALETTE_EVENT } from "@/app/components/CommandPalette";
  */
 export function JumpToBar() {
   return (
-    <div className="sticky top-0 z-30 flex h-16 items-center justify-center border-b border-zinc-800 bg-black/90 px-16 backdrop-blur">
+    <div className="sticky top-0 z-30 flex h-16 items-center justify-center bg-black/90 px-16 backdrop-blur">
       <button
         type="button"
         onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}

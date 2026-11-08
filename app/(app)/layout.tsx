@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <PageFrame>{children}</PageFrame>
           </main>
         </div>
-        <div className="fixed right-6 top-6 z-40">
+        <div className="fixed right-6 top-[14px] z-40">
           <ProfileMenu user={session} />
         </div>
         <CommandPalette />
