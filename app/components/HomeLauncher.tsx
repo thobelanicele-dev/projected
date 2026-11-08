@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { SearchIcon } from "@/app/components/appNav";
+import { OPEN_PALETTE_EVENT } from "@/app/components/CommandPalette";
 import { NAV_ITEMS } from "@/app/components/appNav";
 import { PlanUsageNote } from "@/app/components/PlanUsageNote";
 import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
@@ -33,8 +35,19 @@ export function HomeLauncher({ username }: { username: string }) {
 
   return (
     <div>
-      <p className="text-sm text-zinc-500">{username ? `Welcome back, ${username}` : "Welcome back"}</p>
-      <h1 className="mt-1 text-3xl font-semibold tracking-tight">What are you working on?</h1>
+      <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+        <p className="text-sm text-zinc-500">{username ? `Welcome back, ${username}` : "Welcome back"}</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">What are you working on?</h1>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
+          className="mt-6 flex h-12 w-full items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950 px-4 text-left text-sm text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
+        >
+          <SearchIcon />
+          <span>Jump to a tool or trade</span>
+          <kbd className="ml-auto hidden rounded border border-zinc-800 px-1.5 py-0.5 text-[11px] sm:inline">Ctrl K</kbd>
+        </button>
+      </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {CARDS.map((card) => {
