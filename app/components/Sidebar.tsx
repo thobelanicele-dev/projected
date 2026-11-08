@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
-import { NAV_ITEMS, HomeIcon, SearchIcon } from "@/app/components/appNav";
-import { OPEN_PALETTE_EVENT } from "@/app/components/CommandPalette";
+import { NAV_ITEMS, HomeIcon } from "@/app/components/appNav";
 
 // Mobile and desktop each remember their own open/closed preference, rather
 // than sharing one flag: closing the sidebar on your phone shouldn't also
@@ -134,17 +133,8 @@ export function Sidebar() {
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
-          className="mt-6 flex items-center gap-2.5 rounded-lg border border-zinc-800 px-2.5 py-2 text-sm text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300"
-        >
-          <SearchIcon />
-          Jump to…
-          <kbd className="ml-auto hidden rounded border border-zinc-800 px-1.5 py-0.5 text-[11px] md:inline">Ctrl K</kbd>
-        </button>
 
-        <nav className="mt-4 flex flex-col gap-1">
+        <nav className="mt-8 flex flex-col gap-1">
           <Link
             href="/home"
             aria-current={pathname === "/home" ? "page" : undefined}
