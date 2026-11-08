@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/app/lib/auth/session";
+import { ChangeUsernameForm } from "@/app/components/account/ChangeUsernameForm";
 import { ChangePasswordForm } from "@/app/components/account/ChangePasswordForm";
 import { ChangeEmailForm } from "@/app/components/account/ChangeEmailForm";
 import { DeleteAccountSection } from "@/app/components/account/DeleteAccountSection";
@@ -37,6 +38,11 @@ export default async function AccountPage() {
       <section className="flex flex-col gap-4">
         <h2 className="text-sm font-medium text-zinc-200">Profile picture</h2>
         <ProfilePictureSection username={session.username} />
+      </section>
+
+      <section className="flex flex-col gap-4 border-t border-zinc-800 pt-8">
+        <h2 className="text-sm font-medium text-zinc-200">Username</h2>
+        <ChangeUsernameForm currentUsername={session.username} />
       </section>
 
       <section className="flex flex-col gap-4 border-t border-zinc-800 pt-8">
