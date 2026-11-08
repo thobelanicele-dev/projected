@@ -98,7 +98,7 @@ export function Sidebar() {
         type="button"
         onClick={open}
         aria-label="Open sidebar"
-        className={`fixed left-4 top-3 z-40 h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/90 text-zinc-300 backdrop-blur transition-colors hover:text-zinc-50 ${
+        className={`fixed left-4 top-3 z-40 h-10 w-10 items-center justify-center rounded-lg text-zinc-300 transition-colors hover:text-zinc-50 ${
           visibleOnMobile ? "hidden" : "flex"
         } ${visibleOnDesktop ? "md:hidden" : "md:flex"}`}
       >
