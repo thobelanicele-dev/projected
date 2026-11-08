@@ -3,6 +3,7 @@ import { getSession } from "@/app/lib/auth/session";
 import { ChangePasswordForm } from "@/app/components/account/ChangePasswordForm";
 import { ChangeEmailForm } from "@/app/components/account/ChangeEmailForm";
 import { DeleteAccountSection } from "@/app/components/account/DeleteAccountSection";
+import { ProfilePictureSection } from "@/app/components/account/ProfilePictureSection";
 import { PlanBillingSection } from "@/app/components/account/PlanBillingSection";
 import { isBillingEnabled } from "@/app/lib/paystack";
 import { effectiveTier, PLAN_NAMES, subscriptionState } from "@/app/lib/planLimits";
@@ -34,6 +35,11 @@ export default async function AccountPage() {
       </div>
 
       <section className="flex flex-col gap-4">
+        <h2 className="text-sm font-medium text-zinc-200">Profile picture</h2>
+        <ProfilePictureSection username={session.username} />
+      </section>
+
+      <section className="flex flex-col gap-4 border-t border-zinc-800 pt-8">
         <h2 className="text-sm font-medium text-zinc-200">Plan and billing</h2>
         {session.complimentary ? (
           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4 text-sm">

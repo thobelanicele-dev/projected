@@ -43,8 +43,8 @@ export default function PrivacyPage() {
 
       <LegalSection title="What stays on your device only">
         <p>
-          Your trade journal, saved plan drafts, plan checklists, and risk-calculator inputs are
-          stored in your browser&apos;s local storage, never sent to or stored on our servers.
+          Your trade journal, saved plan drafts, plan checklists, risk-calculator inputs, and your
+          profile picture (if you set one) are stored in your browser&apos;s local storage, never sent to or stored on our servers.
           Clearing your browser data, or switching device or browser, will not carry this information
           over, since we never had a copy of it.
         </p>

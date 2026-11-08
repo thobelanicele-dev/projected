@@ -3,8 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Field, inputClass } from "@/app/components/TradeIdeaForm";
+import { useCurrentUserId } from "@/app/components/CurrentUserProvider";
+import { removeAvatar } from "@/app/lib/avatar";
 
 export function DeleteAccountSection({ hasPassword }: { hasPassword: boolean }) {
+  const userId = useCurrentUserId();
   const [confirmText, setConfirmText] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,6 +34,7 @@ export function DeleteAccountSection({ hasPassword }: { hasPassword: boolean }) 
         setError(data.error ?? "Something went wrong.");
         return;
       }
+      removeAvatar(userId);
       setDeleted(true);
     } catch {
       setError("Could not reach the server. Please try again.");

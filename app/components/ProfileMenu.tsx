@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Avatar } from "@/app/components/Avatar";
 import type { SessionUser } from "@/app/lib/auth/session";
 
 const PLAN_LABELS: Record<string, string> = {
@@ -38,7 +39,6 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
     }
   }
 
-  const initial = user.username.charAt(0).toUpperCase();
   const planLabel = user.plan ? (PLAN_LABELS[user.plan] ?? user.plan) : "Free";
 
   return (
@@ -47,9 +47,9 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="Account menu"
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-700"
+        className="flex rounded-full transition-opacity hover:opacity-80"
       >
-        {initial}
+        <Avatar username={user.username} />
       </button>
 
       {open && (
