@@ -42,7 +42,7 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
   const planLabel = user.plan ? (PLAN_LABELS[user.plan] ?? user.plan) : "Free";
 
   return (
-    <div ref={menuRef} className="fixed right-6 top-6 z-40">
+    <div ref={menuRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

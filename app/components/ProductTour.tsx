@@ -141,7 +141,9 @@ export function ProductTour({ steps }: { steps: TourStep[] }) {
     // before looking for the target; it won't be in the DOM yet otherwise.
     const lookupTimeout = setTimeout(
       () => {
-        const el = document.querySelector<HTMLElement>(step.target);
+        // The same tool can appear in the top bar and the phone tab bar; use the one that is on screen.
+        const el =
+          Array.from(document.querySelectorAll<HTMLElement>(step.target)).find((n) => n.getClientRects().length > 0) ?? null;
 
         if (!el) {
           // Target not on screen right now (e.g. hidden by responsive layout);

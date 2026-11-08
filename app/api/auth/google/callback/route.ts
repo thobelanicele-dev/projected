@@ -134,7 +134,7 @@ export async function GET(req: NextRequest) {
     }
 
     await createSession(userId);
-    return NextResponse.redirect(new URL("/planner", req.url));
+    return NextResponse.redirect(new URL("/home", req.url));
   } catch (error) {
     console.error("Google OAuth sign-in failed", error);
     return errorRedirect(req, "google-auth-failed");

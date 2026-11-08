@@ -48,7 +48,7 @@ function LoginForm() {
         if (res.status === 403) setNeedsVerification(true);
         return;
       }
-      router.push("/planner");
+      router.push("/home");
     } catch {
       setError("Could not reach the server. Please try again.");
     } finally {
