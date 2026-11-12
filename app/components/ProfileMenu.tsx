@@ -72,6 +72,13 @@ export function ProfileMenu({ user }: { user: SessionUser }) {
             >
               Account settings
             </Link>
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-200"
+            >
+              Landing page
+            </Link>
             <button
               type="button"
               onClick={() => {

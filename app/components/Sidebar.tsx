@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
-import { NAV_ITEMS, HomeIcon } from "@/app/components/appNav";
+import { NAV_ITEMS, HomeIcon, GlobeIcon } from "@/app/components/appNav";
 
 // Mobile and desktop each remember their own open/closed preference, rather
 // than sharing one flag: closing the sidebar on your phone shouldn't also
@@ -164,9 +164,19 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-4">
-          <span className="px-2.5 text-xs text-zinc-500">Appearance</span>
-          <ThemeToggle />
+        <div className="mt-auto flex flex-col gap-1 border-t border-zinc-800 pt-4">
+          {/* Stays signed in: this is just a link to the public landing page. */}
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-900/60"
+          >
+            <GlobeIcon />
+            Landing page
+          </Link>
+          <div className="flex items-center justify-between">
+            <span className="px-2.5 text-xs text-zinc-500">Appearance</span>
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
     </>
