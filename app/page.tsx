@@ -5,14 +5,12 @@ import { NavAuthLink } from "@/app/components/NavAuthLink";
 import { Reveal } from "@/app/components/Reveal";
 import { HowItWorksSteps } from "@/app/components/HowItWorksSteps";
 import { PairsTicker } from "@/app/components/PairsTicker";
-import { PlannerDemo } from "@/app/components/PlannerDemo";
 import { FaqAccordion } from "@/app/components/FaqAccordion";
-import { ProductTabs } from "@/app/components/ProductTabs";
 import { NumberTicker } from "@/app/components/beui/number-ticker";
 import { Magnetic } from "@/app/components/beui/magnetic";
 import { TextReveal } from "@/app/components/beui/text-reveal";
-import { TiltCard } from "@/app/components/beui/tilt-card";
 import { PricingSection } from "@/app/components/PricingSection";
+import { ProductShowcase } from "@/app/components/ProductShowcase";
 import { isBillingEnabled } from "@/app/lib/paystack";
 
 const CAPABILITIES = [
@@ -41,39 +39,6 @@ const STEPS = [
   },
 ];
 
-const GRID_FEATURES = [
-  {
-    eyebrow: "Trade journal",
-    title: "Your history, kept honest",
-    body: "Every plan saves automatically and gets checked against what actually happened, not just what you remember.",
-    stats: [
-      ["Win rate", "58%"],
-      ["Avg R", "0.8R"],
-      ["Trades", "34"],
-    ] as [string, string][],
-  },
-  {
-    eyebrow: "Backtest engine",
-    title: "Test it before you risk it",
-    body: "Pick a template or describe your own strategy, then run it against real historical prices, costs included.",
-    stats: [
-      ["Trades", "24"],
-      ["Win rate", "46%"],
-      ["Profit factor", "1.31"],
-    ] as [string, string][],
-  },
-  {
-    eyebrow: "Risk calculator",
-    title: "Know your exact risk",
-    body: "Position size, margin, and correlated exposure, worked out automatically from your account and risk %.",
-    stats: [
-      ["Risk", "$100"],
-      ["Size", "0.20 lots"],
-      ["R:R", "1:2.0"],
-    ] as [string, string][],
-  },
-];
-
 const FAQS = [
   {
     q: "Do all plans include all four tools?",
@@ -97,10 +62,6 @@ const FAQS = [
   },
 ];
 
-function Dot() {
-  return <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-zinc-600" />;
-}
-
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="flex items-center gap-2 text-xs uppercase tracking-widest text-zinc-500">
@@ -109,99 +70,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
     </p>
   );
 }
-
-function ToolPanel({
-  eyebrow,
-  title,
-  body,
-  bullets,
-  visual,
-}: {
-  eyebrow: string;
-  title: string;
-  body: string;
-  bullets?: React.ReactNode[];
-  visual: React.ReactNode;
-}) {
-  return (
-    <div className="grid items-start gap-10 lg:grid-cols-2">
-      <div>
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h3 className="mt-2 text-xl font-medium tracking-tight text-zinc-50">{title}</h3>
-        <p className="mt-4 text-sm leading-relaxed text-zinc-400">{body}</p>
-        {bullets && (
-          <ul className="mt-6 space-y-2 text-sm text-zinc-400">
-            {bullets.map((bullet, i) => (
-              <li key={i} className="flex gap-2">
-                <Dot />
-                {bullet}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <TiltCard max={6} glare={false}>
-        {visual}
-      </TiltCard>
-    </div>
-  );
-}
-
-function StatsMock({ label, stats }: { label: string; stats: [string, string][] }) {
-  return (
-    <div className="border border-zinc-800 bg-zinc-950 p-5 text-left font-mono text-[13px]">
-      <p className="border-b border-zinc-800 pb-3 text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
-      <div className="mt-4 grid grid-cols-3 gap-px border border-zinc-800 bg-zinc-800">
-        {stats.map(([name, value]) => (
-          <div key={name} className="bg-zinc-950 p-3">
-            <p className="text-[10px] uppercase tracking-widest text-zinc-500">{name}</p>
-            <p className="mt-1 text-lg text-zinc-100">{value}</p>
-          </div>
-        ))}
-      </div>
-      <p className="mt-2 text-[10px] text-zinc-600">Illustrative example, not real account data.</p>
-    </div>
-  );
-}
-
-const [JOURNAL, BACKTEST, RISK] = GRID_FEATURES;
-
-const PRODUCT_TABS = [
-  {
-    id: "planner",
-    label: "Trade planner",
-    dwellMs: 9000,
-    content: (
-      <ToolPanel
-        eyebrow="Trade planner"
-        title="Your idea, turned into a safe plan"
-        body="Describe your trade in plain English. We turn it into a clear plan and check it for the mistakes beginners make most."
-        bullets={[
-          "Flags bad habits: chasing price, revenge trading, oversized bets",
-          "Checked against the real, live price when you're entering at market",
-          "Every question explains itself: no jargon",
-        ]}
-        visual={<PlannerDemo />}
-      />
-    ),
-  },
-  ...[
-    { id: "journal", feature: JOURNAL, mock: "Journal summary" },
-    { id: "backtest", feature: BACKTEST, mock: "Backtest result" },
-    { id: "risk", feature: RISK, mock: "Risk calculation" },
-  ].map(({ id, feature, mock }) => ({
-    id,
-    label: feature.eyebrow,
-    content: (
-      <ToolPanel
-        eyebrow={feature.eyebrow}
-        title={feature.title}
-        body={feature.body}
-        visual={<StatsMock label={mock} stats={feature.stats} />}
-      />
-    ),
-  })),
-];
 
 export default async function LandingPage() {
   // A DB hiccup here must not take down the entire marketing page for every
@@ -226,10 +94,8 @@ export default async function LandingPage() {
           </span>
           <nav className="hidden items-center gap-8 text-sm text-zinc-500 md:flex">
             <a href="#how" className="hover:text-zinc-200">How it works</a>
-            <a href="#features" className="hover:text-zinc-200">Product</a>
+            <a href="#features" className="hover:text-zinc-200">Tools</a>
             <a href="#pricing" className="hover:text-zinc-200">Pricing</a>
-            <a href="#faq" className="hover:text-zinc-200">FAQ</a>
-            <Link href="/blog" className="hover:text-zinc-200">Blog</Link>
           </nav>
           <div className="flex items-center gap-4 sm:gap-5">
             <ThemeToggle />
@@ -315,10 +181,16 @@ export default async function LandingPage() {
         <HowItWorksSteps steps={STEPS} />
       </section>
 
-      {/* Feature spotlight + grid */}
+      {/* The four tools, all on screen at once */}
       <section id="features" className="mx-auto w-full max-w-6xl border-t border-zinc-900 px-6 py-24">
         <Reveal>
-          <ProductTabs tabs={PRODUCT_TABS} />
+          <Eyebrow>Tools</Eyebrow>
+          <h2 className="mt-2 text-2xl font-medium tracking-tight text-zinc-50">
+            Four tools that work together
+          </h2>
+        </Reveal>
+        <Reveal delay={100}>
+          <ProductShowcase />
         </Reveal>
       </section>
 
