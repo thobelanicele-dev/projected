@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { getSession } from "@/app/lib/auth/session";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { NavAuthLink } from "@/app/components/NavAuthLink";
@@ -14,7 +13,6 @@ import { Magnetic } from "@/app/components/beui/magnetic";
 import { TextReveal } from "@/app/components/beui/text-reveal";
 import { TiltCard } from "@/app/components/beui/tilt-card";
 import { PricingSection } from "@/app/components/PricingSection";
-import { currencyForCountry } from "@/app/lib/pricingRegion";
 import { isBillingEnabled } from "@/app/lib/paystack";
 
 const CAPABILITIES = [
@@ -215,10 +213,6 @@ export default async function LandingPage() {
     console.error("Landing page session check failed", error);
   }
 
-  // Vercel's edge network sets this on every request; absent in local dev,
-  // where it falls back to USD like any undetected visitor would.
-  const headersList = await headers();
-  const currency = currencyForCountry(headersList.get("x-vercel-ip-country"));
   const billingEnabled = isBillingEnabled();
 
   return (
@@ -343,7 +337,6 @@ export default async function LandingPage() {
 
           <PricingSection
             isLoggedIn={isLoggedIn}
-            currency={currency}
             billingEnabled={billingEnabled}
           />
         </div>

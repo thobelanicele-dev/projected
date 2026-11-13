@@ -5,23 +5,26 @@ import { NumberTicker } from "@/app/components/beui/number-ticker";
 import { Reveal } from "@/app/components/Reveal";
 import { PricingCTA } from "@/app/components/PricingCTA";
 import { limitLines, limitTableRows } from "@/app/lib/planLimits";
-import type { CurrencyCode } from "@/app/lib/pricingRegion";
-
-export type { CurrencyCode };
-
-const SYMBOLS: Record<CurrencyCode, string> = { ZAR: "R", USD: "$", EUR: "€", GBP: "£" };
-
 type TierKey = "free" | "basic" | "premium";
 
-// Converted from live USD/ZAR, GBP/ZAR and EUR/ZAR rates and rounded to normal
-// SaaS "charm" pricing per currency. Proposed starting points, not final —
-// confirm/adjust before this goes live. Everyone is billed in ZAR; the other
-// currencies are display only.
-export const TIER_PRICING: Record<TierKey, Record<CurrencyCode, number>> = {
-  free: { ZAR: 0, USD: 0, EUR: 0, GBP: 0 },
-  basic: { ZAR: 199, USD: 11.99, EUR: 10.99, GBP: 9.99 },
-  premium: { ZAR: 499, USD: 29.99, EUR: 26.99, GBP: 22.99 },
+// Monthly prices in US Dollars. Every visitor sees the same price, wherever
+// they are. The payment provider must charge these same amounts.
+export const TIER_PRICING: Record<TierKey, number> = {
+  free: 0,
+  basic: 20,
+  premium: 50,
 };
+
+const SYMBOL = "$";
+
+/** "$20" for whole amounts, "$19.99" otherwise. */
+export function formatPrice(amount: number): string {
+  return `${SYMBOL}${formatNumber(amount, decimalsFor(amount))}`;
+}
+
+function decimalsFor(amount: number): number {
+  return Number.isInteger(amount) ? 0 : 2;
+}
 
 const TIERS: {
   key: TierKey;
@@ -68,23 +71,13 @@ function formatNumber(amount: number, decimals: number): string {
   });
 }
 
-function formatPrice(amount: number, currency: CurrencyCode): string {
-  if (amount === 0) return "Free";
-  return `${SYMBOLS[currency]}${formatNumber(amount, 2)}`;
-}
-
 export function PricingSection({
   isLoggedIn,
-  currency,
   billingEnabled,
 }: {
   isLoggedIn: boolean;
-  currency: CurrencyCode;
   billingEnabled: boolean;
 }) {
-  const decimals = 2;
-  const symbol = SYMBOLS[currency];
-
   return (
     <>
       <div className="mt-8 grid grid-cols-1 divide-y divide-zinc-900 border border-zinc-900 md:grid-cols-3 md:divide-x md:divide-y-0">
@@ -110,26 +103,25 @@ export function PricingSection({
             <p className="mt-1 text-sm text-zinc-500">{tier.tagline}</p>
             <p className="mt-4">
               <span className="text-3xl font-medium text-zinc-100">
-                {TIER_PRICING[tier.key][currency] === 0 ? (
+                {TIER_PRICING[tier.key] === 0 ? (
                   "Free"
                 ) : (
                   <NumberTicker
-                    value={TIER_PRICING[tier.key][currency]}
-                    decimals={decimals}
-                    prefix={symbol}
-                    format={(n) => formatNumber(n, decimals)}
+                    value={TIER_PRICING[tier.key]}
+                    decimals={decimalsFor(TIER_PRICING[tier.key])}
+                    prefix={SYMBOL}
+                    format={(n) => formatNumber(n, decimalsFor(TIER_PRICING[tier.key]))}
                     duration={0.7}
                   />
                 )}
               </span>
-              {TIER_PRICING[tier.key][currency] > 0 && (
+              {TIER_PRICING[tier.key] > 0 && (
                 <span className="text-sm text-zinc-500"> / month</span>
               )}
             </p>
-            {tier.key !== "free" && currency !== "ZAR" && (
+            {tier.key !== "free" && billingEnabled && (
               <p className="mt-1 text-xs text-zinc-500">
-                Approximate. Billed in South African Rand:{" "}
-                {formatPrice(TIER_PRICING[tier.key].ZAR, "ZAR")} / month.
+                Charged in South African Rand at checkout.
               </p>
             )}
             <ul className="mt-6 flex-1 space-y-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TIER_PRICING } from "@/app/components/PricingSection";
+import { formatPrice, TIER_PRICING } from "@/app/components/PricingSection";
 import { isUpgrade, limitLines, PLAN_NAMES, type PlanTier } from "@/app/lib/planLimits";
 import type { Tier } from "@/app/lib/paystack";
 
@@ -46,7 +46,7 @@ export function UpgradeOptions({ currentTier, className = "" }: { currentTier: P
         {options.map((tier) => (
           <div key={tier} className="flex flex-col rounded-lg border border-zinc-800 p-4">
             <p className="text-zinc-100">{PLAN_NAMES[tier]}</p>
-            <p className="mt-1 text-xs text-zinc-500">R{TIER_PRICING[tier].ZAR} / month</p>
+            <p className="mt-1 text-xs text-zinc-500">{formatPrice(TIER_PRICING[tier])} / month</p>
             <ul className="mt-3 flex-1 space-y-1 text-xs text-zinc-400">
               {limitLines(tier).map((line) => (
                 <li key={line}>{line}</li>
