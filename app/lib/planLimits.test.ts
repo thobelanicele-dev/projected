@@ -53,11 +53,15 @@ describe("pricing copy comes from the enforced limits", () => {
     expect(limitLines("premium")).toContain("2 years of backtest data");
   });
 
-  it("tells people about the daily cap wherever the monthly number is shown", () => {
-    const perDay = PLAN_LIMITS.basic.aiPlansPerDay;
-    expect(limitLines("basic")[0]).toBe(`${PLAN_LIMITS.basic.aiPlans} AI trade plans / month, ${perDay} a day`);
-    expect(limitTableRows()[0][2]).toBe(`${PLAN_LIMITS.basic.aiPlans} / mo, ${perDay} / day`);
-    expect(limitTableRows()[0][3]).toBe("Unlimited");
+  it("shows the daily cap in its own Time limits row of the table", () => {
+    expect(limitLines("basic")[0]).toBe(`${PLAN_LIMITS.basic.aiPlans} AI trade plans / month`);
+    expect(limitTableRows()[0]).toEqual(["AI trade plans", "5 / mo", `${PLAN_LIMITS.basic.aiPlans} / mo`, "Unlimited"]);
+    expect(limitTableRows()[1]).toEqual([
+      "Time limits",
+      "\u2013",
+      `${PLAN_LIMITS.basic.aiPlansPerDay} AI plans / day`,
+      "Unlimited",
+    ]);
   });
 
   it("counts down to the daily reset in hours", () => {
@@ -71,7 +75,13 @@ describe("pricing copy comes from the enforced limits", () => {
 
   it("has a table row for every enforced limit", () => {
     const labels = limitTableRows().map((r) => r[0]);
-    expect(labels).toEqual(["AI trade plans", "Backtest runs", "Journal trades", "Backtest history depth"]);
+    expect(labels).toEqual([
+      "AI trade plans",
+      "Time limits",
+      "Backtest runs",
+      "Journal trades",
+      "Backtest history depth",
+    ]);
   });
 
   it("never promises more journal room than the app's storage cap", () => {

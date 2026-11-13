@@ -114,7 +114,7 @@ function perMonth(n: number | null, noun: string): string {
 export function limitLines(tier: PlanTier): string[] {
   const l = PLAN_LIMITS[tier];
   return [
-    perMonth(l.aiPlans, "AI trade plans") + (l.aiPlansPerDay === null ? "" : `, ${l.aiPlansPerDay} a day`),
+    perMonth(l.aiPlans, "AI trade plans"),
     perMonth(l.backtestRuns, "backtest runs"),
     `Journal up to ${l.journalEntries} trades`,
     `${historyLabel(l.backtestDays)} of backtest data`,
@@ -125,13 +125,18 @@ export function limitLines(tier: PlanTier): string[] {
 /** The rows of the pricing comparison table: [label, free, basic, premium]. */
 export function limitTableRows(): [string, string, string, string][] {
   const cell = (n: number | null, suffix = "") => (n === null ? "Unlimited" : `${n}${suffix}`);
-  const aiCell = (l: PlanLimits) =>
-    cell(l.aiPlans, " / mo") + (l.aiPlansPerDay === null ? "" : `, ${l.aiPlansPerDay} / day`);
+  // The daily cap gets its own row. A plan with a monthly allowance but no
+  // daily cap shows a dash; a plan with no caps at all shows "Unlimited".
+  const timeCell = (l: PlanLimits) => {
+    if (l.aiPlansPerDay !== null) return `${l.aiPlansPerDay} AI plans / day`;
+    return l.aiPlans === null ? "Unlimited" : "\u2013";
+  };
   const f = PLAN_LIMITS.free;
   const b = PLAN_LIMITS.basic;
   const p = PLAN_LIMITS.premium;
   return [
-    ["AI trade plans", aiCell(f), aiCell(b), aiCell(p)],
+    ["AI trade plans", cell(f.aiPlans, " / mo"), cell(b.aiPlans, " / mo"), cell(p.aiPlans, " / mo")],
+    ["Time limits", timeCell(f), timeCell(b), timeCell(p)],
     ["Backtest runs", cell(f.backtestRuns, " / mo"), cell(b.backtestRuns, " / mo"), cell(p.backtestRuns, " / mo")],
     ["Journal trades", String(f.journalEntries), String(b.journalEntries), String(p.journalEntries)],
     [
