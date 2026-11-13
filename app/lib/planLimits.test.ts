@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   subscriptionState,
   effectiveTier,
+  JOURNAL_STORAGE_CAP,
   limitLines,
   limitReachedMessage,
   limitTableRows,
@@ -56,7 +57,7 @@ describe("pricing copy comes from the enforced limits", () => {
 
   it("never promises more journal room than the app's storage cap", () => {
     for (const tier of ["free", "basic", "premium"] as const) {
-      expect(PLAN_LIMITS[tier].journalEntries).toBeLessThanOrEqual(200);
+      expect(PLAN_LIMITS[tier].journalEntries).toBeLessThanOrEqual(JOURNAL_STORAGE_CAP);
     }
   });
 });

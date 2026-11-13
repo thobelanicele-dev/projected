@@ -15,12 +15,20 @@ export interface PlanLimits {
   backtestDays: number;
 }
 
+// The most journal entries the app will ever keep. The journal lives in the
+// browser's storage, which holds roughly 2.5 million characters on the
+// strictest browsers. A saved AI plan is about 5,400 characters, so 300 of
+// them is about 1.6 million: safe everywhere. 500 would not be.
+export const JOURNAL_STORAGE_CAP = 300;
+
 export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
   free: { aiPlans: 5, backtestRuns: 3, journalEntries: 20, backtestDays: 90 },
-  basic: { aiPlans: 50, backtestRuns: 25, journalEntries: 100, backtestDays: 365 },
-  // The journal lives in the browser's storage, which is why even Premium has
-  // a ceiling rather than "unlimited".
-  premium: { aiPlans: null, backtestRuns: null, journalEntries: 200, backtestDays: 730 },
+  // Sized so someone trading every day runs out in about the third week of
+  // the month, which is when Premium's "unlimited" starts to matter.
+  basic: { aiPlans: 30, backtestRuns: 10, journalEntries: 100, backtestDays: 365 },
+  // Even Premium has a journal ceiling rather than "unlimited": see
+  // JOURNAL_STORAGE_CAP above.
+  premium: { aiPlans: null, backtestRuns: null, journalEntries: JOURNAL_STORAGE_CAP, backtestDays: 730 },
 };
 
 export const PLAN_NAMES: Record<PlanTier, string> = {

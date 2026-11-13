@@ -1,5 +1,6 @@
 import type { TradePlan } from "@/app/api/plan/route";
 import type { TradeIdeaFields } from "@/app/components/TradeIdeaForm";
+import { JOURNAL_STORAGE_CAP } from "@/app/lib/planLimits";
 import { migrateUnscopedKey, userScopedKey } from "@/app/lib/userScopedStorage";
 
 export type TradeStatus = "planned" | "open" | "closed";
@@ -44,7 +45,7 @@ export interface JournalStats {
 }
 
 const BASE_STORAGE_KEY = "fxinsites.journal";
-const MAX_ENTRIES = 200;
+const MAX_ENTRIES = JOURNAL_STORAGE_CAP;
 
 function storageKey(userId: string): string {
   const key = userScopedKey(BASE_STORAGE_KEY, userId);

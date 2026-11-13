@@ -2,6 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { NextRequest } from "next/server";
 import { USAGE_TABLE_SQL } from "@/app/lib/usageSchema";
+import { PLAN_LIMITS } from "@/app/lib/planLimits";
 
 // Runs the real route handlers with the real usage SQL on a real Postgres
 // engine. Only the login lookup, the AI call, and the database connection are
@@ -99,9 +100,10 @@ describe("POST /api/plan", () => {
     expect(await usedCount("aiPlans")).toBe(0);
   });
 
-  it("gives Basic 50 and Premium unlimited", async () => {
+  it("stops Basic at its monthly cap and leaves Premium unlimited", async () => {
     asUser("basic", "active");
-    await state.db!.query("INSERT INTO usage_counts VALUES ($1, 'aiPlans', $2, 49)", [USER, currentPeriod()]);
+    const oneLeft = PLAN_LIMITS.basic.aiPlans! - 1;
+    await state.db!.query("INSERT INTO usage_counts VALUES ($1, 'aiPlans', $2, $3)", [USER, currentPeriod(), oneLeft]);
     expect((await planPost(plan())).status).toBe(200);
     expect((await planPost(plan())).status).toBe(403);
 
@@ -146,7 +148,7 @@ describe("/api/limits", () => {
     await state.db!.query("INSERT INTO usage_counts VALUES ($1, 'aiPlans', $2, 7)", [USER, currentPeriod()]);
     const body = await (await limitsGet(req("/api/limits"))).json();
     expect(body.tier).toBe("basic");
-    expect(body.limits.aiPlans).toBe(50);
+    expect(body.limits.aiPlans).toBe(PLAN_LIMITS.basic.aiPlans);
     expect(body.usage.aiPlans).toBe(7);
     expect(body.usage.backtestRuns).toBe(0);
   });
