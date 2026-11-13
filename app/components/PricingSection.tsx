@@ -119,11 +119,6 @@ export function PricingSection({
                 <span className="text-sm text-zinc-500"> / month</span>
               )}
             </p>
-            {tier.key !== "free" && billingEnabled && (
-              <p className="mt-1 text-xs text-zinc-500">
-                Charged in South African Rand at checkout.
-              </p>
-            )}
             <ul className="mt-6 flex-1 space-y-2">
               {limitLines(tier.key).map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm text-zinc-400">
