@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/app/lib/auth/session";
 import { checkRateLimit, getClientIp } from "@/app/lib/rateLimit";
-import { consumeUsage, getUsage, refundUsage } from "@/app/lib/planUsage";
+import { consumeUsage, getAiPlansToday, getUsage, refundUsage } from "@/app/lib/planUsage";
 import {
   effectiveTier,
   limitReachedMessage,
+  nextDailyResetDate,
   nextResetDate,
   PLAN_LIMITS,
 } from "@/app/lib/planLimits";
@@ -28,12 +29,16 @@ export async function GET(req: NextRequest) {
 
   try {
     const tier = effectiveTier(session);
+    const limits = PLAN_LIMITS[tier];
     const usage = await getUsage(session.id);
+    // Only plans with a daily cap count per day, so only they need the lookup.
+    const aiPlansToday = limits.aiPlansPerDay === null ? 0 : await getAiPlansToday(session.id);
     return NextResponse.json({
       tier,
-      limits: PLAN_LIMITS[tier],
-      usage,
+      limits,
+      usage: { ...usage, aiPlansToday },
       resetsAt: nextResetDate().toISOString(),
+      dailyResetsAt: nextDailyResetDate().toISOString(),
     });
   } catch (error) {
     console.error("Limits lookup failed", error);

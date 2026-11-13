@@ -7,6 +7,8 @@ export type PlanTier = "free" | "basic" | "premium";
 export interface PlanLimits {
   /** AI trade plans per calendar month. null = unlimited. */
   aiPlans: number | null;
+  /** AI trade plans per day, on top of the monthly allowance. null = no daily cap. */
+  aiPlansPerDay: number | null;
   /** Backtest runs per calendar month. null = unlimited. */
   backtestRuns: number | null;
   /** Journal entries kept in the browser. */
@@ -22,13 +24,14 @@ export interface PlanLimits {
 export const JOURNAL_STORAGE_CAP = 300;
 
 export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
-  free: { aiPlans: 5, backtestRuns: 3, journalEntries: 20, backtestDays: 90 },
+  free: { aiPlans: 5, aiPlansPerDay: null, backtestRuns: 3, journalEntries: 20, backtestDays: 90 },
   // Sized so someone trading every day runs out in about the third week of
-  // the month, which is when Premium's "unlimited" starts to matter.
-  basic: { aiPlans: 30, backtestRuns: 10, journalEntries: 100, backtestDays: 365 },
+  // the month, which is when Premium's "unlimited" starts to matter. The daily
+  // cap spreads the month's plans out and is one more thing Premium removes.
+  basic: { aiPlans: 30, aiPlansPerDay: 3, backtestRuns: 10, journalEntries: 100, backtestDays: 365 },
   // Even Premium has a journal ceiling rather than "unlimited": see
   // JOURNAL_STORAGE_CAP above.
-  premium: { aiPlans: null, backtestRuns: null, journalEntries: JOURNAL_STORAGE_CAP, backtestDays: 730 },
+  premium: { aiPlans: null, aiPlansPerDay: null, backtestRuns: null, journalEntries: JOURNAL_STORAGE_CAP, backtestDays: 730 },
 };
 
 export const PLAN_NAMES: Record<PlanTier, string> = {
@@ -88,6 +91,15 @@ export function nextResetDate(now: Date = new Date()): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 
+/** Day bucket, in UTC, e.g. "2026-11-13". The daily cap resets when it rolls over. */
+export function usageDay(now: Date = new Date()): string {
+  return now.toISOString().slice(0, 10);
+}
+
+export function nextDailyResetDate(now: Date = new Date()): Date {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+}
+
 function historyLabel(days: number): string {
   if (days >= 730) return "2 years";
   if (days >= 365) return "1 year";
@@ -102,7 +114,7 @@ function perMonth(n: number | null, noun: string): string {
 export function limitLines(tier: PlanTier): string[] {
   const l = PLAN_LIMITS[tier];
   return [
-    perMonth(l.aiPlans, "AI trade plans"),
+    perMonth(l.aiPlans, "AI trade plans") + (l.aiPlansPerDay === null ? "" : `, ${l.aiPlansPerDay} a day`),
     perMonth(l.backtestRuns, "backtest runs"),
     `Journal up to ${l.journalEntries} trades`,
     `${historyLabel(l.backtestDays)} of backtest data`,
@@ -113,11 +125,13 @@ export function limitLines(tier: PlanTier): string[] {
 /** The rows of the pricing comparison table: [label, free, basic, premium]. */
 export function limitTableRows(): [string, string, string, string][] {
   const cell = (n: number | null, suffix = "") => (n === null ? "Unlimited" : `${n}${suffix}`);
+  const aiCell = (l: PlanLimits) =>
+    cell(l.aiPlans, " / mo") + (l.aiPlansPerDay === null ? "" : `, ${l.aiPlansPerDay} / day`);
   const f = PLAN_LIMITS.free;
   const b = PLAN_LIMITS.basic;
   const p = PLAN_LIMITS.premium;
   return [
-    ["AI trade plans", cell(f.aiPlans, " / mo"), cell(b.aiPlans, " / mo"), cell(p.aiPlans, " / mo")],
+    ["AI trade plans", aiCell(f), aiCell(b), aiCell(p)],
     ["Backtest runs", cell(f.backtestRuns, " / mo"), cell(b.backtestRuns, " / mo"), cell(p.backtestRuns, " / mo")],
     ["Journal trades", String(f.journalEntries), String(b.journalEntries), String(p.journalEntries)],
     [
@@ -139,6 +153,16 @@ export function limitReachedMessage(metric: UsageMetric, tier: PlanTier, limit: 
   const upgrade =
     tier === "premium" ? "It resets at the start of next month." : "Upgrade for more, or wait for next month.";
   return `You've used all ${limit} ${METRIC_NOUN[metric]} on the ${PLAN_NAMES[tier]} plan this month. ${upgrade}`;
+}
+
+/**
+ * What we tell someone who has used today's AI plans. It counts down in hours
+ * rather than naming a clock time, so it reads right in every time zone.
+ */
+export function dailyLimitReachedMessage(tier: PlanTier, limit: number, now: Date = new Date()): string {
+  const hours = Math.max(1, Math.ceil((nextDailyResetDate(now).getTime() - now.getTime()) / 3_600_000));
+  const wait = hours === 1 ? "about an hour" : `about ${hours} hours`;
+  return `You've used all ${limit} AI trade plans for today on the ${PLAN_NAMES[tier]} plan. You can make more in ${wait}, or upgrade to Premium for no daily limit.`;
 }
 
 export function historyLimitMessage(tier: PlanTier): string {

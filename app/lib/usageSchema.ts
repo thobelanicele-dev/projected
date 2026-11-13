@@ -1,4 +1,6 @@
-// One row per user, per metric, per calendar month. Kept separate from db.ts so
+// One row per user, per metric, per period. Monthly allowances use a month as
+// the period ("2026-11"); the daily AI plan cap uses a day ("2026-11-13") under
+// its own metric name, so the two never mix. Kept separate from db.ts so
 // the exact SQL that enforces the limits can also be run against a real
 // Postgres engine in tests.
 export const USAGE_TABLE_SQL = `
@@ -30,4 +32,10 @@ export const REFUND_SQL = `
 
 export const READ_USAGE_SQL = `
   SELECT metric, count FROM usage_counts WHERE user_id = $1 AND period = $2
+`;
+
+// Clears a metric's counters from earlier periods. Used for the daily cap so a
+// person doesn't collect one leftover row for every day they used the app.
+export const PRUNE_OLDER_SQL = `
+  DELETE FROM usage_counts WHERE user_id = $1 AND metric = $2 AND period < $3
 `;

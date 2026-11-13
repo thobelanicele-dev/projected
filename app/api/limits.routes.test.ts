@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { NextRequest } from "next/server";
 import { USAGE_TABLE_SQL } from "@/app/lib/usageSchema";
-import { PLAN_LIMITS } from "@/app/lib/planLimits";
+import { PLAN_LIMITS, usageDay } from "@/app/lib/planLimits";
 
 // Runs the real route handlers with the real usage SQL on a real Postgres
 // engine. Only the login lookup, the AI call, and the database connection are
@@ -106,11 +106,60 @@ describe("POST /api/plan", () => {
     await state.db!.query("INSERT INTO usage_counts VALUES ($1, 'aiPlans', $2, $3)", [USER, currentPeriod(), oneLeft]);
     expect((await planPost(plan())).status).toBe(200);
     expect((await planPost(plan())).status).toBe(403);
+    // The plan the month refused must not stay counted against today.
+    expect(await usedCount("aiPlansDaily")).toBe(1);
 
     await state.db!.exec("DELETE FROM usage_counts");
     asUser("premium", "active");
     await state.db!.query("INSERT INTO usage_counts VALUES ($1, 'aiPlans', $2, 100000)", [USER, currentPeriod()]);
     expect((await planPost(plan())).status).toBe(200);
+  });
+
+  it("stops Basic at its daily cap without calling the AI or touching the month", async () => {
+    asUser("basic", "active");
+    const perDay = PLAN_LIMITS.basic.aiPlansPerDay!;
+    for (let i = 0; i < perDay; i++) expect((await planPost(plan())).status).toBe(200);
+
+    const refused = await planPost(plan());
+    expect(refused.status).toBe(403);
+    const body = await refused.json();
+    expect(body.code).toBe("limit_reached");
+    expect(body.error).toContain("for today");
+    expect(state.aiCalls).toBe(perDay);
+    expect(await usedCount("aiPlans")).toBe(perDay);
+    expect(await usedCount("aiPlansDaily")).toBe(perDay);
+  });
+
+  it("opens the daily cap again on a new day and clears the old day's count", async () => {
+    asUser("basic", "active");
+    await state.db!.query("INSERT INTO usage_counts VALUES ($1, 'aiPlansDaily', '2020-01-01', $2)", [
+      USER,
+      PLAN_LIMITS.basic.aiPlansPerDay,
+    ]);
+    expect((await planPost(plan())).status).toBe(200);
+    const rows = await state.db!.query<{ period: string; count: number }>(
+      "SELECT period, count FROM usage_counts WHERE user_id = $1 AND metric = 'aiPlansDaily'",
+      [USER]
+    );
+    expect(rows.rows).toEqual([{ period: usageDay(), count: 1 }]);
+  });
+
+  it("gives today's plan back too when the AI call fails", async () => {
+    asUser("basic", "active");
+    state.aiShouldFail = true;
+    expect((await planPost(plan())).status).toBe(500);
+    expect(await usedCount("aiPlans")).toBe(0);
+    expect(await usedCount("aiPlansDaily")).toBe(0);
+  });
+
+  it("has no daily cap on Free or Premium", async () => {
+    asUser("premium", "active");
+    for (let i = 0; i < PLAN_LIMITS.basic.aiPlansPerDay! + 2; i++) {
+      expect((await planPost(plan())).status).toBe(200);
+    }
+    expect(PLAN_LIMITS.free.aiPlansPerDay).toBeNull();
+    expect(PLAN_LIMITS.premium.aiPlansPerDay).toBeNull();
+    expect(await usedCount("aiPlansDaily")).toBe(0);
   });
 
   it("treats a cancelled subscription as Free", async () => {
@@ -150,6 +199,8 @@ describe("/api/limits", () => {
     expect(body.tier).toBe("basic");
     expect(body.limits.aiPlans).toBe(PLAN_LIMITS.basic.aiPlans);
     expect(body.usage.aiPlans).toBe(7);
+    expect(body.limits.aiPlansPerDay).toBe(PLAN_LIMITS.basic.aiPlansPerDay);
+    expect(body.usage.aiPlansToday).toBe(0);
     expect(body.usage.backtestRuns).toBe(0);
   });
 

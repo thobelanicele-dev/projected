@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   subscriptionState,
+  dailyLimitReachedMessage,
+  nextDailyResetDate,
+  usageDay,
   effectiveTier,
   JOURNAL_STORAGE_CAP,
   limitLines,
@@ -48,6 +51,22 @@ describe("pricing copy comes from the enforced limits", () => {
     expect(limitLines("basic")).toContain(`Journal up to ${PLAN_LIMITS.basic.journalEntries} trades`);
     expect(limitLines("free")).toContain("3 months of backtest data");
     expect(limitLines("premium")).toContain("2 years of backtest data");
+  });
+
+  it("tells people about the daily cap wherever the monthly number is shown", () => {
+    const perDay = PLAN_LIMITS.basic.aiPlansPerDay;
+    expect(limitLines("basic")[0]).toBe(`${PLAN_LIMITS.basic.aiPlans} AI trade plans / month, ${perDay} a day`);
+    expect(limitTableRows()[0][2]).toBe(`${PLAN_LIMITS.basic.aiPlans} / mo, ${perDay} / day`);
+    expect(limitTableRows()[0][3]).toBe("Unlimited");
+  });
+
+  it("counts down to the daily reset in hours", () => {
+    const lateEvening = new Date(Date.UTC(2026, 10, 13, 19, 30));
+    expect(dailyLimitReachedMessage("basic", 3, lateEvening)).toContain("in about 5 hours");
+    const lastMinutes = new Date(Date.UTC(2026, 10, 13, 23, 40));
+    expect(dailyLimitReachedMessage("basic", 3, lastMinutes)).toContain("in about an hour");
+    expect(usageDay(lateEvening)).toBe("2026-11-13");
+    expect(nextDailyResetDate(lateEvening).toISOString()).toBe("2026-11-14T00:00:00.000Z");
   });
 
   it("has a table row for every enforced limit", () => {

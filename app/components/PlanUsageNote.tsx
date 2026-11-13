@@ -10,8 +10,8 @@ export const USAGE_CHANGED_EVENT = "fxinsites:usage-changed";
 
 interface Summary {
   tier: PlanTier;
-  limits: Record<UsageMetric, number | null>;
-  usage: Record<UsageMetric, number>;
+  limits: Record<UsageMetric, number | null> & { aiPlansPerDay?: number | null };
+  usage: Record<UsageMetric, number> & { aiPlansToday?: number };
 }
 
 /** A thin bar showing how much of the month's allowance is used. Turns orange near the limit. */
@@ -63,11 +63,15 @@ export function PlanUsageNote({ metric, noun }: { metric: UsageMetric; noun: str
 
   const limit = summary.limits[metric];
   const used = summary.usage[metric];
-  const atLimit = limit !== null && used >= limit;
+  // Only AI plans have a daily cap, and only on plans that set one.
+  const dailyLimit = metric === "aiPlans" ? (summary.limits.aiPlansPerDay ?? null) : null;
+  const usedToday = summary.usage.aiPlansToday ?? 0;
+  const atLimit = (limit !== null && used >= limit) || (dailyLimit !== null && usedToday >= dailyLimit);
 
   return (
     <div>
       <p className={`mt-2 text-xs ${atLimit ? "text-orange-400" : "text-zinc-500"}`}>
+        {dailyLimit !== null && `${usedToday} of ${dailyLimit} used today · `}
         {limit === null ? `${used} ${noun} this month` : `${used} of ${limit} ${noun} used this month`}
         {" · "}
         {PLAN_NAMES[summary.tier]} plan
