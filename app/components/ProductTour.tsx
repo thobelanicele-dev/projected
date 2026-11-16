@@ -86,12 +86,21 @@ export const TOUR_STEPS: TourStep[] = [
     title: "Trade journal",
     body: "Every plan you build gets saved here automatically, checked against what really happened.",
   },
+  {
+    target: '[data-tour="nav-landing"]',
+    title: "Back to the homepage",
+    body: "The globe opens the public FxInsites homepage, with pricing and the FAQ. You stay signed in, so you can come straight back.",
+  },
 ];
 
 const BASE_STORAGE_KEY = "fxinsites.tourSeen";
 const RESTART_EVENT = "fxinsites:replay-tour";
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_MARGIN = 12;
+// Roughly how tall the tooltip gets with its longest text. A target with less
+// room than this beneath it gets the tooltip above it instead, so the buttons
+// never fall off the bottom of the screen.
+const TOOLTIP_ROOM = 250;
 
 export function ProductTour({ steps }: { steps: TourStep[] }) {
   const userId = useCurrentUserId();
@@ -199,7 +208,7 @@ export function ProductTour({ steps }: { steps: TourStep[] }) {
 
   const step = steps[stepIndex];
   const spaceBelow = window.innerHeight - rect.bottom;
-  const placeAbove = spaceBelow < 180 && rect.top > 180;
+  const placeAbove = spaceBelow < TOOLTIP_ROOM && rect.top > TOOLTIP_ROOM;
   const top = placeAbove ? Math.max(TOOLTIP_MARGIN, rect.top - TOOLTIP_MARGIN) : rect.bottom + TOOLTIP_MARGIN;
   const left = Math.min(
     Math.max(TOOLTIP_MARGIN, rect.left),

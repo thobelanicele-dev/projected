@@ -5,9 +5,16 @@ import {
   addWeeks,
   buildSummaryText,
   computeBestDayToTrade,
+  computePeriodSummary,
   computeWeeklySummary,
+  customPeriod,
+  formatPeriodRange,
   formatR,
+  monthPeriod,
+  shiftPeriod,
   startOfWeek,
+  weekPeriod,
+  yearPeriod,
 } from "./weeklySummary";
 
 // Local-time dates throughout, because weeks follow the trader's own clock.
@@ -276,5 +283,142 @@ describe("copyable summary", () => {
     expect(formatR(1.5)).toBe("+1.5R");
     expect(formatR(-0.4)).toBe("-0.4R");
     expect(formatR(0)).toBe("+0R");
+  });
+});
+
+// `trade({ day })` counts days from Monday 19 October 2026, so day -18 is 1 October.
+describe("a month", () => {
+  const october = monthPeriod(at(0));
+
+  it("runs from the 1st to the last day of the calendar month", () => {
+    expect(october.start).toBe(new Date(2026, 9, 1).getTime());
+    expect(october.end).toBe(new Date(2026, 10, 1).getTime());
+    expect(formatPeriodRange(october)).toBe("October 2026");
+  });
+
+  it("counts the month's trades and leaves out the ones either side", () => {
+    const s = computePeriodSummary(
+      [
+        trade({ day: -18, rMultiple: 1 }), // 1 Oct
+        trade({ day: 12, rMultiple: 2 }), // 31 Oct
+        trade({ day: -19, rMultiple: 5 }), // 30 Sep
+        trade({ day: 13, rMultiple: 5 }), // 1 Nov
+      ],
+      october
+    );
+    expect(s.closedTrades).toBe(2);
+    expect(s.totalR).toBe(3);
+    expect(s.previous?.totalR).toBe(5);
+  });
+
+  it("draws one bar per week, and trims the first to the start of the month", () => {
+    const s = computePeriodSummary([trade({ day: 0, rMultiple: 2 }), trade({ day: -14, rMultiple: -1, outcome: "loss" })], october);
+    expect(s.bucketUnit).toBe("week");
+    expect(s.buckets.map((b) => b.short)).toEqual(["1 Oct", "5 Oct", "12 Oct", "19 Oct", "26 Oct"]);
+    expect(s.buckets.map((b) => b.totalR)).toEqual([0, -1, 0, 2, 0]);
+    expect(s.bestBucketIndex).toBe(3);
+  });
+
+  it("names days by their date, since a month has more than one Monday", () => {
+    const s = computePeriodSummary(
+      [0, 0, 0, 0].map((day) => trade({ day, rMultiple: -1, outcome: "loss" })),
+      october
+    );
+    expect(s.worstDay?.name).toBe("Mon 19 Oct");
+    expect(s.insights.find((i) => i.id === "overtrading")?.title).toBe("Too many trades on Mon 19 Oct");
+  });
+
+  it("talks about the month, not the week", () => {
+    const s = computePeriodSummary([trade({ day: 0, rMultiple: 2 }), trade({ day: 1, rMultiple: 1 }), trade({ day: -30, rMultiple: 0.5 })], october);
+    const titles = s.insights.map((i) => i.title);
+    expect(titles).toContain("A profitable month");
+    expect(titles).toContain("Better than last month");
+    expect(buildSummaryText(s).split("\n")[0]).toBe("My trading month: October 2026");
+  });
+});
+
+describe("a year", () => {
+  const y2026 = yearPeriod(at(0));
+
+  it("runs from 1 January to 31 December", () => {
+    expect(y2026.start).toBe(new Date(2026, 0, 1).getTime());
+    expect(y2026.end).toBe(new Date(2027, 0, 1).getTime());
+    expect(formatPeriodRange(y2026)).toBe("2026");
+  });
+
+  it("draws one bar per month and compares with the year before", () => {
+    const s = computePeriodSummary([trade({ day: 0, rMultiple: 2 }), trade({ day: -365, rMultiple: 1 })], y2026);
+    expect(s.bucketUnit).toBe("month");
+    expect(s.buckets).toHaveLength(12);
+    expect(s.buckets[0].short).toBe("Jan");
+    expect(s.buckets[9].short).toBe("Oct");
+    expect(s.buckets[9].name).toBe("October 2026");
+    expect(s.buckets[9].totalR).toBe(2);
+    expect(s.closedTrades).toBe(1);
+    expect(s.previous?.totalR).toBe(1);
+    expect(buildSummaryText(s).split("\n")[0]).toBe("My trading year: 2026");
+  });
+});
+
+describe("dates you pick", () => {
+  it("includes both the first and the last day, whichever order they're given in", () => {
+    const period = customPeriod(at(0), at(2));
+    expect(customPeriod(at(2), at(0))).toEqual(period);
+    expect(formatPeriodRange(period)).toBe("19 Oct 2026 to 21 Oct 2026");
+
+    const s = computePeriodSummary(
+      [
+        trade({ day: 0, rMultiple: 1 }),
+        trade({ day: 2, rMultiple: 1, closedAt: at(2, 23) }),
+        trade({ day: 3, rMultiple: 9 }),
+        trade({ day: -1, rMultiple: 4 }),
+      ],
+      period
+    );
+    expect(s.closedTrades).toBe(2);
+    // The period before is the same number of days, straight before it.
+    expect(s.previous?.totalR).toBe(4);
+    expect(s.bucketUnit).toBe("day");
+    expect(s.buckets.map((b) => b.short)).toEqual(["19 Oct", "20 Oct", "21 Oct"]);
+  });
+
+  it("works for a single day", () => {
+    const period = customPeriod(at(0), at(0, 18));
+    expect(formatPeriodRange(period)).toBe("19 Oct 2026");
+    expect(computePeriodSummary([trade({ day: 0 }), trade({ day: 1 })], period).closedTrades).toBe(1);
+  });
+
+  it("uses bigger bars for longer stretches, so the chart stays readable", () => {
+    const unit = (days: number) => computePeriodSummary([], customPeriod(at(0), at(days - 1))).bucketUnit;
+    expect(unit(14)).toBe("day");
+    expect(unit(60)).toBe("week");
+    expect(unit(300)).toBe("month");
+    expect(unit(1200)).toBe("year");
+    expect(computePeriodSummary([], customPeriod(at(0), at(1199))).buckets.length).toBeLessThanOrEqual(14);
+  });
+
+  it("says which year a month belongs to when the dates cross New Year", () => {
+    const s = computePeriodSummary([], customPeriod(new Date(2026, 10, 1), new Date(2027, 1, 28)));
+    expect(s.buckets.map((b) => b.short)).toEqual(["Nov 26", "Dec 26", "Jan 27", "Feb 27"]);
+  });
+
+  it("talks about the period", () => {
+    const s = computePeriodSummary([trade({ day: 0, rMultiple: 2 }), trade({ day: 1, rMultiple: 1 })], customPeriod(at(0), at(9)));
+    expect(s.insights.map((i) => i.title)).toContain("A profitable period");
+    expect(buildSummaryText(s).split("\n")[0]).toBe("My trading, 19 Oct 2026 to 28 Oct 2026");
+  });
+});
+
+describe("stepping back and forward", () => {
+  it("moves a week, a month or a year at a time", () => {
+    expect(shiftPeriod(weekPeriod(at(0)), -1).start).toBe(addWeeks(MON, -1));
+    expect(formatPeriodRange(shiftPeriod(monthPeriod(new Date(2026, 0, 15)), -1))).toBe("December 2025");
+    expect(formatPeriodRange(shiftPeriod(monthPeriod(new Date(2026, 0, 31)), 1))).toBe("February 2026");
+    expect(formatPeriodRange(shiftPeriod(yearPeriod(at(0)), 1))).toBe("2027");
+  });
+
+  it("gives the same week whether asked through the old or the new way", () => {
+    const entries = [trade({ day: 0, rMultiple: 2 }), trade({ day: 4, rMultiple: -1, outcome: "loss" })];
+    expect(computePeriodSummary(entries, weekPeriod(at(3)))).toEqual(computeWeeklySummary(entries, MON));
   });
 });

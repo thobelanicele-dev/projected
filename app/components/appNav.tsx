@@ -108,8 +108,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     href: "/weekly",
-    label: "Weekly summary",
-    description: "Your week in trades, and where to improve",
+    label: "Summaries",
+    description: "Your week, month or year in trades, and where to improve",
     tourId: "nav-weekly",
     Icon: WeeklyIcon,
   },

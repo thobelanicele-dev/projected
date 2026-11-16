@@ -165,13 +165,15 @@ export function Sidebar() {
         </nav>
 
         <div className="mt-auto flex flex-col gap-1 border-t border-zinc-800 pt-4">
-          {/* Stays signed in: this is just a link to the public landing page. */}
+          {/* Stays signed in: this is just a link to the public landing page. Icon only, so it carries its own name for screen readers and on hover. */}
           <Link
             href="/"
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-900/60"
+            data-tour="nav-landing"
+            aria-label="Landing page"
+            title="Landing page"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-300 transition-colors hover:bg-zinc-900/60 hover:text-zinc-50"
           >
             <GlobeIcon />
-            Landing page
           </Link>
           <div className="flex items-center justify-between">
             <span className="px-2.5 text-xs text-zinc-500">Appearance</span>
