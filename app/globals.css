@@ -183,6 +183,13 @@ html[data-theme-vt]::view-transition-new(root) {
   transition: outline-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* A highlighted element that is pinned to the screen (the floating globe) must
+   stay pinned. Without this, the rule above would turn it into a normal part
+   of the page and it would jump out of its corner. */
+.tour-highlight.fixed {
+  position: fixed;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tour-highlight {
     transition: none;

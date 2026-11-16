@@ -105,6 +105,23 @@ export function Sidebar() {
         <MenuIcon />
       </button>
 
+      {/* The globe stays reachable when the side menu is collapsed on a laptop or
+          desktop, in the same corner it lives in when the menu is open. Phones
+          don't get it: there the menu is closed most of the time, and a button
+          floating over the page would cover what people are reading. It comes
+          before the menu in the page so the tour finds whichever one is showing. */}
+      <Link
+        href="/"
+        data-tour="nav-landing"
+        aria-label="Landing page"
+        title="Landing page"
+        className={`fixed bottom-6 left-4 z-40 hidden h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-50 ${
+          visibleOnDesktop ? "" : "md:flex"
+        }`}
+      >
+        <GlobeIcon />
+      </Link>
+
       {visibleOnMobile && (
         <div
           onClick={close}
